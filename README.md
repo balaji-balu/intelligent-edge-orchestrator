@@ -10,13 +10,13 @@
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-**Intelligent Edge Orch** is a lightweight **edge orchestration platform** demonstrating CO (Coordinator), LO (Local Orchestrator), and EN (Edge Node) services for IoT, retail, and industrial edge computing environments.
+**Intelligent Edge Orch** is a lightweight **edge orchestration platform** demonstrating CO (Central Orchestrator), LO (Local Orchestrator), and EN (Edge Node) services for IoT, retail, and industrial edge computing environments.
 
 
 ## Key Features
 
 - **Security-First Architecture** – Enterprise-grade protection for all edge deployments.
-- **Deployment automation** ensures that software can be delivered to thousands of distributed edge nodes (far edge or device edge) with minimal manual intervention.  
+- **Deployment automation** - Ensures that software can be delivered to thousands of distributed edge nodes (far edge or device edge) with minimal manual intervention.  
 - **Deploy AI Workloads at the Edge & IoT Devices** – Run applications closer to the data for faster insights.
 - **Intelligent Edge Node Selection** – Automatically pick the best devices for deployment.
 - **Offline-First Support** – Works smoothly even with intermittent or unreliable network connections.
@@ -80,7 +80,7 @@ go test ./...
 
 Optional: run smoke tests via GitHub Actions or local scripts.
 
-### Architecture
+## Architecture
 
 Three-tier orchestration system:
 - CO – Central Orchestrator  
@@ -130,7 +130,7 @@ Users interact via Web Portal or CLI through CO API.
 - Each **LO** manages a **site** (e.g., factory floor, retail store) and connects to its **ENs** via overlay or local network.
 - CO (Central Orchestrator) remains the control plane, accessible through **Web Portal / CLI**, using **Margo API**.
 
-### Roadmap
+## Roadmap
 - runtime: wasm, k3s/k8, Talos linux based k8s
 - rich intelligent profile selection at CO
 - margo based security between CO and LO
@@ -139,7 +139,7 @@ Users interact via Web Portal or CLI through CO API.
 - web portal
 
 
-### 💬 Contributing
+## 💬 Contributing
 
 See [CONTRIBUTING.md](contributing.md)
  for guidelines.
