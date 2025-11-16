@@ -2,7 +2,7 @@
   <img src="docs/logo.png" alt="Margo Logo" width="150"/>
 </p>
 
-# Margo Hello World
+# Intelligent Edge Orch
 
 <p align="center">
   <em>Lightweight Edge Orchestration Platform (CO / LO / EN)</em>
