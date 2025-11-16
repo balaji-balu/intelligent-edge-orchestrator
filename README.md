@@ -1,6 +1,17 @@
-<h1 align="center">
-  <img src="docs/logo.png" width="180"><br/>
-</h1>
+<p align="center">
+  <img src="assets/logo.png" alt="Margo Logo" width="150"/>
+</p>
+
+# Margo Hello World
+
+<p align="center">
+  <em>Lightweight Edge Orchestration Platform (CO / LO / EN)</em>
+</p>
+
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
+**margo-hello-world** is a lightweight **edge orchestration platform** demonstrating CO (Coordinator), LO (Local Orchestrator), and EN (Edge Node) services for IoT, retail, and industrial edge computing environments.
+
 
 ## Key Features
 
@@ -129,6 +140,17 @@ Listing apps ...
 go run main.go co deploy --app "Digitron orchestrator" --site 3e5c21bc-2fef-4fd7-a2d0-60fc6b3260ad --deploytype compose 
 ```
 
+### 💬 Contributing
+
+See [CONTRIBUTING.md](contributing.md)
+ for guidelines.
+We welcome contributions in all forms:
+- Bug reports
+- Feature requests
+- Code fixes
+- Tests & CI/CD improvements
+- Documentation improvements
+
 ### Folders structure
 cmd
 - cmd
@@ -169,6 +191,8 @@ web portal:
 
 cli: 
 - cobra
+
+
 ## Code 
 ```
 go run ./cmd/co --config=./configs/co.yml
@@ -198,3 +222,7 @@ atlas migrate diff add_deloymentstatus --env local --to "ent://ent/schema"
 atlas migrate apply --env local
 ```
 uses atlas.hcl at the root directory
+
+## 📄 License
+This project is licensed under the MIT License – see LICENSE
+ for details.
