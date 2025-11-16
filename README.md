@@ -139,7 +139,7 @@ Users interact via Web Portal or CLI through CO API.
 - web portal
 
 
-## 💬 Contributing
+## Contributing
 
 See [CONTRIBUTING.md](contributing.md)
  for guidelines.
@@ -199,6 +199,6 @@ Thanks to all contributors!
 </a>
 
 Made with [contrib.rocks](https://contrib.rocks).
-## 📄 License
+## License
 This project is licensed under the MIT License – see [LICENSE](license.md)
  for details.
