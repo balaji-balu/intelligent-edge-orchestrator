@@ -194,7 +194,7 @@ cli:
 ## Contributors
 Thanks to all contributors!
 
-<a href="https://github.com/github.com/balaji-balu/intelligent-edge-orchestrator/graphs/contributors">
+<a href="https://github.com/github.com/balaji-balu/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=github.com/balaji-balu" />
 </a>
 
