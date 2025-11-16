@@ -224,5 +224,5 @@ atlas migrate apply --env local
 uses atlas.hcl at the root directory
 
 ## 📄 License
-This project is licensed under the MIT License – see LICENSE
+This project is licensed under the MIT License – see [LICENSE](license.md)
  for details.
