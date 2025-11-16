@@ -130,6 +130,11 @@ func main() {
 	}
 	log.Println("connected to", natsURL)
 
+s := NewDbStore(client)
+na := NewNatsActuator(nc, subj, t)
+r := NewHTTPReporter("api/v1/co/deploy/status", ti)
+reconciler := NewReconciler(s, na, r)
+	
 	gitmgr := gitmanager.NewManager()
 	gitmgr.Register(gitmanager.RepoConfig{
 		Name: "deployments",

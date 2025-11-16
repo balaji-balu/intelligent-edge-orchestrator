@@ -64,20 +64,15 @@ type LoConfig struct {
 
 type LocalOrchestrator struct {
 	Config  LoConfig
-	Journal Journal
-	Client  *ent.Client
+
 	EOPort  string
 	//Hosturls []string
 	Hosts []string
 	FSM   *fsm.FSM
-	//machine *fsm.FSMWrapper
-	//Callback CallbackHandler
-	//fsm     *fsm.FSM
-	//logger *zap.Logger
+
 	rb *ResultBus
-	//eventCh chan string
+
 	RootCtx context.Context
-	//db      *bolt.DB
 	nc      *natsbroker.Broker
 	Mgr     *gitmanager.Manager
 	Watcher *watcher.Watcher
@@ -86,11 +81,12 @@ type LocalOrchestrator struct {
 	logger      *zap.Logger
 	currentMode string
 	cancelFunc  context.CancelFunc // for stopping running process
+	Reconciler  *Reconciler 
 }
 
-type RegisterRequest struct {
-	EdgeURL string `json:"edge_url" binding:"required"`
-}
+// type RegisterRequest struct {
+// 	EdgeURL string `json:"edge_url" binding:"required"`
+// }
 
 func (lo *LocalOrchestrator) ResultBus() *ResultBus {
 	return lo.rb
@@ -106,6 +102,7 @@ func New(
 	db *ent.Client,
 	nc *natsbroker.Broker,
 	gitmgr *gitmanager.Manager,
+	reconciler *Reconciler,
 	logger *zap.Logger,
 ) *LocalOrchestrator {
 	rb := NewResultBus()
@@ -126,36 +123,37 @@ func New(
 		db:      db,
 		nc:      nc,
 		Mgr: 	gitmgr,
+		Reconciler: reconciler 
 	}
 }
 
 // RegisterRequest handles registration of an Edge Node.
-func (lo *LocalOrchestrator) RegisterRequest(c *gin.Context) {
-	var req RegisterRequest
+// func (lo *LocalOrchestrator) RegisterRequest(c *gin.Context) {
+// 	var req RegisterRequest
 
-	// Bind JSON payload
-	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Println("❌ Invalid register request:", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
-		return
-	}
+// 	// Bind JSON payload
+// 	if err := c.ShouldBindJSON(&req); err != nil {
+// 		log.Println("❌ Invalid register request:", err)
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+// 		return
+// 	}
 
-	// Add to host list
-	log.Println("✅ Registering edge:", req.EdgeURL)
-	lo.Hosts = append(lo.Hosts, req.EdgeURL)
+// 	// Add to host list
+// 	log.Println("✅ Registering edge:", req.EdgeURL)
+// 	lo.Hosts = append(lo.Hosts, req.EdgeURL)
 
-	lo.logger.Info("Node registration", zap.String("node_id", req.EdgeURL))
+// 	lo.logger.Info("Node registration", zap.String("node_id", req.EdgeURL))
 
-	if lo.FSM.Current() == "waiting_for_nodes" {
-		lo.FSM.Event(c.Request.Context(), "node_registered")
-	}
+// 	if lo.FSM.Current() == "waiting_for_nodes" {
+// 		lo.FSM.Event(c.Request.Context(), "node_registered")
+// 	}
 
-	// Respond success
-	c.JSON(http.StatusOK, gin.H{
-		"message":  "edge registered successfully",
-		"edge_url": req.EdgeURL,
-	})
-}
+// 	// Respond success
+// 	c.JSON(http.StatusOK, gin.H{
+// 		"message":  "edge registered successfully",
+// 		"edge_url": req.EdgeURL,
+// 	})
+// }
 
 func (lo *LocalOrchestrator) DeployToEdges(
 	id string,
@@ -269,7 +267,10 @@ func (l *LocalOrchestrator) handleGitPolled(data GitPolledPayload) {
 			continue
 		}
 		// Call your deployer here
-		l.DeployToEdges(d.DeploymentID, dep)
+		if err := l.Reconciler.ReconcileMulti(d.DeploymentID); err != nil {
+    		log.Fatal(err)
+		}
+		//l.DeployToEdges(d.DeploymentID, dep)
 	}
 }
 
@@ -333,30 +334,7 @@ func (l *LocalOrchestrator) StartEventDispatcher(ctx context.Context) {
 	}
 }
 
-/*
-	func (l *LocalOrchestrator) StartEventDispatcher(ctx context.Context) {
-	    l.logger.Info("Starting FSM event dispatcher...")
-	    for {
-	        select {
-	        case <-ctx.Done():
-	            l.logger.Info("Event dispatcher stopped")
-	            return
-	        case ev := <-l.eventCh:
-	            l.logger.Info("Processing FSM event",
-	                    zap.Any("event", ev),
-	                    zap.String("state", l.FSM.Current()))
-	            if err := l.FSM.Event(ctx, ev.Name); err != nil {
-	                l.logger.Error("FSnM event failed",
-	                    zap.Any("event", ev),
-	                    zap.String("state", l.FSM.Current()),
-	                    zap.Error(err))
-	            } else {
-	                l.logger.Info("FSM event completed", zap.Any("event", ev))
-	            }
-	        }
-	    }
-	}
-*/
+
 func (l *LocalOrchestrator) TriggerEvent(ctx context.Context, name string, data interface{}) {
 	ev := Event{Name: name, Data: data, Time: time.Now()}
 
@@ -368,40 +346,3 @@ func (l *LocalOrchestrator) TriggerEvent(ctx context.Context, name string, data 
 	}
 }
 
-/*
-func (lo *LocalOrchestrator) pickTargetNodes(req deployment.DeployRequest) ([]EdgeNode, error) {
-
-    // := DeployAPIRequest{
-
-	// choose targets
-	targets := []EdgeNode{}
-	if len(req.TargetNodes) > 0 {
-		// load nodes from db
-		all := GetAllNodes(lo.db)
-		for _, n := range all {
-			for _, id := range req.TargetNodes {
-				if n.NodeID == id {
-					targets = append(targets, n);
-					break
-				}
-			}
-		}
-	} else {
-		all := GetAllNodes(lo.db)
-		rt := req.RuntimeFilter
-		if rt == "" && len(req.WasmImages) > 0 { rt = "wasm" }
-		if rt == "" && len(req.ContainerImages) > 0 { rt = "containerd" }
-		targets = PickNodes(all, rt, req.Region, 10)
-	}
-
-	if len(targets) == 0 {
-		//http.Error(w, "no target nodes available", 400)
-		log.Println("[LO] no target nodes available")
-		return nil, fmt.Errorf("no target nodes available")
-	}
-
-    return targets, nil
-
-}
-
-*/

@@ -191,6 +191,13 @@ web portal:
 cli: 
 - cobra
 
+## Contributors
+Thanks to all contributors!
+
+<a href="https://github.com/edge-orchestration-platform/margo-hello-world/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=edge-orchestration-platform/margo-hello-world" />
+</a>
+
 ## 📄 License
 This project is licensed under the MIT License – see [LICENSE](license.md)
  for details.
