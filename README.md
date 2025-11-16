@@ -194,8 +194,8 @@ cli:
 ## Contributors
 Thanks to all contributors!
 
-<a href="https://github.com/edge-orchestration-platform/margo-hello-world/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=edge-orchestration-platform/margo-hello-world" />
+<a href="https://github.com/balaji-balu/intelligent-edge-orchestrator/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=edge-orchestration-platform/intelligent-edge-orchestrator" />
 </a>
 
 ## 📄 License
