@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.png" alt="Margo Logo" width="150"/>
+  <img src="docs/logo.png" alt="Margo Logo" width="150"/>
 </p>
 
 # Margo Hello World
