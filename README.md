@@ -194,12 +194,11 @@ cli:
 ## Contributors
 Thanks to all contributors!
 
-<a href="https://github.com/github.com/balaji-balu/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=github.com/balaji-balu" />
+<a href="https://github.com/balaji-balu/intelligent-edge-orchestrator/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=balaji-balu/intelligent-edge-orchestrator" />
 </a>
 
 Made with [contrib.rocks](https://contrib.rocks).
-
 ## 📄 License
 This project is licensed under the MIT License – see [LICENSE](license.md)
  for details.
