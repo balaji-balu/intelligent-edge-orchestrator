@@ -7,6 +7,36 @@ This project is part of the **Edge Orchestration Platform (CO, LO, EN)** ecosyst
 
 ---
 
+## Code 
+```
+go run ./cmd/co --config=./configs/co.yml
+go run ./cmd/lo 
+go run ./cmd/en
+```
+
+#### Configuration
+```
+GITHUB_TOKEN=
+DATABASE_URL=
+SITE_ID  = 
+NODE_ID  =
+RUNTIME = containerd(default), wasm, compose_pkg, helm
+DEPLOYMENTS_REPO = https://github.com/edge-orchestration-platform/deployments (this is where co writes deployment requests. lo will monitor for this repo changes for its site)
+APPLICATIONS_REPO = https://github.com/edge-orchestration-platform/app-registry (this is for testing. actual repo will be on developers site)
+AI_SAMPLE_DEMO = ghcr.io/edge-orchestration-platform/edge-ai-sample(sample edge ai)
+```
+##### Data Models addition/modifications
+
+go to root directory
+add schema files to `ent/schema` and then 
+
+```
+ent generate ./ent/schema  --feature sql/upsert
+atlas migrate diff add_deloymentstatus --env local --to "ent://ent/schema"
+atlas migrate apply --env local
+```
+uses atlas.hcl at the root directory
+
 ## 💬 Ways to Contribute
 
 You can help the project in many ways:
