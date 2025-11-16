@@ -1,6 +1,11 @@
+<h1 align="center">
+  <img src="docs/logo.png" width="180"><br/>
+</h1>
+
 ## Key Features
 
-- **Security-First Architecture** – Enterprise-grade protection for all edge deployments.  
+- **Security-First Architecture** – Enterprise-grade protection for all edge deployments.
+- **Deployment automation** ensures that software can be delivered to thousands of distributed edge nodes (far edge or device edge) with minimal manual intervention.  
 - **Deploy AI Workloads at the Edge & IoT Devices** – Run applications closer to the data for faster insights.
 - **Intelligent Edge Node Selection** – Automatically pick the best devices for deployment.
 - **Offline-First Support** – Works smoothly even with intermittent or unreliable network connections.
@@ -10,7 +15,8 @@
 - **Customer Access via CLI and Web Portal** – Manage and monitor deployments through command-line tools or a web interface.
 - **Remote Workloads Lifecycle Management** – Add, update, and remove workloads on edge devices remotely. Air-gap environment supported
 - **Interoperable Runtime Support** – Works with different runtime environments, including WASM/Ocre, container-based, and Kubernetes-based runtimes. Supports a range of devices from **small microcontrollers (MCP)** to **more powerful microprocessors (MPC)**.
-- **Industry Focus** – Designed for industrial settings, manufacturing shop floors, and retail environments.
+- **Industry Focus** – Designed for industrial settings, manufacturing shop floors, and retail environments. 
+
 
 ### Architecture
 

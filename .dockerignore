@@ -1,5 +1,8 @@
-logs
 local-cache
 cache
 data
 docs
+**/logs
+**/.git
+**/tmp
+*.md

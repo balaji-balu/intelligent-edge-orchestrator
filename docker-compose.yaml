@@ -36,6 +36,49 @@ services:
     networks:
       - edge-net
 
+  # loki:
+  #   image: grafana/loki:2.9.0
+  #   ports:
+  #     - "3100:3100"
+  #   command: -config.file=/etc/loki/local-config.yaml
+  #   volumes:
+  #     - ./loki-config.yaml:/etc/loki/local-config.yaml
+  #     - ./loki-data:/loki 
+  #   networks:
+  #     - edge-net
+  #   logging:
+  #     driver: json-file  
+
+  # promtail:
+  #   image: grafana/promtail:2.9.0
+  #   volumes:
+  #     # MOUNT PODMAN CONTAINER LOGS (rootless)
+  #     - ~/.local/share/containers/storage/containers:/podman/containers:ro
+
+  #     # Your config
+  #     - ./promtail-config.yml:/etc/promtail/promtail-config.yml
+  #   command: -config.file=/etc/promtail/promtail-config.yml
+  #   networks:
+  #     - edge-net
+  #   logging:
+  #     driver: json-file
+
+
+  # grafana:
+  #   image: grafana/grafana:10.2.3
+  #   container_name: grafana
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - grafana-data:/var/lib/grafana
+  #   environment:
+  #     - GF_SECURITY_ADMIN_PASSWORD=admin
+  #   depends_on:
+  #     # - loki
+  #     - prometheus
+  #   networks:
+  #     - edge-net
+
   co:
     build:
       dockerfile: ./dockerfile.co
@@ -49,15 +92,13 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       GITHUB_TOKEN: ${GITHUB_TOKEN}
       PORT: 9001
-      SITE_ID: 3e5c21bc-2fef-4fd7-a2d0-60fc6b3260ad
-    # healthcheck:
-    #   test: ["CMD", "pg_isready", "-U", "postgres"]
-    #   interval: 5s
-    #   timeout: 3s
-    #   retries: 5
+      SITE_ID: 
     networks:
       - edge-net
-  lo:
+    # logging:
+    #   driver: json-file
+
+  lo_1:
     build:
       dockerfile: ./dockerfile.lo
     ports:
@@ -74,14 +115,38 @@ services:
       PORT: 9010
       REPO: 
       CO_URL: http://co:9001/api/v1
-      SITE_ID: 3e5c21bc-2fef-4fd7-a2d0-60fc6b3260ad
+      SITE_ID: 379871e1-d4c4-4cef-8545-353e4535f08e
     volumes:
-      # - ./data/lo:/data
+      - ./local-cache:/tmp/repo-cache
+    networks:
+      - edge-net
+    # logging:
+    #   driver: json-file
+
+  lo_2:
+    build:
+      dockerfile: ./dockerfile.lo
+    ports:
+      - 9011:9011
+    expose:
+      - "9200"
+    depends_on:
+      - postgres
+      - nats
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      NATS_URL: nats://nats:4222
+      GITHUB_TOKEN: ${GITHUB_TOKEN} 
+      PORT: 9011
+      REPO: 
+      CO_URL: http://co:9001/api/v1
+      SITE_ID: 68370fbd-421e-4a6c-9d22-0fa7167d3de7
+    volumes:
       - ./local-cache:/tmp/repo-cache
     networks:
       - edge-net
 
-  en:
+  en_1:
     build:
       dockerfile: ./dockerfile.en
     ports:
@@ -95,12 +160,37 @@ services:
       GITHUB_TOKEN: ${GITHUB_TOKEN} 
       RUNTIME: containerd
       NODE_ID: node_id_1
-      SITE_ID: 3e5c21bc-2fef-4fd7-a2d0-60fc6b3260ad 
-      PORT: 9100 
+      SITE_ID: 379871e1-d4c4-4cef-8545-353e4535f08e 
+      PORT: 9100
     # volumes:
     #   - ./local-cache:/local-cache
     networks:
       - edge-net
+    # logging:
+    #   driver: json-file
+
+  en_2:
+    build:
+      dockerfile: ./dockerfile.en
+    ports:
+      - 9101:9101
+    expose:
+      - "9200" 
+    depends_on:
+      - nats
+    environment:
+      NATS_URL: nats://nats:4222
+      GITHUB_TOKEN: ${GITHUB_TOKEN} 
+      RUNTIME: containerd
+      NODE_ID: node_id_2
+      SITE_ID: 68370fbd-421e-4a6c-9d22-0fa7167d3de7 
+      PORT: 9100
+    # volumes:
+    #   - ./local-cache:/local-cache
+    networks:
+      - edge-net
+    # logging:
+    #   driver: json-file
 
 networks:
   edge-net:
@@ -109,3 +199,4 @@ networks:
 
 volumes:
   pgdata:
+  grafana-data:

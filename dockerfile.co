@@ -6,7 +6,8 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o co ./cmd/co
+RUN go install -ldflags="-s -w" ./cmd/co
+#RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o co ./cmd/co
 # RUN go build -o co ./cmd/co
 
 FROM docker.io/debian:bookworm-slim
@@ -16,7 +17,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/co .
+COPY --from=builder /go/bin/co .
 COPY ./configs/co.yaml ./configs/co.yaml
 #ENTRYPOINT ["/app/co"]
 
