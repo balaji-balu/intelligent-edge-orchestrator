@@ -198,8 +198,6 @@ Thanks to all contributors!
   <img src="https://contrib.rocks/image?repo=github.com/balaji-balu" />
 </a>
 
-
-</a>
 Made with [contrib.rocks](https://contrib.rocks).
 
 ## 📄 License
