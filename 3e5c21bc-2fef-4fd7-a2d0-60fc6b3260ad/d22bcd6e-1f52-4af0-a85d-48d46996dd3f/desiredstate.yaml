@@ -1,0 +1,24 @@
+apiVersion: margo.edge/v1
+kind: Deployment
+metadata:
+    name: Digitron orchestrator-deployment
+    namespace: ""
+    labels:
+        app: Digitron orchestrator
+    annotations:
+        applicationId: com-northstartida-digitron-orchestrator
+        id: d22bcd6e-1f52-4af0-a85d-48d46996dd3f
+spec:
+    deploymentProfile:
+        type: compose
+        components:
+            - name: digitron-orchestrator-docker
+              properties:
+                packageLocation: https://northsitarida.com/digitron/docker/digitron-orchestrator.tar.gz
+                keyLocation: https://northsitarida.com/digitron/docker/public-key.asc
+    parameters:
+        - name: SiteId
+          value: 3e5c21bc-2fef-4fd7-a2d0-60fc6b3260ad
+          targets:
+            - pointer: /sites/3e5c21bc-2fef-4fd7-a2d0-60fc6b3260ad
+              components: []
