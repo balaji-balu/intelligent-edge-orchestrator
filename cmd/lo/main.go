@@ -12,22 +12,27 @@ import (
 	//"sync"
 	"syscall"
 	"time"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"go.uber.org/zap"
+	//"go.uber.org/zap"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	_ "github.com/lib/pq"
-	//bolt "go.etcd.io/bbolt"
+	bolt "go.etcd.io/bbolt"
 
+	"github.com/balaji-balu/margo-hello-world/internal/lo"
+	//"github.com/balaji-balu/margo-hello-world/internal/lo/logger"
 	//cfffg "github.com/balaji-balu/margo-hello-world/internal/config"
 	"github.com/balaji-balu/margo-hello-world/ent"
-	"github.com/balaji-balu/margo-hello-world/internal/fsmloader"
+	//"github.com/balaji-balu/margo-hello-world/internal/fsmloader"
 	"github.com/balaji-balu/margo-hello-world/internal/natsbroker"
-	"github.com/balaji-balu/margo-hello-world/internal/orchestrator"
+	//"github.com/balaji-balu/margo-hello-world/internal/orchestrator"
 	"github.com/balaji-balu/margo-hello-world/internal/gitmanager"
-	"github.com/balaji-balu/margo-hello-world/internal/metrics"
+	//"github.com/balaji-balu/margo-hello-world/internal/localorch/heartbeat"
+	
+	//"github.com/balaji-balu/margo-hello-world/internal/logger"
 )
 
 var (
@@ -50,6 +55,8 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// logger, _ := logger.New("production", "lo")
+	// logger.Info(ctx, "zap logger inialized")
 	//configPath := flag.String("config", "./configs/lo1.yaml", "path to config file")
 	//flag.Parse()
 
@@ -85,13 +92,23 @@ func main() {
 	log.Printf("siteid:%s port:%s nats url:%s ", 
 		siteID, port, natsURL, )
 
-    logger, err := zap.NewProduction()
-    if err != nil {
-        // If Zap fails, fall back to standard log or panic
-        log.Fatalf("can't initialize zap logger: %v", err)
-    }
-    defer logger.Sync() // Ensure all buffered logs are written
-	zap.RedirectStdLog(logger)
+    // logger, err := zap.NewProduction()
+    // if err != nil {
+    //     // If Zap fails, fall back to standard log or panic
+    //     log.Fatalf("can't initialize zap logger: %v", err)
+    // }
+    // defer logger.Sync() // Ensure all buffered logs are written
+	// zap.RedirectStdLog(logger)
+
+	boltzpath, err := boltDBPath(siteID)
+	if err != nil {
+		log.Fatal("Error creating file path", err)
+	}	
+	b, err := bolt.Open(boltzpath, 0600, &bolt.Options{Timeout: 1 * time.Second})
+	if err != nil {
+		log.Fatalf("bolt open error")
+		//return nil
+	}
 
 	dsn := os.Getenv("DATABASE_URL")
 	fmt.Println("[CO] connecting to postgres at", dsn)
@@ -110,7 +127,7 @@ func main() {
 		time.Sleep(3 * time.Second)
 	}
 	if err1 != nil {
-		log.Fatalf("❌ Failed to connect to Postgres after retries: %v", err)
+		log.Fatalf("❌ Failed to connect to Postgres after retries: %v", err1)
 	}
 
 	client := ent.NewClient(ent.Driver(drv))
@@ -124,23 +141,18 @@ func main() {
 	// }
 
 	log.Println("Connecting to", natsURL)
-	nc, err = natsbroker.New(natsURL)
+	nc, err := natsbroker.New(natsURL)
 	if err != nil {
 		log.Fatalf("nats connect: %v", err)
 	}
 	log.Println("connected to", natsURL)
 
-s := NewDbStore(client)
-na := NewNatsActuator(nc, subj, t)
-r := NewHTTPReporter("api/v1/co/deploy/status", ti)
-reconciler := NewReconciler(s, na, r)
-	
 	gitmgr := gitmanager.NewManager()
 	gitmgr.Register(gitmanager.RepoConfig{
 		Name: "deployments",
-		Mode: gitmanager.GitLocal, //GitRemote,
-		//RemoteURL: "https://github.com/edge-orchestration-platform/deployments.git",
-		LocalPath: "/home/balaji/local-deployments",
+		Mode: gitmanager.GitRemote, //, GitLocal
+		RemoteURL: "https://github.com/edge-orchestration-platform/deployments.git",
+		//LocalPath: "/home/balaji/local-deployments",
 		Branch: "main",
 		Token: os.Getenv("GITHUB_TOKEN"),
 		WorkingPath: "/tmp/deployments-lo",
@@ -149,15 +161,19 @@ reconciler := NewReconciler(s, na, r)
 	// ------------------------------------------------------------
 	// 2️⃣ Setup orchestrator + FSM loader
 	// ------------------------------------------------------------
-	lo := orchestrator.New(ctx, siteID, natsURL, "deployments", client, nc, gitmgr, logger)
-	loader := fsmloader.NewLoader(ctx, logger, lo)
-	lo.FSM = loader.FSM // ensure both share same FSM instance
-	//w.OnChange = lo.OnDeployments
-	lo.MonitorHealthandStatusFromEN(coURL)
 
-	metrics.Init("lo")
-	metrics.StartServer(metrics_port)	
+	localorch := lo.New(ctx, 
+		siteID, natsURL,  
+		"deployments", b, client, nc, gitmgr, metrics_port)
+	if localorch != nil {
+		log.Println("XXXXXXXXXXXXXXXXXXXXXXXX localorch is nil")
+	}
 
+	// loader := fsmloader.NewLoader(ctx)
+	// if loader != nil {
+	// 	logger.Error("fsm loader is nil")
+	// }
+	// localorch.FSM = loader.FSM
 	log.Println("🚀 Starting adaptive mode manager...")
 
 	// ------------------------------------------------------------
@@ -180,12 +196,12 @@ reconciler := NewReconciler(s, na, r)
 	// 4️⃣ Start orchestrator and HTTP server
 	// ------------------------------------------------------------
 	//go lo.StartModeLoop(ctx)
-	go lo.StartNetworkMonitor(ctx)
+	localorch.Start(coURL) // NetworkMonitor(ctx)
 
 	go func() {
-		logger.Info("🌐 HTTP server started on :", zap.String("Port", port))
+		log.Println("🌐 HTTP server started on :", port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Fatal("HTTP server crashed", zap.Error(err))
+			log.Fatal("HTTP server crashed", err)
 		}
 	}()
 
@@ -206,14 +222,30 @@ reconciler := NewReconciler(s, na, r)
 	defer shutdownCancel()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		logger.Error("HTTP server forced to shutdown", zap.Error(err))
+		log.Fatal("HTTP server forced to shutdown", err)
 	} else {
-		logger.Info("HTTP server shutdown gracefully")
+		log.Println("HTTP server shutdown gracefully")
 	}
 
 	// ------------------------------------------------------------
 	// 7️⃣ Final cleanup
 	// ------------------------------------------------------------
 	time.Sleep(500 * time.Millisecond)
-	logger.Info("🧹 All systems stopped. Goodbye!")
+	log.Println("🧹 All systems stopped. Goodbye!")
+}
+
+func boltDBPath(siteID string) (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+
+	// ~/.lo/<siteID>/boltz.db
+	dir := filepath.Join(home, ".lo", siteID)
+
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", err
+	}
+
+	return filepath.Join(dir, "boltz.db"), nil
 }

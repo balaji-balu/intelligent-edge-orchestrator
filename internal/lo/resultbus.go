@@ -1,4 +1,4 @@
-package orchestrator
+package lo
 
 type WorkResult struct {
 	Node   string

@@ -19,10 +19,11 @@ import (
 	"github.com/balaji-balu/margo-hello-world/pkg/model"
 	"github.com/balaji-balu/margo-hello-world/internal/ocifetch"
 	"github.com/balaji-balu/margo-hello-world/internal/natsbroker"
+	"github.com/balaji-balu/margo-hello-world/internal/lo/reconciler"
 )
 
 type EdgeNode struct {
-	SiteID, NodeID, Runtime, Region string
+	SiteID, HostID, Runtime, Region string
 	//localOrchestratorURL string
 	nc *natsbroker.Broker
 	logger *zap.Logger
@@ -30,14 +31,14 @@ type EdgeNode struct {
 }
 
 func NewEdgeNode(ctx context.Context, 
-		siteID, nodeID, runtime string, nc *natsbroker.Broker, logger *zap.Logger) *EdgeNode {
+		siteID, hostID, runtime string, nc *natsbroker.Broker, logger *zap.Logger) *EdgeNode {
 	return &EdgeNode{
 		//localOrchestratorURL: localOrchestratorURL,
 		ctx: ctx,
 		nc : nc,
 		logger: logger,
 		SiteID: siteID,
-		NodeID: nodeID,
+		HostID: hostID,
 		Runtime: runtime,
 		//Region: cfg.Server.Region,
 	}
@@ -53,7 +54,7 @@ func (en *EdgeNode) startHeartbeat() {
 	go func() {
 		for range ticker.C {
 			msg := model.HealthMsg{
-				NodeID:     en.NodeID,
+				NodeID:     en.HostID,
 				SiteID:     en.SiteID,
 				CPUPercent: rand.Float64() * 20,
 				MemMB:      50 + rand.Float64()*20,
@@ -62,7 +63,7 @@ func (en *EdgeNode) startHeartbeat() {
 				//Region:     en.Region,
 			}
 			//data, _ := json.Marshal(msg)
-			subj := fmt.Sprintf("health.%s.%s", en.SiteID, en.NodeID)
+			subj := fmt.Sprintf("health.%s.%s", en.SiteID, en.HostID)
 			if err := en.nc.Publish(subj, msg); err != nil {
 				log.Println("Heart publish failed:", err)
 			} else {
@@ -76,21 +77,28 @@ func (en *EdgeNode) startHeartbeat() {
 
 // TBD: workload Update, delete
 func (en *EdgeNode) startDeployListener() {
-	subj := fmt.Sprintf("site.%s.deploy.%s", en.SiteID, en.NodeID)
-	en.nc.Subscribe3(subj, func(req deployment.DeployRequest) {
+	subj := fmt.Sprintf("site.%s.deploy.%s", en.SiteID, en.HostID)
+	en.nc.Subscribe3(subj, func(req model.HostDeployRequest) {
 		log.Printf("req:", req)
-		log.Printf("[EN %s] deploy request received (%s)", en.NodeID, en.Runtime)
-		success := true
-		statusMsg := "Deployment successful"
+		log.Printf("[EN %s] deploy request received (%s)", en.HostID, en.Runtime)
+		//success := true
+		//statusMsg := "Deployment successful"
+		log.Println("req.Component:", req.Component)
+		en.UpdateStatus(req.DeploymentID, string(model.StateInstalling), 
+			req.Component.Name, nil)
+		time.Sleep(30 * time.Second)
+		en.UpdateStatus(req.DeploymentID, string(model.StateInstalled), 
+			req.Component.Name, nil)
 
+/*		
 		if en.Runtime == "wasm" {
 			for _, w := range req.WasmImages {
 				log.Println("[EN] Running wasm:", w)
 				//err := deployWorkload(w, runtime)
 				//if err != nil {
 					//fsm.Transition(shared.Deploying)
-					success = false
-					statusMsg = fmt.Sprintf("WASM deploy failed for %s: %v", w)
+					//success = false
+					//statusMsg = fmt.Sprintf("WASM deploy failed for %s: %v", w)
 					break
 				//}
 			}
@@ -100,8 +108,8 @@ func (en *EdgeNode) startDeployListener() {
 				err := en.deployContainerd(req, fmt.Sprintf("component-%d", i))
 				if err != nil {
 					//fsm.Transition(shared.Deploying)
-					success = false
-					statusMsg = fmt.Sprintf("Container deploy failed for %s: %v", img, err)
+					//success = false
+					//statusMsg = fmt.Sprintf("Container deploy failed for %s: %v", img, err)
 					break
 				}
 			}
@@ -123,6 +131,7 @@ func (en *EdgeNode) startDeployListener() {
 		} else {
 			log.Printf("[EN] status published: %s (success=%v)", statusSubj, success)
 		}
+*/
 		en.nc.Flush()
 		//fsm.Transition(shared.Running)
 	})
@@ -138,7 +147,7 @@ func (en *EdgeNode) deployContainerd(
 	log.Println("Deploying Containerd:", req.Image)
 
     // 1️⃣ PENDING
-    en.UpdateStatus(deploymentID, string(model.StatePending), compName, nil)
+    // en.UpdateStatus(deploymentID, string(model.StatePending), compName, nil)
 
     // 2️⃣ INSTALLING (OCI Fetch)
     en.UpdateStatus(deploymentID, string(model.StateInstalling), compName, nil)
@@ -170,30 +179,24 @@ func (en *EdgeNode) deployContainerd(
 	return nil
 }
 
+// deployment status of an component is sent
 func (en *EdgeNode) UpdateStatus(
 	deploymentID string, state string, compName string, err error,
 ) {
-    ds := model.DeploymentStatus{
-        DeploymentID: deploymentID,
-        APIVersion:   "deployment.margo/v1",
-        Kind:         "DeploymentStatus",
-    }
 
-    ds.Status.State = state
-    if err != nil {
-        ds.Status.Error = model.StatusError{
-            Code:    "DEPLOYMENT_FAILED",
-            Message: err.Error(),
-        }
-    }
+	ds := reconciler.DeploymentComponentStatus {}
+	ds.ComponentName = compName
+	ds.DeploymentID = deploymentID
+	ds.Status = state
+	ds.HostID = en.HostID
+	// if err != nil {
+    //     ds.Error = model.StatusError{
+    //         Code:    "DEPLOYMENT_FAILED",
+    //         Message: err.Error(),
+    //     }		
+	// }
 
-    if compName != "" {
-        ds.Components = []model.DeploymentComponent{
-            {Name: compName, State: state, Error: ds.Status.Error},
-        }
-    }
-
-	statusSubj := fmt.Sprintf("status.%s.%s", en.SiteID, en.NodeID)
+	statusSubj := fmt.Sprintf("status.%s.%s", en.SiteID, en.HostID)
     en.nc.Publish(statusSubj, ds)
 }
 

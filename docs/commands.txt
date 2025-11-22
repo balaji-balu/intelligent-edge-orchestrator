@@ -1,0 +1,3 @@
+boltbrowser ~/.lo/321459e0-fdaf-47b1-85c2-5df0af395177/boltz.db
+
+go test -v -cover -race ./...

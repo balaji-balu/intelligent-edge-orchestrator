@@ -26,8 +26,10 @@ type Host struct {
 	SiteID uuid.UUID `json:"site_id,omitempty"`
 	// Runtime holds the value of the "runtime" field.
 	Runtime string `json:"runtime,omitempty"`
-	// LastHeartbeat holds the value of the "last_heartbeat" field.
-	LastHeartbeat time.Time `json:"last_heartbeat,omitempty"`
+	// LastSeen holds the value of the "last_seen" field.
+	LastSeen time.Time `json:"last_seen,omitempty"`
+	// Misses holds the value of the "misses" field.
+	Misses int `json:"misses,omitempty"`
 	// CPUFree holds the value of the "cpu_free" field.
 	CPUFree float64 `json:"cpu_free,omitempty"`
 	// Status holds the value of the "status" field.
@@ -79,9 +81,11 @@ func (*Host) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case host.FieldCPUFree:
 			values[i] = new(sql.NullFloat64)
+		case host.FieldMisses:
+			values[i] = new(sql.NullInt64)
 		case host.FieldHostID, host.FieldRuntime, host.FieldStatus, host.FieldHostname, host.FieldIPAddress, host.FieldEdgeURL:
 			values[i] = new(sql.NullString)
-		case host.FieldLastHeartbeat, host.FieldCreatedAt, host.FieldUpdatedAt:
+		case host.FieldLastSeen, host.FieldCreatedAt, host.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case host.FieldID, host.FieldSiteID:
 			values[i] = new(uuid.UUID)
@@ -124,11 +128,17 @@ func (_m *Host) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Runtime = value.String
 			}
-		case host.FieldLastHeartbeat:
+		case host.FieldLastSeen:
 			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field last_heartbeat", values[i])
+				return fmt.Errorf("unexpected type %T for field last_seen", values[i])
 			} else if value.Valid {
-				_m.LastHeartbeat = value.Time
+				_m.LastSeen = value.Time
+			}
+		case host.FieldMisses:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field misses", values[i])
+			} else if value.Valid {
+				_m.Misses = int(value.Int64)
 			}
 		case host.FieldCPUFree:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
@@ -230,8 +240,11 @@ func (_m *Host) String() string {
 	builder.WriteString("runtime=")
 	builder.WriteString(_m.Runtime)
 	builder.WriteString(", ")
-	builder.WriteString("last_heartbeat=")
-	builder.WriteString(_m.LastHeartbeat.Format(time.ANSIC))
+	builder.WriteString("last_seen=")
+	builder.WriteString(_m.LastSeen.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("misses=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Misses))
 	builder.WriteString(", ")
 	builder.WriteString("cpu_free=")
 	builder.WriteString(fmt.Sprintf("%v", _m.CPUFree))

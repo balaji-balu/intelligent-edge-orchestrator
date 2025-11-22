@@ -67,6 +67,20 @@ func (_c *DeploymentStatusCreate) SetNillableErrorMessage(v *string) *Deployment
 	return _c
 }
 
+// SetHostID sets the "host_id" field.
+func (_c *DeploymentStatusCreate) SetHostID(v string) *DeploymentStatusCreate {
+	_c.mutation.SetHostID(v)
+	return _c
+}
+
+// SetNillableHostID sets the "host_id" field if the given value is not nil.
+func (_c *DeploymentStatusCreate) SetNillableHostID(v *string) *DeploymentStatusCreate {
+	if v != nil {
+		_c.SetHostID(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *DeploymentStatusCreate) SetCreatedAt(v time.Time) *DeploymentStatusCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -236,6 +250,10 @@ func (_c *DeploymentStatusCreate) createSpec() (*DeploymentStatus, *sqlgraph.Cre
 		_spec.SetField(deploymentstatus.FieldErrorMessage, field.TypeString, value)
 		_node.ErrorMessage = value
 	}
+	if value, ok := _c.mutation.HostID(); ok {
+		_spec.SetField(deploymentstatus.FieldHostID, field.TypeString, value)
+		_node.HostID = value
+	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(deploymentstatus.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
@@ -357,6 +375,24 @@ func (u *DeploymentStatusUpsert) UpdateErrorMessage() *DeploymentStatusUpsert {
 // ClearErrorMessage clears the value of the "error_message" field.
 func (u *DeploymentStatusUpsert) ClearErrorMessage() *DeploymentStatusUpsert {
 	u.SetNull(deploymentstatus.FieldErrorMessage)
+	return u
+}
+
+// SetHostID sets the "host_id" field.
+func (u *DeploymentStatusUpsert) SetHostID(v string) *DeploymentStatusUpsert {
+	u.Set(deploymentstatus.FieldHostID, v)
+	return u
+}
+
+// UpdateHostID sets the "host_id" field to the value that was provided on create.
+func (u *DeploymentStatusUpsert) UpdateHostID() *DeploymentStatusUpsert {
+	u.SetExcluded(deploymentstatus.FieldHostID)
+	return u
+}
+
+// ClearHostID clears the value of the "host_id" field.
+func (u *DeploymentStatusUpsert) ClearHostID() *DeploymentStatusUpsert {
+	u.SetNull(deploymentstatus.FieldHostID)
 	return u
 }
 
@@ -485,6 +521,27 @@ func (u *DeploymentStatusUpsertOne) UpdateErrorMessage() *DeploymentStatusUpsert
 func (u *DeploymentStatusUpsertOne) ClearErrorMessage() *DeploymentStatusUpsertOne {
 	return u.Update(func(s *DeploymentStatusUpsert) {
 		s.ClearErrorMessage()
+	})
+}
+
+// SetHostID sets the "host_id" field.
+func (u *DeploymentStatusUpsertOne) SetHostID(v string) *DeploymentStatusUpsertOne {
+	return u.Update(func(s *DeploymentStatusUpsert) {
+		s.SetHostID(v)
+	})
+}
+
+// UpdateHostID sets the "host_id" field to the value that was provided on create.
+func (u *DeploymentStatusUpsertOne) UpdateHostID() *DeploymentStatusUpsertOne {
+	return u.Update(func(s *DeploymentStatusUpsert) {
+		s.UpdateHostID()
+	})
+}
+
+// ClearHostID clears the value of the "host_id" field.
+func (u *DeploymentStatusUpsertOne) ClearHostID() *DeploymentStatusUpsertOne {
+	return u.Update(func(s *DeploymentStatusUpsert) {
+		s.ClearHostID()
 	})
 }
 
@@ -784,6 +841,27 @@ func (u *DeploymentStatusUpsertBulk) UpdateErrorMessage() *DeploymentStatusUpser
 func (u *DeploymentStatusUpsertBulk) ClearErrorMessage() *DeploymentStatusUpsertBulk {
 	return u.Update(func(s *DeploymentStatusUpsert) {
 		s.ClearErrorMessage()
+	})
+}
+
+// SetHostID sets the "host_id" field.
+func (u *DeploymentStatusUpsertBulk) SetHostID(v string) *DeploymentStatusUpsertBulk {
+	return u.Update(func(s *DeploymentStatusUpsert) {
+		s.SetHostID(v)
+	})
+}
+
+// UpdateHostID sets the "host_id" field to the value that was provided on create.
+func (u *DeploymentStatusUpsertBulk) UpdateHostID() *DeploymentStatusUpsertBulk {
+	return u.Update(func(s *DeploymentStatusUpsert) {
+		s.UpdateHostID()
+	})
+}
+
+// ClearHostID clears the value of the "host_id" field.
+func (u *DeploymentStatusUpsertBulk) ClearHostID() *DeploymentStatusUpsertBulk {
+	return u.Update(func(s *DeploymentStatusUpsert) {
+		s.ClearHostID()
 	})
 }
 

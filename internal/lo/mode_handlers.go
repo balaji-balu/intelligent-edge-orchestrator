@@ -1,4 +1,4 @@
-package orchestrator
+package lo
 
 import (
 	"context"
@@ -10,11 +10,14 @@ import (
 	. "github.com/balaji-balu/margo-hello-world/internal/config"
 	"github.com/balaji-balu/margo-hello-world/internal/gitobserver"
 	"github.com/balaji-balu/margo-hello-world/internal/natsbroker"
-	"github.com/balaji-balu/margo-hello-world/internal/watcher"
+	"github.com/balaji-balu/margo-hello-world/internal/lo/watcher"
+	"github.com/balaji-balu/margo-hello-world/internal/lo/logger"
+	//"github.com/balaji-balu/margo-hello-world/internal/lo/nwadapt"
+	//"github.com/balaji-balu/margo-hello-world/internal/lo"
 )
 
 // Handles PushPreferred mode
-func (lo *LocalOrchestrator) StartPushMode(ctx context.Context, cfg LoConfig) error {
+func (l *LocalOrchestrator) StartPushMode(ctx context.Context, cfg LoConfig) error {
 	log.Println("🚀 Starting Push Mode (NATS subscribe to desiredstate.changed)")
 	log.Println("cfg.NATS.URL", cfg.NatsUrl)
 	//log.Println("cfg.Server.Site", cfgSite)
@@ -26,10 +29,10 @@ func (lo *LocalOrchestrator) StartPushMode(ctx context.Context, cfg LoConfig) er
 
 	// Subscribe to global topic
 	err = b.Subscribe("git.desiredstate.changed", func(ev gitobserver.GitEvent) {
-		lo.logger.Info("Received push event", zap.Any("event", ev))
+		logger.Info("Received push event", zap.Any("event", ev))
 
 		if ev.Site != cfg.Site && ev.Site != "*" {
-			lo.logger.Error("Site mismatch",
+			logger.Error("Site mismatch",
 				zap.String("expected", cfg.Site),
 				zap.String("received", ev.Site))
 			return
@@ -42,10 +45,10 @@ func (lo *LocalOrchestrator) StartPushMode(ctx context.Context, cfg LoConfig) er
 		log.Println("✅ FSM event triggered")
 		// ✅ Queue FSM event safely
 		//go lo.TriggerEvent("git_update_received")
-		go lo.FSM.Event(ctx, "git_update_received", nil)
+		//TBD: go l.FSM.Event(ctx, "git_update_received", nil)
 	})
 	if err != nil {
-		lo.logger.Error("Failed to subscribe to NATS", zap.Error(err))
+		logger.Error("Failed to subscribe to NATS", zap.Error(err))
 		return err
 	}
 
@@ -57,13 +60,14 @@ func (lo *LocalOrchestrator) StartPushMode(ctx context.Context, cfg LoConfig) er
 }
 
 func (l *LocalOrchestrator) StartPullMode(ctx context.Context, cfg LoConfig) {
-	l.logger.Info("📡 Starting Pull Mode (periodic git sync)")
+	logger.Info("📡 Starting Pull Mode (periodic git sync)")
 
 	w := watcher.NewWatcher(l.Mgr, cfg.Repo, cfg.Site, 3*time.Second)
 	//w.OnChange = lo.onDeployments
 
 	//watcher := gitobserver.New(cfg.Repo, "main", 30*time.Second)
 	w.OnChange = func(commit string, deployments []watcher.DeploymentChange) {
+		log.Println("w.OnChange: Data received...", deployments)
 		payload := GitPolledPayload{
 			Commit:      commit,
 			Deployments: deployments,
@@ -73,17 +77,17 @@ func (l *LocalOrchestrator) StartPullMode(ctx context.Context, cfg LoConfig) {
 
 	go func() {
 		if err := w.Start(); err != nil {
-			l.logger.Error("Watcher error", zap.Error(err))
+			logger.Error("Watcher error", zap.Error(err))
 		}
 	}()
 
 	<-ctx.Done()
-	l.logger.Info("🛑 Stopping Git watcher...")
+	logger.Info("🛑 Stopping Git watcher...")
 	w.Stop()
 }
 
-func (lo *LocalOrchestrator) StartOfflineMode(ctx context.Context, cfg LoConfig) error {
-	lo.logger.Info("📡 Starting offline Mode")
+func (l *LocalOrchestrator) StartOfflineMode(ctx context.Context, cfg LoConfig) error {
+	logger.Info("📡 Starting offline Mode")
 	return nil
 }
 
@@ -154,7 +158,7 @@ func (lo *LocalOrchestrator) StartPullMode(ctx context.Context, cfg LoConfig) er
 // Handles OfflineDeterministic mode
 func (lo *LocalOrchestrator) start_offline_mode(ctx context.Context, cfg *Config) error {
 	log.Println("📴 Starting Offline Mode (working from journal)")
-	lo.FSM.Event(ctx, "offline_mode_start")
+	//TBD: lo.FSM.Event(ctx, "offline_mode_start")
 	<-ctx.Done()
 	log.Println("🛑 Offline Mode stopped gracefully")
 	return nil

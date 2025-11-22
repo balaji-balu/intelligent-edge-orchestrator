@@ -323,14 +323,24 @@ func CreateDeployment(c *gin.Context,co *co.CO,  client *ent.Client, cfg *config
 			//Kind:         "DeploymentStatus",
 			DeploymentID: deploymentID,
 			Status: model.DeploymentState{
-				State: string(model.StateInstalling),
+				State: string(model.StatePending),
 				Error: model.StatusError{},
 			},
-			Components: []model.DeploymentComponent{
-				{Name: "digitron-orchestrator", State: string(model.StateInstalling)},
-				{Name: "database-services", State: string(model.StatePending)},
-			},
+			// Components: []model.DeploymentComponent{
+			// 	{Name: "digitron-orchestrator", State: string(model.StatePending)},
+			// 	{Name: "database-services", State: string(model.StatePending)},
+			// },
 		}
+		var cs []model.DeploymentComponent
+		for _, c := range components {
+			cs = append(cs, model.DeploymentComponent{	
+				Name: c.Name, 
+				State: string(model.StatePending),
+			})
+		}
+		status.Components = cs
+		
+
 		SaveDeploymentStatus(ctx, client, status)
 
 		deployments = append(deployments, deploymentID)

@@ -19,8 +19,10 @@ const (
 	FieldSiteID = "site_id"
 	// FieldRuntime holds the string denoting the runtime field in the database.
 	FieldRuntime = "runtime"
-	// FieldLastHeartbeat holds the string denoting the last_heartbeat field in the database.
-	FieldLastHeartbeat = "last_heartbeat"
+	// FieldLastSeen holds the string denoting the last_seen field in the database.
+	FieldLastSeen = "last_seen"
+	// FieldMisses holds the string denoting the misses field in the database.
+	FieldMisses = "misses"
 	// FieldCPUFree holds the string denoting the cpu_free field in the database.
 	FieldCPUFree = "cpu_free"
 	// FieldStatus holds the string denoting the status field in the database.
@@ -56,7 +58,8 @@ var Columns = []string{
 	FieldHostID,
 	FieldSiteID,
 	FieldRuntime,
-	FieldLastHeartbeat,
+	FieldLastSeen,
+	FieldMisses,
 	FieldCPUFree,
 	FieldStatus,
 	FieldHostname,
@@ -105,9 +108,14 @@ func ByRuntime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRuntime, opts...).ToFunc()
 }
 
-// ByLastHeartbeat orders the results by the last_heartbeat field.
-func ByLastHeartbeat(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldLastHeartbeat, opts...).ToFunc()
+// ByLastSeen orders the results by the last_seen field.
+func ByLastSeen(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastSeen, opts...).ToFunc()
+}
+
+// ByMisses orders the results by the misses field.
+func ByMisses(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMisses, opts...).ToFunc()
 }
 
 // ByCPUFree orders the results by the cpu_free field.

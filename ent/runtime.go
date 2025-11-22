@@ -48,11 +48,11 @@ func init() {
 	// deploymentstatus.DefaultState holds the default value on creation for the state field.
 	deploymentstatus.DefaultState = deploymentstatusDescState.Default.(string)
 	// deploymentstatusDescCreatedAt is the schema descriptor for created_at field.
-	deploymentstatusDescCreatedAt := deploymentstatusFields[4].Descriptor()
+	deploymentstatusDescCreatedAt := deploymentstatusFields[5].Descriptor()
 	// deploymentstatus.DefaultCreatedAt holds the default value on creation for the created_at field.
 	deploymentstatus.DefaultCreatedAt = deploymentstatusDescCreatedAt.Default.(func() time.Time)
 	// deploymentstatusDescUpdatedAt is the schema descriptor for updated_at field.
-	deploymentstatusDescUpdatedAt := deploymentstatusFields[5].Descriptor()
+	deploymentstatusDescUpdatedAt := deploymentstatusFields[6].Descriptor()
 	// deploymentstatus.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	deploymentstatus.DefaultUpdatedAt = deploymentstatusDescUpdatedAt.Default.(func() time.Time)
 	// deploymentstatus.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

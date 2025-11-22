@@ -70,6 +70,9 @@ Listing apps ...
 ✅ Available applications:
  1. Digitron orchestrator 1.2.1      http://www.northstar-ida.com com-northstartida-digitron-orchestrator
 ```
+
+
+
 5. deploy sample app
 ```
 go run main.go co deploy --app "Digitron orchestrator" --site 3e5c21bc-2fef-4fd7-a2d0-60fc6b3260ad --deploytype compose 

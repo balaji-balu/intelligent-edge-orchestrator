@@ -28,3 +28,11 @@ INSERT INTO site (
     NOW(),
     NOW()
 );
+
+-- insert after site. 
+--   ensure that site id matches with existing site id
+INSERT INTO host (id, host_id, site_id, hostname, ip_address, edge_url, status, last_seen, metadata, created_at, updated_at)
+VALUES
+  (gen_random_uuid(),'host-edge-001', '321459e0-fdaf-47b1-85c2-5df0af395177', 'edge1', 'localhost', 'http://localhost:9105', 'inactive', NOW(), '{"role": "edge-node"}', NOW(), NOW()),
+  (gen_random_uuid(),'host-edge-002', '321459e0-fdaf-47b1-85c2-5df0af395177', 'edge2', 'localhost', 'http://localhost:910681', 'inactive', NOW(), '{"role": "edge-node"}', NOW(), NOW())
+ON CONFLICT (host_id) DO NOTHING;

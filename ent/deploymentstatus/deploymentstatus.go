@@ -21,6 +21,8 @@ const (
 	FieldErrorCode = "error_code"
 	// FieldErrorMessage holds the string denoting the error_message field in the database.
 	FieldErrorMessage = "error_message"
+	// FieldHostID holds the string denoting the host_id field in the database.
+	FieldHostID = "host_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -44,6 +46,7 @@ var Columns = []string{
 	FieldState,
 	FieldErrorCode,
 	FieldErrorMessage,
+	FieldHostID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -92,6 +95,11 @@ func ByErrorCode(opts ...sql.OrderTermOption) OrderOption {
 // ByErrorMessage orders the results by the error_message field.
 func ByErrorMessage(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldErrorMessage, opts...).ToFunc()
+}
+
+// ByHostID orders the results by the host_id field.
+func ByHostID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldHostID, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

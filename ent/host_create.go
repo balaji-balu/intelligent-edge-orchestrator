@@ -59,16 +59,30 @@ func (_c *HostCreate) SetNillableRuntime(v *string) *HostCreate {
 	return _c
 }
 
-// SetLastHeartbeat sets the "last_heartbeat" field.
-func (_c *HostCreate) SetLastHeartbeat(v time.Time) *HostCreate {
-	_c.mutation.SetLastHeartbeat(v)
+// SetLastSeen sets the "last_seen" field.
+func (_c *HostCreate) SetLastSeen(v time.Time) *HostCreate {
+	_c.mutation.SetLastSeen(v)
 	return _c
 }
 
-// SetNillableLastHeartbeat sets the "last_heartbeat" field if the given value is not nil.
-func (_c *HostCreate) SetNillableLastHeartbeat(v *time.Time) *HostCreate {
+// SetNillableLastSeen sets the "last_seen" field if the given value is not nil.
+func (_c *HostCreate) SetNillableLastSeen(v *time.Time) *HostCreate {
 	if v != nil {
-		_c.SetLastHeartbeat(*v)
+		_c.SetLastSeen(*v)
+	}
+	return _c
+}
+
+// SetMisses sets the "misses" field.
+func (_c *HostCreate) SetMisses(v int) *HostCreate {
+	_c.mutation.SetMisses(v)
+	return _c
+}
+
+// SetNillableMisses sets the "misses" field if the given value is not nil.
+func (_c *HostCreate) SetNillableMisses(v *int) *HostCreate {
+	if v != nil {
+		_c.SetMisses(*v)
 	}
 	return _c
 }
@@ -294,9 +308,13 @@ func (_c *HostCreate) createSpec() (*Host, *sqlgraph.CreateSpec) {
 		_spec.SetField(host.FieldRuntime, field.TypeString, value)
 		_node.Runtime = value
 	}
-	if value, ok := _c.mutation.LastHeartbeat(); ok {
-		_spec.SetField(host.FieldLastHeartbeat, field.TypeTime, value)
-		_node.LastHeartbeat = value
+	if value, ok := _c.mutation.LastSeen(); ok {
+		_spec.SetField(host.FieldLastSeen, field.TypeTime, value)
+		_node.LastSeen = value
+	}
+	if value, ok := _c.mutation.Misses(); ok {
+		_spec.SetField(host.FieldMisses, field.TypeInt, value)
+		_node.Misses = value
 	}
 	if value, ok := _c.mutation.CPUFree(); ok {
 		_spec.SetField(host.FieldCPUFree, field.TypeFloat64, value)
@@ -447,21 +465,45 @@ func (u *HostUpsert) ClearRuntime() *HostUpsert {
 	return u
 }
 
-// SetLastHeartbeat sets the "last_heartbeat" field.
-func (u *HostUpsert) SetLastHeartbeat(v time.Time) *HostUpsert {
-	u.Set(host.FieldLastHeartbeat, v)
+// SetLastSeen sets the "last_seen" field.
+func (u *HostUpsert) SetLastSeen(v time.Time) *HostUpsert {
+	u.Set(host.FieldLastSeen, v)
 	return u
 }
 
-// UpdateLastHeartbeat sets the "last_heartbeat" field to the value that was provided on create.
-func (u *HostUpsert) UpdateLastHeartbeat() *HostUpsert {
-	u.SetExcluded(host.FieldLastHeartbeat)
+// UpdateLastSeen sets the "last_seen" field to the value that was provided on create.
+func (u *HostUpsert) UpdateLastSeen() *HostUpsert {
+	u.SetExcluded(host.FieldLastSeen)
 	return u
 }
 
-// ClearLastHeartbeat clears the value of the "last_heartbeat" field.
-func (u *HostUpsert) ClearLastHeartbeat() *HostUpsert {
-	u.SetNull(host.FieldLastHeartbeat)
+// ClearLastSeen clears the value of the "last_seen" field.
+func (u *HostUpsert) ClearLastSeen() *HostUpsert {
+	u.SetNull(host.FieldLastSeen)
+	return u
+}
+
+// SetMisses sets the "misses" field.
+func (u *HostUpsert) SetMisses(v int) *HostUpsert {
+	u.Set(host.FieldMisses, v)
+	return u
+}
+
+// UpdateMisses sets the "misses" field to the value that was provided on create.
+func (u *HostUpsert) UpdateMisses() *HostUpsert {
+	u.SetExcluded(host.FieldMisses)
+	return u
+}
+
+// AddMisses adds v to the "misses" field.
+func (u *HostUpsert) AddMisses(v int) *HostUpsert {
+	u.Add(host.FieldMisses, v)
+	return u
+}
+
+// ClearMisses clears the value of the "misses" field.
+func (u *HostUpsert) ClearMisses() *HostUpsert {
+	u.SetNull(host.FieldMisses)
 	return u
 }
 
@@ -719,24 +761,52 @@ func (u *HostUpsertOne) ClearRuntime() *HostUpsertOne {
 	})
 }
 
-// SetLastHeartbeat sets the "last_heartbeat" field.
-func (u *HostUpsertOne) SetLastHeartbeat(v time.Time) *HostUpsertOne {
+// SetLastSeen sets the "last_seen" field.
+func (u *HostUpsertOne) SetLastSeen(v time.Time) *HostUpsertOne {
 	return u.Update(func(s *HostUpsert) {
-		s.SetLastHeartbeat(v)
+		s.SetLastSeen(v)
 	})
 }
 
-// UpdateLastHeartbeat sets the "last_heartbeat" field to the value that was provided on create.
-func (u *HostUpsertOne) UpdateLastHeartbeat() *HostUpsertOne {
+// UpdateLastSeen sets the "last_seen" field to the value that was provided on create.
+func (u *HostUpsertOne) UpdateLastSeen() *HostUpsertOne {
 	return u.Update(func(s *HostUpsert) {
-		s.UpdateLastHeartbeat()
+		s.UpdateLastSeen()
 	})
 }
 
-// ClearLastHeartbeat clears the value of the "last_heartbeat" field.
-func (u *HostUpsertOne) ClearLastHeartbeat() *HostUpsertOne {
+// ClearLastSeen clears the value of the "last_seen" field.
+func (u *HostUpsertOne) ClearLastSeen() *HostUpsertOne {
 	return u.Update(func(s *HostUpsert) {
-		s.ClearLastHeartbeat()
+		s.ClearLastSeen()
+	})
+}
+
+// SetMisses sets the "misses" field.
+func (u *HostUpsertOne) SetMisses(v int) *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.SetMisses(v)
+	})
+}
+
+// AddMisses adds v to the "misses" field.
+func (u *HostUpsertOne) AddMisses(v int) *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.AddMisses(v)
+	})
+}
+
+// UpdateMisses sets the "misses" field to the value that was provided on create.
+func (u *HostUpsertOne) UpdateMisses() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateMisses()
+	})
+}
+
+// ClearMisses clears the value of the "misses" field.
+func (u *HostUpsertOne) ClearMisses() *HostUpsertOne {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearMisses()
 	})
 }
 
@@ -1186,24 +1256,52 @@ func (u *HostUpsertBulk) ClearRuntime() *HostUpsertBulk {
 	})
 }
 
-// SetLastHeartbeat sets the "last_heartbeat" field.
-func (u *HostUpsertBulk) SetLastHeartbeat(v time.Time) *HostUpsertBulk {
+// SetLastSeen sets the "last_seen" field.
+func (u *HostUpsertBulk) SetLastSeen(v time.Time) *HostUpsertBulk {
 	return u.Update(func(s *HostUpsert) {
-		s.SetLastHeartbeat(v)
+		s.SetLastSeen(v)
 	})
 }
 
-// UpdateLastHeartbeat sets the "last_heartbeat" field to the value that was provided on create.
-func (u *HostUpsertBulk) UpdateLastHeartbeat() *HostUpsertBulk {
+// UpdateLastSeen sets the "last_seen" field to the value that was provided on create.
+func (u *HostUpsertBulk) UpdateLastSeen() *HostUpsertBulk {
 	return u.Update(func(s *HostUpsert) {
-		s.UpdateLastHeartbeat()
+		s.UpdateLastSeen()
 	})
 }
 
-// ClearLastHeartbeat clears the value of the "last_heartbeat" field.
-func (u *HostUpsertBulk) ClearLastHeartbeat() *HostUpsertBulk {
+// ClearLastSeen clears the value of the "last_seen" field.
+func (u *HostUpsertBulk) ClearLastSeen() *HostUpsertBulk {
 	return u.Update(func(s *HostUpsert) {
-		s.ClearLastHeartbeat()
+		s.ClearLastSeen()
+	})
+}
+
+// SetMisses sets the "misses" field.
+func (u *HostUpsertBulk) SetMisses(v int) *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.SetMisses(v)
+	})
+}
+
+// AddMisses adds v to the "misses" field.
+func (u *HostUpsertBulk) AddMisses(v int) *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.AddMisses(v)
+	})
+}
+
+// UpdateMisses sets the "misses" field to the value that was provided on create.
+func (u *HostUpsertBulk) UpdateMisses() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.UpdateMisses()
+	})
+}
+
+// ClearMisses clears the value of the "misses" field.
+func (u *HostUpsertBulk) ClearMisses() *HostUpsertBulk {
+	return u.Update(func(s *HostUpsert) {
+		s.ClearMisses()
 	})
 }
 

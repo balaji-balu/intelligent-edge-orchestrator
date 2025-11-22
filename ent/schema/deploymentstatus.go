@@ -21,6 +21,7 @@ func (DeploymentStatus) Fields() []ent.Field {
 		field.String("state").Default("pending"),
 		field.String("error_code").Optional(),
 		field.String("error_message").Optional(),
+		field.String("host_id").Optional(),
 		field.Time("created_at").Default(time.Now),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}

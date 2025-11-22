@@ -1,0 +1,13 @@
+package reconciler
+
+import (
+	"encoding/json"
+)
+
+func encode(v interface{}) ([]byte, error) {
+	return json.Marshal(v)
+}
+
+func decode(data []byte, v interface{}) error {
+	return json.Unmarshal(data, v)
+}

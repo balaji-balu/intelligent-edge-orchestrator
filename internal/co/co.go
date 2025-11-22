@@ -23,6 +23,7 @@ func NewCO(m *gitmanager.Manager, appRepo, depRepo string) *CO {
 
 // CreateDeployment writes a desiredstate.yaml under deployments/<site>/<deploymentID>/desiredstate.yaml
 func (c *CO) CreateDeployment(siteID, deploymentID string, yaml []byte) error {
+	fmt.Println("CreateDeployment: enter")
 	rel := filepath.Join(siteID, deploymentID, "desiredstate.yaml")
 	// write file into working path
 	cfg, _ := c.Mgr.GetConfig(c.DepRepo)
@@ -35,6 +36,7 @@ func (c *CO) CreateDeployment(siteID, deploymentID string, yaml []byte) error {
 	}
 	// commit and push
 	msg := fmt.Sprintf("CO: create deployment %s for site %s", deploymentID, siteID)
+	fmt.Println("CreateDeployment: exit", msg)
 	return c.Mgr.CommitAndPush(c.DepRepo, rel, msg)
 }
 

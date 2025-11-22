@@ -71,6 +71,11 @@ func ErrorMessage(v string) predicate.DeploymentStatus {
 	return predicate.DeploymentStatus(sql.FieldEQ(FieldErrorMessage, v))
 }
 
+// HostID applies equality check predicate on the "host_id" field. It's identical to HostIDEQ.
+func HostID(v string) predicate.DeploymentStatus {
+	return predicate.DeploymentStatus(sql.FieldEQ(FieldHostID, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.DeploymentStatus {
 	return predicate.DeploymentStatus(sql.FieldEQ(FieldCreatedAt, v))
@@ -294,6 +299,81 @@ func ErrorMessageEqualFold(v string) predicate.DeploymentStatus {
 // ErrorMessageContainsFold applies the ContainsFold predicate on the "error_message" field.
 func ErrorMessageContainsFold(v string) predicate.DeploymentStatus {
 	return predicate.DeploymentStatus(sql.FieldContainsFold(FieldErrorMessage, v))
+}
+
+// HostIDEQ applies the EQ predicate on the "host_id" field.
+func HostIDEQ(v string) predicate.DeploymentStatus {
+	return predicate.DeploymentStatus(sql.FieldEQ(FieldHostID, v))
+}
+
+// HostIDNEQ applies the NEQ predicate on the "host_id" field.
+func HostIDNEQ(v string) predicate.DeploymentStatus {
+	return predicate.DeploymentStatus(sql.FieldNEQ(FieldHostID, v))
+}
+
+// HostIDIn applies the In predicate on the "host_id" field.
+func HostIDIn(vs ...string) predicate.DeploymentStatus {
+	return predicate.DeploymentStatus(sql.FieldIn(FieldHostID, vs...))
+}
+
+// HostIDNotIn applies the NotIn predicate on the "host_id" field.
+func HostIDNotIn(vs ...string) predicate.DeploymentStatus {
+	return predicate.DeploymentStatus(sql.FieldNotIn(FieldHostID, vs...))
+}
+
+// HostIDGT applies the GT predicate on the "host_id" field.
+func HostIDGT(v string) predicate.DeploymentStatus {
+	return predicate.DeploymentStatus(sql.FieldGT(FieldHostID, v))
+}
+
+// HostIDGTE applies the GTE predicate on the "host_id" field.
+func HostIDGTE(v string) predicate.DeploymentStatus {
+	return predicate.DeploymentStatus(sql.FieldGTE(FieldHostID, v))
+}
+
+// HostIDLT applies the LT predicate on the "host_id" field.
+func HostIDLT(v string) predicate.DeploymentStatus {
+	return predicate.DeploymentStatus(sql.FieldLT(FieldHostID, v))
+}
+
+// HostIDLTE applies the LTE predicate on the "host_id" field.
+func HostIDLTE(v string) predicate.DeploymentStatus {
+	return predicate.DeploymentStatus(sql.FieldLTE(FieldHostID, v))
+}
+
+// HostIDContains applies the Contains predicate on the "host_id" field.
+func HostIDContains(v string) predicate.DeploymentStatus {
+	return predicate.DeploymentStatus(sql.FieldContains(FieldHostID, v))
+}
+
+// HostIDHasPrefix applies the HasPrefix predicate on the "host_id" field.
+func HostIDHasPrefix(v string) predicate.DeploymentStatus {
+	return predicate.DeploymentStatus(sql.FieldHasPrefix(FieldHostID, v))
+}
+
+// HostIDHasSuffix applies the HasSuffix predicate on the "host_id" field.
+func HostIDHasSuffix(v string) predicate.DeploymentStatus {
+	return predicate.DeploymentStatus(sql.FieldHasSuffix(FieldHostID, v))
+}
+
+// HostIDIsNil applies the IsNil predicate on the "host_id" field.
+func HostIDIsNil() predicate.DeploymentStatus {
+	return predicate.DeploymentStatus(sql.FieldIsNull(FieldHostID))
+}
+
+// HostIDNotNil applies the NotNil predicate on the "host_id" field.
+func HostIDNotNil() predicate.DeploymentStatus {
+	return predicate.DeploymentStatus(sql.FieldNotNull(FieldHostID))
+}
+
+// HostIDEqualFold applies the EqualFold predicate on the "host_id" field.
+func HostIDEqualFold(v string) predicate.DeploymentStatus {
+	return predicate.DeploymentStatus(sql.FieldEqualFold(FieldHostID, v))
+}
+
+// HostIDContainsFold applies the ContainsFold predicate on the "host_id" field.
+func HostIDContainsFold(v string) predicate.DeploymentStatus {
+	return predicate.DeploymentStatus(sql.FieldContainsFold(FieldHostID, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

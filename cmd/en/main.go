@@ -50,9 +50,9 @@ func main() {
 	if siteID == "" {
 		siteID = "f95d34b2-8019-4590-a3ff-ff1e15ecc5d5"
 	}
-    nodeID := os.Getenv("NODE_ID")
-	if nodeID == "" {
-		nodeID = "edge1-containerd"
+    hostID := os.Getenv("HOST_ID")
+	if hostID == "" {
+		hostID = "edge1-containerd"
 	}
 	runtime := os.Getenv("RUNTIME")
 	if runtime == "" {
@@ -63,8 +63,8 @@ func main() {
 		natsURL = "nats://localhost:4222"
 	}
 
-	log.Printf("siteid:%s nodeid:%s port:%s nats url:%s runtime:%s", 
-		siteID, nodeID, port, natsURL, runtime)
+	log.Printf("siteid:%s hostid:%s port:%s nats url:%s runtime:%s", 
+		siteID, hostID, port, natsURL, runtime)
 
 	// Initialize NATS
 	log.Printf("📡 Connecting to NATS at %s", natsURL)
@@ -84,11 +84,11 @@ func main() {
 	ctx := context.Background()
 
 	// Initialize Edge Node + FSM
-	en := edgenode.NewEdgeNode(ctx, siteID, nodeID, runtime, nc, logger)
+	en := edgenode.NewEdgeNode(ctx, siteID, hostID, runtime, nc, logger)
 	//nodeFSM := fsmloader.NewEdgeNodeFSM(ctx, "edge-node-1", en, logger)
 
-metrics.Init("en")
-metrics.StartServer(metrics_port)	
+	metrics.Init("en")
+	metrics.StartServer(metrics_port)	
 
 	// Start background tasks
 	en.Start()
@@ -100,7 +100,7 @@ metrics.StartServer(metrics_port)
 	router.GET("/healthz", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "ok",
-			"node":    nodeID,
+			"node":    hostID,
 			"runtime": runtime,
 			//"region":  cfg.Server.Region,
 		})

@@ -13,8 +13,10 @@ type DeploymentStatus struct {
     APIVersion   string                 `json:"apiVersion"`
     Kind         string                 `json:"kind"`
     DeploymentID string                 `json:"deploymentId"`
-    Status       DeploymentState        `json:"status"`
+    Status       DeploymentState        `json:"status"`  
     Components   []DeploymentComponent  `json:"components"`
+    SiteID       string                 `json:"site_id"`
+    
 }
 
 type DeploymentState struct {
@@ -23,9 +25,12 @@ type DeploymentState struct {
 }
 
 type DeploymentComponent struct {
-    Name  string      `json:"name"`
-    State string      `json:"state"`
-    Error StatusError `json:"error"`
+    Name        string        `json:"name"`
+    State       string        `json:"state"`
+    Error       StatusError   `json:"error"`
+    SpecHash    string        `json:"spec_hash"`
+    HostID      string        `json:"host_id"`
+    DeploymentID string       `json:"deployment_id"`
 }
 
 type StatusError struct {

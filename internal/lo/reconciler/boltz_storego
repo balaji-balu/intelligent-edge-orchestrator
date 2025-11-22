@@ -1,0 +1,278 @@
+package reconciler
+
+import (
+	"context"
+	"errors"
+	"time"
+
+	bolt "go.etcd.io/bbolt"
+	"github.com/google/uuid"
+)
+
+// ---------------------------
+// BUCKET NAMES
+// ---------------------------
+const (
+	bucketDesired    = "desired"
+	bucketActual     = "actual"
+	bucketNodes      = "nodes"
+	bucketHostState  = "host_state"
+)
+
+type HostState struct {
+	LastSeen int64  `json:"last_seen"`
+	Misses   int    `json:"misses"`
+	Status   string `json:"status"`
+}
+
+// ---------------------------
+// BoltStore
+// ---------------------------
+type BoltStore struct {
+	db    *bolt.DB
+	cache *InMemoryStore // Your in-memory cache interface
+}
+
+func NewBoltStore(db *bolt.DB, cache *InMemoryStore) *BoltStore {
+	return &BoltStore{db: db, cache: cache}
+}
+
+//
+// ============================================================
+// DESIRED HASHES
+// ============================================================
+//
+
+// SetDesired stores: desired/depID/component = hash
+func (b *BoltStore) SetDesired(ctx context.Context, depID string, comp ComponentSpec, specHash string) error {
+	return b.db.Update(func(tx *bolt.Tx) error {
+		bd, err := tx.CreateBucketIfNotExists([]byte(bucketDesired))
+		if err != nil { return err }
+
+		depB, err := bd.CreateBucketIfNotExists([]byte(depID))
+		if err != nil { return err }
+
+		return depB.Put([]byte(comp.Name), []byte(specHash))
+	})
+}
+
+// GetDesiredHashes returns {component -> hash}
+func (b *BoltStore) GetDesiredHashes(ctx context.Context, depID string) (map[string]string, error) {
+	out := map[string]string{}
+
+	err := b.db.View(func(tx *bolt.Tx) error {
+		bd := tx.Bucket([]byte(bucketDesired))
+		if bd == nil { return nil }
+
+		depB := bd.Bucket([]byte(depID))
+		if depB == nil { return nil }
+
+		return depB.ForEach(func(k, v []byte) error {
+			out[string(k)] = string(v)
+			return nil
+		})
+	})
+
+	return out, err
+}
+
+//
+// ============================================================
+// ACTUAL HASHES (per host)
+// ============================================================
+//
+
+// SetActualHash stores: actual/depID/hostID/component = hash
+func (b *BoltStore) SetActualHash(ctx context.Context, depID, hostID, compName, hash string) error {
+	return b.db.Update(func(tx *bolt.Tx) error {
+		ba, err := tx.CreateBucketIfNotExists([]byte(bucketActual))
+		if err != nil { return err }
+
+		depB, err := ba.CreateBucketIfNotExists([]byte(depID))
+		if err != nil { return err }
+
+		hostB, err := depB.CreateBucketIfNotExists([]byte(hostID))
+		if err != nil { return err }
+
+		return hostB.Put([]byte(compName), []byte(hash))
+	})
+}
+
+// GetActualHashes returns: map[hostID]map[component]hash
+func (b *BoltStore) GetActualHashes(ctx context.Context, depID string) (map[string]map[string]string, error) {
+	out := map[string]map[string]string{}
+
+	err := b.db.View(func(tx *bolt.Tx) error {
+		ba := tx.Bucket([]byte(bucketActual))
+		if ba == nil { return nil }
+
+		depB := ba.Bucket([]byte(depID))
+		if depB == nil { return nil }
+
+		return depB.ForEach(func(k, v []byte) error {
+			// k = hostID, v = nil (because nested bucket)
+			hostID := string(k)
+			hostB := depB.Bucket(k)
+			if hostB == nil { return nil }
+
+			m := map[string]string{}
+			hostB.ForEach(func(ck, cv []byte) error {
+				m[string(ck)] = string(cv)
+				return nil
+			})
+
+			out[hostID] = m
+			return nil
+		})
+	})
+
+	return out, err
+}
+
+// GetActual returns list of DeploymentComponentStatus rows
+func (b *BoltStore) GetActual(ctx context.Context, deploymentID string) ([]*DeploymentComponentStatus, error) {
+	rows := []*DeploymentComponentStatus{}
+
+	err := b.db.View(func(tx *bolt.Tx) error {
+		ba := tx.Bucket([]byte(bucketActual))
+		if ba == nil { return nil }
+
+		depB := ba.Bucket([]byte(deploymentID))
+		if depB == nil { return nil }
+
+		return depB.ForEach(func(hk, hv []byte) error {
+			hostB := depB.Bucket(hk)
+			if hostB == nil { return nil }
+
+			hostID := string(hk)
+
+			return hostB.ForEach(func(ck, cv []byte) error {
+				rows = append(rows, &DeploymentComponentStatus{
+					ID:            uuid.New(),
+					DeploymentID:  deploymentID,
+					HostID:        hostID,
+					ComponentName: string(ck),
+					ActualHash:    string(cv),
+					LastUpdate:    time.Now(),
+				})
+				return nil
+			})
+		})
+	})
+
+	return rows, err
+}
+
+//
+// ============================================================
+// HOST / NODE MANAGEMENT
+// ============================================================
+//
+
+func (s *BoltStore) GetNodes(ctx context.Context, siteID string) ([]*Host, error) {
+	// try cache
+	if cached, _ := s.cache.GetNodes(ctx, siteID); len(cached) > 0 {
+		return cached, nil
+	}
+
+	out := []*Host{}
+
+	err := s.db.View(func(tx *bolt.Tx) error {
+		nodesB := tx.Bucket([]byte(bucketNodes))
+		if nodesB == nil { return nil }
+
+		siteB := nodesB.Bucket([]byte(siteID))
+		if siteB == nil { return nil }
+
+		return siteB.ForEach(func(k, v []byte) error {
+			var h Host
+			if err := decode(v, &h); err != nil {
+				return err
+			}
+			out = append(out, &h)
+			return nil
+		})
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	s.cache.SetNodesForSite(siteID, out)
+	return out, nil
+}
+
+func (s *BoltStore) AddOrUpdateHost(ctx context.Context, siteID string, host *Host) error {
+	// write-through
+	s.cache.AddOrUpdateHost(siteID, host)
+
+	return s.db.Update(func(tx *bolt.Tx) error {
+		nodesB := tx.Bucket([]byte(bucketNodes))
+		siteB, err := nodesB.CreateBucketIfNotExists([]byte(siteID))
+		if err != nil {
+			return err
+		}
+		buf, err := encode(host)
+		if err != nil {
+			return err
+		}
+		return siteB.Put([]byte(host.ID), buf)
+	})
+}
+// ---------------------------
+// HostState Management
+// ---------------------------
+
+func (s *BoltStore) SetHostAlive(id string, t time.Time) error {
+	return s.db.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte(bucketHostState))
+		if err != nil { return err }
+
+		st := HostState{
+			LastSeen: t.Unix(),
+			Misses:   0,
+			Status:   "alive",
+		}
+
+		data, _ := encode(st)
+		return b.Put([]byte(id), data)
+	})
+}
+
+func (s *BoltStore) SetHostDead(id string, lastSeen time.Time) error {
+	return s.db.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte(bucketHostState))
+		if err != nil { return err }
+
+		st := HostState{
+			LastSeen: lastSeen.Unix(),
+			Misses:   0,
+			Status:   "dead",
+		}
+
+		data, _ := encode(st)
+		return b.Put([]byte(id), data)
+	})
+}
+
+func (s *BoltStore) IncrementMisses(id string, misses int) error {
+	return s.db.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte(bucketHostState))
+		if err != nil { return err }
+
+		raw := b.Get([]byte(id))
+		if raw == nil {
+			return errors.New("host not found")
+		}
+
+		var st HostState
+		if err := decode(raw, &st); err != nil {
+			return err
+		}
+
+		st.Misses = misses
+
+		data, _ := encode(st)
+		return b.Put([]byte(id), data)
+	})
+}

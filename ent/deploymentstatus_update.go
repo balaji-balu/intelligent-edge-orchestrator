@@ -84,6 +84,26 @@ func (_u *DeploymentStatusUpdate) ClearErrorMessage() *DeploymentStatusUpdate {
 	return _u
 }
 
+// SetHostID sets the "host_id" field.
+func (_u *DeploymentStatusUpdate) SetHostID(v string) *DeploymentStatusUpdate {
+	_u.mutation.SetHostID(v)
+	return _u
+}
+
+// SetNillableHostID sets the "host_id" field if the given value is not nil.
+func (_u *DeploymentStatusUpdate) SetNillableHostID(v *string) *DeploymentStatusUpdate {
+	if v != nil {
+		_u.SetHostID(*v)
+	}
+	return _u
+}
+
+// ClearHostID clears the value of the "host_id" field.
+func (_u *DeploymentStatusUpdate) ClearHostID() *DeploymentStatusUpdate {
+	_u.mutation.ClearHostID()
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *DeploymentStatusUpdate) SetCreatedAt(v time.Time) *DeploymentStatusUpdate {
 	_u.mutation.SetCreatedAt(v)
@@ -204,6 +224,12 @@ func (_u *DeploymentStatusUpdate) sqlSave(ctx context.Context) (_node int, err e
 	}
 	if _u.mutation.ErrorMessageCleared() {
 		_spec.ClearField(deploymentstatus.FieldErrorMessage, field.TypeString)
+	}
+	if value, ok := _u.mutation.HostID(); ok {
+		_spec.SetField(deploymentstatus.FieldHostID, field.TypeString, value)
+	}
+	if _u.mutation.HostIDCleared() {
+		_spec.ClearField(deploymentstatus.FieldHostID, field.TypeString)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(deploymentstatus.FieldCreatedAt, field.TypeTime, value)
@@ -327,6 +353,26 @@ func (_u *DeploymentStatusUpdateOne) SetNillableErrorMessage(v *string) *Deploym
 // ClearErrorMessage clears the value of the "error_message" field.
 func (_u *DeploymentStatusUpdateOne) ClearErrorMessage() *DeploymentStatusUpdateOne {
 	_u.mutation.ClearErrorMessage()
+	return _u
+}
+
+// SetHostID sets the "host_id" field.
+func (_u *DeploymentStatusUpdateOne) SetHostID(v string) *DeploymentStatusUpdateOne {
+	_u.mutation.SetHostID(v)
+	return _u
+}
+
+// SetNillableHostID sets the "host_id" field if the given value is not nil.
+func (_u *DeploymentStatusUpdateOne) SetNillableHostID(v *string) *DeploymentStatusUpdateOne {
+	if v != nil {
+		_u.SetHostID(*v)
+	}
+	return _u
+}
+
+// ClearHostID clears the value of the "host_id" field.
+func (_u *DeploymentStatusUpdateOne) ClearHostID() *DeploymentStatusUpdateOne {
+	_u.mutation.ClearHostID()
 	return _u
 }
 
@@ -480,6 +526,12 @@ func (_u *DeploymentStatusUpdateOne) sqlSave(ctx context.Context) (_node *Deploy
 	}
 	if _u.mutation.ErrorMessageCleared() {
 		_spec.ClearField(deploymentstatus.FieldErrorMessage, field.TypeString)
+	}
+	if value, ok := _u.mutation.HostID(); ok {
+		_spec.SetField(deploymentstatus.FieldHostID, field.TypeString, value)
+	}
+	if _u.mutation.HostIDCleared() {
+		_spec.ClearField(deploymentstatus.FieldHostID, field.TypeString)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(deploymentstatus.FieldCreatedAt, field.TypeTime, value)

@@ -129,9 +129,9 @@ func main() {
 
 	gitm.Register(gitmanager.RepoConfig{
 		Name: "deployments",
-		Mode: gitmanager.GitLocal, //GitRemote,
-		//RemoteURL: "https://github.com/edge-orchestration-platform/deployments.git",
-		LocalPath: "/home/balaji/local-deployments",
+		Mode: gitmanager.GitRemote, //GitLocal, //,
+		RemoteURL: "https://github.com/edge-orchestration-platform/deployments.git",
+		//LocalPath: "/home/balaji/local-deployments",
 		Branch: "main",
 		Token: os.Getenv("GITHUB_TOKEN"),
 		WorkingPath: "/tmp/deployments-co",
@@ -139,6 +139,12 @@ func main() {
 	if err := gitm.InitRepo("deployments"); err != nil {
     	logger.Error(ctx, "Git initrepo failed", err)
 	}
+	cfg1, err := gitm.GetConfig("deployments")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("CONFIG: %+v\n", cfg1)
+	//fmt.Printf("CONFIG: %+v\n", gitm.GetConfig("deployments"))	
 	c := co.NewCO(gitm, "app-registry", "deployments")
 
 	router := api.NewRouter(client, c, cfg)

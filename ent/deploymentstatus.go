@@ -24,6 +24,8 @@ type DeploymentStatus struct {
 	ErrorCode string `json:"error_code,omitempty"`
 	// ErrorMessage holds the value of the "error_message" field.
 	ErrorMessage string `json:"error_message,omitempty"`
+	// HostID holds the value of the "host_id" field.
+	HostID string `json:"host_id,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -57,7 +59,7 @@ func (*DeploymentStatus) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case deploymentstatus.FieldState, deploymentstatus.FieldErrorCode, deploymentstatus.FieldErrorMessage:
+		case deploymentstatus.FieldState, deploymentstatus.FieldErrorCode, deploymentstatus.FieldErrorMessage, deploymentstatus.FieldHostID:
 			values[i] = new(sql.NullString)
 		case deploymentstatus.FieldCreatedAt, deploymentstatus.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -101,6 +103,12 @@ func (_m *DeploymentStatus) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field error_message", values[i])
 			} else if value.Valid {
 				_m.ErrorMessage = value.String
+			}
+		case deploymentstatus.FieldHostID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field host_id", values[i])
+			} else if value.Valid {
+				_m.HostID = value.String
 			}
 		case deploymentstatus.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -163,6 +171,9 @@ func (_m *DeploymentStatus) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("error_message=")
 	builder.WriteString(_m.ErrorMessage)
+	builder.WriteString(", ")
+	builder.WriteString("host_id=")
+	builder.WriteString(_m.HostID)
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

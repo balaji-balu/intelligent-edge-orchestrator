@@ -109,6 +109,7 @@ var (
 		{Name: "state", Type: field.TypeString, Default: "pending"},
 		{Name: "error_code", Type: field.TypeString, Nullable: true},
 		{Name: "error_message", Type: field.TypeString, Nullable: true},
+		{Name: "host_id", Type: field.TypeString, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 	}
@@ -123,7 +124,8 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "host_id", Type: field.TypeString, Unique: true},
 		{Name: "runtime", Type: field.TypeString, Nullable: true},
-		{Name: "last_heartbeat", Type: field.TypeTime, Nullable: true},
+		{Name: "last_seen", Type: field.TypeTime, Nullable: true},
+		{Name: "misses", Type: field.TypeInt, Nullable: true},
 		{Name: "cpu_free", Type: field.TypeFloat64, Nullable: true},
 		{Name: "status", Type: field.TypeString, Nullable: true},
 		{Name: "hostname", Type: field.TypeString, Nullable: true},
@@ -142,7 +144,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "host_site_hosts",
-				Columns:    []*schema.Column{HostColumns[12]},
+				Columns:    []*schema.Column{HostColumns[13]},
 				RefColumns: []*schema.Column{SiteColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

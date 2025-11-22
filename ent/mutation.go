@@ -3689,6 +3689,7 @@ type DeploymentStatusMutation struct {
 	state             *string
 	error_code        *string
 	error_message     *string
+	host_id           *string
 	created_at        *time.Time
 	updated_at        *time.Time
 	clearedFields     map[string]struct{}
@@ -3938,6 +3939,55 @@ func (m *DeploymentStatusMutation) ResetErrorMessage() {
 	delete(m.clearedFields, deploymentstatus.FieldErrorMessage)
 }
 
+// SetHostID sets the "host_id" field.
+func (m *DeploymentStatusMutation) SetHostID(s string) {
+	m.host_id = &s
+}
+
+// HostID returns the value of the "host_id" field in the mutation.
+func (m *DeploymentStatusMutation) HostID() (r string, exists bool) {
+	v := m.host_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHostID returns the old "host_id" field's value of the DeploymentStatus entity.
+// If the DeploymentStatus object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DeploymentStatusMutation) OldHostID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHostID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHostID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHostID: %w", err)
+	}
+	return oldValue.HostID, nil
+}
+
+// ClearHostID clears the value of the "host_id" field.
+func (m *DeploymentStatusMutation) ClearHostID() {
+	m.host_id = nil
+	m.clearedFields[deploymentstatus.FieldHostID] = struct{}{}
+}
+
+// HostIDCleared returns if the "host_id" field was cleared in this mutation.
+func (m *DeploymentStatusMutation) HostIDCleared() bool {
+	_, ok := m.clearedFields[deploymentstatus.FieldHostID]
+	return ok
+}
+
+// ResetHostID resets all changes to the "host_id" field.
+func (m *DeploymentStatusMutation) ResetHostID() {
+	m.host_id = nil
+	delete(m.clearedFields, deploymentstatus.FieldHostID)
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *DeploymentStatusMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -4098,7 +4148,7 @@ func (m *DeploymentStatusMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *DeploymentStatusMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 6)
 	if m.state != nil {
 		fields = append(fields, deploymentstatus.FieldState)
 	}
@@ -4107,6 +4157,9 @@ func (m *DeploymentStatusMutation) Fields() []string {
 	}
 	if m.error_message != nil {
 		fields = append(fields, deploymentstatus.FieldErrorMessage)
+	}
+	if m.host_id != nil {
+		fields = append(fields, deploymentstatus.FieldHostID)
 	}
 	if m.created_at != nil {
 		fields = append(fields, deploymentstatus.FieldCreatedAt)
@@ -4128,6 +4181,8 @@ func (m *DeploymentStatusMutation) Field(name string) (ent.Value, bool) {
 		return m.ErrorCode()
 	case deploymentstatus.FieldErrorMessage:
 		return m.ErrorMessage()
+	case deploymentstatus.FieldHostID:
+		return m.HostID()
 	case deploymentstatus.FieldCreatedAt:
 		return m.CreatedAt()
 	case deploymentstatus.FieldUpdatedAt:
@@ -4147,6 +4202,8 @@ func (m *DeploymentStatusMutation) OldField(ctx context.Context, name string) (e
 		return m.OldErrorCode(ctx)
 	case deploymentstatus.FieldErrorMessage:
 		return m.OldErrorMessage(ctx)
+	case deploymentstatus.FieldHostID:
+		return m.OldHostID(ctx)
 	case deploymentstatus.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case deploymentstatus.FieldUpdatedAt:
@@ -4180,6 +4237,13 @@ func (m *DeploymentStatusMutation) SetField(name string, value ent.Value) error 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetErrorMessage(v)
+		return nil
+	case deploymentstatus.FieldHostID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHostID(v)
 		return nil
 	case deploymentstatus.FieldCreatedAt:
 		v, ok := value.(time.Time)
@@ -4231,6 +4295,9 @@ func (m *DeploymentStatusMutation) ClearedFields() []string {
 	if m.FieldCleared(deploymentstatus.FieldErrorMessage) {
 		fields = append(fields, deploymentstatus.FieldErrorMessage)
 	}
+	if m.FieldCleared(deploymentstatus.FieldHostID) {
+		fields = append(fields, deploymentstatus.FieldHostID)
+	}
 	return fields
 }
 
@@ -4251,6 +4318,9 @@ func (m *DeploymentStatusMutation) ClearField(name string) error {
 	case deploymentstatus.FieldErrorMessage:
 		m.ClearErrorMessage()
 		return nil
+	case deploymentstatus.FieldHostID:
+		m.ClearHostID()
+		return nil
 	}
 	return fmt.Errorf("unknown DeploymentStatus nullable field %s", name)
 }
@@ -4267,6 +4337,9 @@ func (m *DeploymentStatusMutation) ResetField(name string) error {
 		return nil
 	case deploymentstatus.FieldErrorMessage:
 		m.ResetErrorMessage()
+		return nil
+	case deploymentstatus.FieldHostID:
+		m.ResetHostID()
 		return nil
 	case deploymentstatus.FieldCreatedAt:
 		m.ResetCreatedAt()
@@ -4365,27 +4438,29 @@ func (m *DeploymentStatusMutation) ResetEdge(name string) error {
 // HostMutation represents an operation that mutates the Host nodes in the graph.
 type HostMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *uuid.UUID
-	host_id        *string
-	runtime        *string
-	last_heartbeat *time.Time
-	cpu_free       *float64
-	addcpu_free    *float64
-	status         *string
-	hostname       *string
-	ip_address     *string
-	edge_url       *string
-	metadata       *struct{}
-	created_at     *time.Time
-	updated_at     *time.Time
-	clearedFields  map[string]struct{}
-	site           *uuid.UUID
-	clearedsite    bool
-	done           bool
-	oldValue       func(context.Context) (*Host, error)
-	predicates     []predicate.Host
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	host_id       *string
+	runtime       *string
+	last_seen     *time.Time
+	misses        *int
+	addmisses     *int
+	cpu_free      *float64
+	addcpu_free   *float64
+	status        *string
+	hostname      *string
+	ip_address    *string
+	edge_url      *string
+	metadata      *struct{}
+	created_at    *time.Time
+	updated_at    *time.Time
+	clearedFields map[string]struct{}
+	site          *uuid.UUID
+	clearedsite   bool
+	done          bool
+	oldValue      func(context.Context) (*Host, error)
+	predicates    []predicate.Host
 }
 
 var _ ent.Mutation = (*HostMutation)(nil)
@@ -4626,53 +4701,123 @@ func (m *HostMutation) ResetRuntime() {
 	delete(m.clearedFields, host.FieldRuntime)
 }
 
-// SetLastHeartbeat sets the "last_heartbeat" field.
-func (m *HostMutation) SetLastHeartbeat(t time.Time) {
-	m.last_heartbeat = &t
+// SetLastSeen sets the "last_seen" field.
+func (m *HostMutation) SetLastSeen(t time.Time) {
+	m.last_seen = &t
 }
 
-// LastHeartbeat returns the value of the "last_heartbeat" field in the mutation.
-func (m *HostMutation) LastHeartbeat() (r time.Time, exists bool) {
-	v := m.last_heartbeat
+// LastSeen returns the value of the "last_seen" field in the mutation.
+func (m *HostMutation) LastSeen() (r time.Time, exists bool) {
+	v := m.last_seen
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldLastHeartbeat returns the old "last_heartbeat" field's value of the Host entity.
+// OldLastSeen returns the old "last_seen" field's value of the Host entity.
 // If the Host object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *HostMutation) OldLastHeartbeat(ctx context.Context) (v time.Time, err error) {
+func (m *HostMutation) OldLastSeen(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldLastHeartbeat is only allowed on UpdateOne operations")
+		return v, errors.New("OldLastSeen is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldLastHeartbeat requires an ID field in the mutation")
+		return v, errors.New("OldLastSeen requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldLastHeartbeat: %w", err)
+		return v, fmt.Errorf("querying old value for OldLastSeen: %w", err)
 	}
-	return oldValue.LastHeartbeat, nil
+	return oldValue.LastSeen, nil
 }
 
-// ClearLastHeartbeat clears the value of the "last_heartbeat" field.
-func (m *HostMutation) ClearLastHeartbeat() {
-	m.last_heartbeat = nil
-	m.clearedFields[host.FieldLastHeartbeat] = struct{}{}
+// ClearLastSeen clears the value of the "last_seen" field.
+func (m *HostMutation) ClearLastSeen() {
+	m.last_seen = nil
+	m.clearedFields[host.FieldLastSeen] = struct{}{}
 }
 
-// LastHeartbeatCleared returns if the "last_heartbeat" field was cleared in this mutation.
-func (m *HostMutation) LastHeartbeatCleared() bool {
-	_, ok := m.clearedFields[host.FieldLastHeartbeat]
+// LastSeenCleared returns if the "last_seen" field was cleared in this mutation.
+func (m *HostMutation) LastSeenCleared() bool {
+	_, ok := m.clearedFields[host.FieldLastSeen]
 	return ok
 }
 
-// ResetLastHeartbeat resets all changes to the "last_heartbeat" field.
-func (m *HostMutation) ResetLastHeartbeat() {
-	m.last_heartbeat = nil
-	delete(m.clearedFields, host.FieldLastHeartbeat)
+// ResetLastSeen resets all changes to the "last_seen" field.
+func (m *HostMutation) ResetLastSeen() {
+	m.last_seen = nil
+	delete(m.clearedFields, host.FieldLastSeen)
+}
+
+// SetMisses sets the "misses" field.
+func (m *HostMutation) SetMisses(i int) {
+	m.misses = &i
+	m.addmisses = nil
+}
+
+// Misses returns the value of the "misses" field in the mutation.
+func (m *HostMutation) Misses() (r int, exists bool) {
+	v := m.misses
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMisses returns the old "misses" field's value of the Host entity.
+// If the Host object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *HostMutation) OldMisses(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMisses is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMisses requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMisses: %w", err)
+	}
+	return oldValue.Misses, nil
+}
+
+// AddMisses adds i to the "misses" field.
+func (m *HostMutation) AddMisses(i int) {
+	if m.addmisses != nil {
+		*m.addmisses += i
+	} else {
+		m.addmisses = &i
+	}
+}
+
+// AddedMisses returns the value that was added to the "misses" field in this mutation.
+func (m *HostMutation) AddedMisses() (r int, exists bool) {
+	v := m.addmisses
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearMisses clears the value of the "misses" field.
+func (m *HostMutation) ClearMisses() {
+	m.misses = nil
+	m.addmisses = nil
+	m.clearedFields[host.FieldMisses] = struct{}{}
+}
+
+// MissesCleared returns if the "misses" field was cleared in this mutation.
+func (m *HostMutation) MissesCleared() bool {
+	_, ok := m.clearedFields[host.FieldMisses]
+	return ok
+}
+
+// ResetMisses resets all changes to the "misses" field.
+func (m *HostMutation) ResetMisses() {
+	m.misses = nil
+	m.addmisses = nil
+	delete(m.clearedFields, host.FieldMisses)
 }
 
 // SetCPUFree sets the "cpu_free" field.
@@ -5149,7 +5294,7 @@ func (m *HostMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *HostMutation) Fields() []string {
-	fields := make([]string, 0, 12)
+	fields := make([]string, 0, 13)
 	if m.host_id != nil {
 		fields = append(fields, host.FieldHostID)
 	}
@@ -5159,8 +5304,11 @@ func (m *HostMutation) Fields() []string {
 	if m.runtime != nil {
 		fields = append(fields, host.FieldRuntime)
 	}
-	if m.last_heartbeat != nil {
-		fields = append(fields, host.FieldLastHeartbeat)
+	if m.last_seen != nil {
+		fields = append(fields, host.FieldLastSeen)
+	}
+	if m.misses != nil {
+		fields = append(fields, host.FieldMisses)
 	}
 	if m.cpu_free != nil {
 		fields = append(fields, host.FieldCPUFree)
@@ -5200,8 +5348,10 @@ func (m *HostMutation) Field(name string) (ent.Value, bool) {
 		return m.SiteID()
 	case host.FieldRuntime:
 		return m.Runtime()
-	case host.FieldLastHeartbeat:
-		return m.LastHeartbeat()
+	case host.FieldLastSeen:
+		return m.LastSeen()
+	case host.FieldMisses:
+		return m.Misses()
 	case host.FieldCPUFree:
 		return m.CPUFree()
 	case host.FieldStatus:
@@ -5233,8 +5383,10 @@ func (m *HostMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldSiteID(ctx)
 	case host.FieldRuntime:
 		return m.OldRuntime(ctx)
-	case host.FieldLastHeartbeat:
-		return m.OldLastHeartbeat(ctx)
+	case host.FieldLastSeen:
+		return m.OldLastSeen(ctx)
+	case host.FieldMisses:
+		return m.OldMisses(ctx)
 	case host.FieldCPUFree:
 		return m.OldCPUFree(ctx)
 	case host.FieldStatus:
@@ -5281,12 +5433,19 @@ func (m *HostMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetRuntime(v)
 		return nil
-	case host.FieldLastHeartbeat:
+	case host.FieldLastSeen:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetLastHeartbeat(v)
+		m.SetLastSeen(v)
+		return nil
+	case host.FieldMisses:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMisses(v)
 		return nil
 	case host.FieldCPUFree:
 		v, ok := value.(float64)
@@ -5352,6 +5511,9 @@ func (m *HostMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *HostMutation) AddedFields() []string {
 	var fields []string
+	if m.addmisses != nil {
+		fields = append(fields, host.FieldMisses)
+	}
 	if m.addcpu_free != nil {
 		fields = append(fields, host.FieldCPUFree)
 	}
@@ -5363,6 +5525,8 @@ func (m *HostMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *HostMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case host.FieldMisses:
+		return m.AddedMisses()
 	case host.FieldCPUFree:
 		return m.AddedCPUFree()
 	}
@@ -5374,6 +5538,13 @@ func (m *HostMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *HostMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case host.FieldMisses:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMisses(v)
+		return nil
 	case host.FieldCPUFree:
 		v, ok := value.(float64)
 		if !ok {
@@ -5395,8 +5566,11 @@ func (m *HostMutation) ClearedFields() []string {
 	if m.FieldCleared(host.FieldRuntime) {
 		fields = append(fields, host.FieldRuntime)
 	}
-	if m.FieldCleared(host.FieldLastHeartbeat) {
-		fields = append(fields, host.FieldLastHeartbeat)
+	if m.FieldCleared(host.FieldLastSeen) {
+		fields = append(fields, host.FieldLastSeen)
+	}
+	if m.FieldCleared(host.FieldMisses) {
+		fields = append(fields, host.FieldMisses)
 	}
 	if m.FieldCleared(host.FieldCPUFree) {
 		fields = append(fields, host.FieldCPUFree)
@@ -5442,8 +5616,11 @@ func (m *HostMutation) ClearField(name string) error {
 	case host.FieldRuntime:
 		m.ClearRuntime()
 		return nil
-	case host.FieldLastHeartbeat:
-		m.ClearLastHeartbeat()
+	case host.FieldLastSeen:
+		m.ClearLastSeen()
+		return nil
+	case host.FieldMisses:
+		m.ClearMisses()
 		return nil
 	case host.FieldCPUFree:
 		m.ClearCPUFree()
@@ -5486,8 +5663,11 @@ func (m *HostMutation) ResetField(name string) error {
 	case host.FieldRuntime:
 		m.ResetRuntime()
 		return nil
-	case host.FieldLastHeartbeat:
-		m.ResetLastHeartbeat()
+	case host.FieldLastSeen:
+		m.ResetLastSeen()
+		return nil
+	case host.FieldMisses:
+		m.ResetMisses()
 		return nil
 	case host.FieldCPUFree:
 		m.ResetCPUFree()

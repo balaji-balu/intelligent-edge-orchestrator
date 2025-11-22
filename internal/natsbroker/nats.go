@@ -3,8 +3,10 @@ package natsbroker
 import (
 	"encoding/json"
 	"github.com/balaji-balu/margo-hello-world/internal/gitobserver"
+	"github.com/balaji-balu/margo-hello-world/internal/lo/reconciler"
 	"github.com/balaji-balu/margo-hello-world/pkg/model"
-	"github.com/balaji-balu/margo-hello-world/pkg/deployment"
+
+	//"github.com/balaji-balu/margo-hello-world/pkg/deployment"
 	"github.com/nats-io/nats.go"
 )
 
@@ -43,18 +45,18 @@ func (b *Broker) Subscribe2(topic string, handler func(model.HealthMsg)) error {
 	return err
 }
 
-func (b *Broker) Subscribe3(topic string, handler func(deployment.DeployRequest)) error {
+func (b *Broker) Subscribe3(topic string, handler func(model.HostDeployRequest)) error {
 	_, err := b.conn.Subscribe(topic, func(m *nats.Msg) {
-		var ev deployment.DeployRequest
+		var ev model.HostDeployRequest
 		_ = json.Unmarshal(m.Data, &ev)
 		handler(ev)
 	})
 	return err
 }
 
-func (b *Broker) Subscribe4(topic string, handler func(model.DeploymentStatus)) error {
+func (b *Broker) Subscribe4(topic string, handler func(reconciler.DeploymentComponentStatus)) error {
 	_, err := b.conn.Subscribe(topic, func(m *nats.Msg) {
-		var ev model.DeploymentStatus
+		var ev reconciler.DeploymentComponentStatus
 		_ = json.Unmarshal(m.Data, &ev)
 		handler(ev)
 	})

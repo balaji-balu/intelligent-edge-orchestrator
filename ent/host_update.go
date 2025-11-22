@@ -84,23 +84,50 @@ func (_u *HostUpdate) ClearRuntime() *HostUpdate {
 	return _u
 }
 
-// SetLastHeartbeat sets the "last_heartbeat" field.
-func (_u *HostUpdate) SetLastHeartbeat(v time.Time) *HostUpdate {
-	_u.mutation.SetLastHeartbeat(v)
+// SetLastSeen sets the "last_seen" field.
+func (_u *HostUpdate) SetLastSeen(v time.Time) *HostUpdate {
+	_u.mutation.SetLastSeen(v)
 	return _u
 }
 
-// SetNillableLastHeartbeat sets the "last_heartbeat" field if the given value is not nil.
-func (_u *HostUpdate) SetNillableLastHeartbeat(v *time.Time) *HostUpdate {
+// SetNillableLastSeen sets the "last_seen" field if the given value is not nil.
+func (_u *HostUpdate) SetNillableLastSeen(v *time.Time) *HostUpdate {
 	if v != nil {
-		_u.SetLastHeartbeat(*v)
+		_u.SetLastSeen(*v)
 	}
 	return _u
 }
 
-// ClearLastHeartbeat clears the value of the "last_heartbeat" field.
-func (_u *HostUpdate) ClearLastHeartbeat() *HostUpdate {
-	_u.mutation.ClearLastHeartbeat()
+// ClearLastSeen clears the value of the "last_seen" field.
+func (_u *HostUpdate) ClearLastSeen() *HostUpdate {
+	_u.mutation.ClearLastSeen()
+	return _u
+}
+
+// SetMisses sets the "misses" field.
+func (_u *HostUpdate) SetMisses(v int) *HostUpdate {
+	_u.mutation.ResetMisses()
+	_u.mutation.SetMisses(v)
+	return _u
+}
+
+// SetNillableMisses sets the "misses" field if the given value is not nil.
+func (_u *HostUpdate) SetNillableMisses(v *int) *HostUpdate {
+	if v != nil {
+		_u.SetMisses(*v)
+	}
+	return _u
+}
+
+// AddMisses adds value to the "misses" field.
+func (_u *HostUpdate) AddMisses(v int) *HostUpdate {
+	_u.mutation.AddMisses(v)
+	return _u
+}
+
+// ClearMisses clears the value of the "misses" field.
+func (_u *HostUpdate) ClearMisses() *HostUpdate {
+	_u.mutation.ClearMisses()
 	return _u
 }
 
@@ -332,11 +359,20 @@ func (_u *HostUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.RuntimeCleared() {
 		_spec.ClearField(host.FieldRuntime, field.TypeString)
 	}
-	if value, ok := _u.mutation.LastHeartbeat(); ok {
-		_spec.SetField(host.FieldLastHeartbeat, field.TypeTime, value)
+	if value, ok := _u.mutation.LastSeen(); ok {
+		_spec.SetField(host.FieldLastSeen, field.TypeTime, value)
 	}
-	if _u.mutation.LastHeartbeatCleared() {
-		_spec.ClearField(host.FieldLastHeartbeat, field.TypeTime)
+	if _u.mutation.LastSeenCleared() {
+		_spec.ClearField(host.FieldLastSeen, field.TypeTime)
+	}
+	if value, ok := _u.mutation.Misses(); ok {
+		_spec.SetField(host.FieldMisses, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedMisses(); ok {
+		_spec.AddField(host.FieldMisses, field.TypeInt, value)
+	}
+	if _u.mutation.MissesCleared() {
+		_spec.ClearField(host.FieldMisses, field.TypeInt)
 	}
 	if value, ok := _u.mutation.CPUFree(); ok {
 		_spec.SetField(host.FieldCPUFree, field.TypeFloat64, value)
@@ -492,23 +528,50 @@ func (_u *HostUpdateOne) ClearRuntime() *HostUpdateOne {
 	return _u
 }
 
-// SetLastHeartbeat sets the "last_heartbeat" field.
-func (_u *HostUpdateOne) SetLastHeartbeat(v time.Time) *HostUpdateOne {
-	_u.mutation.SetLastHeartbeat(v)
+// SetLastSeen sets the "last_seen" field.
+func (_u *HostUpdateOne) SetLastSeen(v time.Time) *HostUpdateOne {
+	_u.mutation.SetLastSeen(v)
 	return _u
 }
 
-// SetNillableLastHeartbeat sets the "last_heartbeat" field if the given value is not nil.
-func (_u *HostUpdateOne) SetNillableLastHeartbeat(v *time.Time) *HostUpdateOne {
+// SetNillableLastSeen sets the "last_seen" field if the given value is not nil.
+func (_u *HostUpdateOne) SetNillableLastSeen(v *time.Time) *HostUpdateOne {
 	if v != nil {
-		_u.SetLastHeartbeat(*v)
+		_u.SetLastSeen(*v)
 	}
 	return _u
 }
 
-// ClearLastHeartbeat clears the value of the "last_heartbeat" field.
-func (_u *HostUpdateOne) ClearLastHeartbeat() *HostUpdateOne {
-	_u.mutation.ClearLastHeartbeat()
+// ClearLastSeen clears the value of the "last_seen" field.
+func (_u *HostUpdateOne) ClearLastSeen() *HostUpdateOne {
+	_u.mutation.ClearLastSeen()
+	return _u
+}
+
+// SetMisses sets the "misses" field.
+func (_u *HostUpdateOne) SetMisses(v int) *HostUpdateOne {
+	_u.mutation.ResetMisses()
+	_u.mutation.SetMisses(v)
+	return _u
+}
+
+// SetNillableMisses sets the "misses" field if the given value is not nil.
+func (_u *HostUpdateOne) SetNillableMisses(v *int) *HostUpdateOne {
+	if v != nil {
+		_u.SetMisses(*v)
+	}
+	return _u
+}
+
+// AddMisses adds value to the "misses" field.
+func (_u *HostUpdateOne) AddMisses(v int) *HostUpdateOne {
+	_u.mutation.AddMisses(v)
+	return _u
+}
+
+// ClearMisses clears the value of the "misses" field.
+func (_u *HostUpdateOne) ClearMisses() *HostUpdateOne {
+	_u.mutation.ClearMisses()
 	return _u
 }
 
@@ -770,11 +833,20 @@ func (_u *HostUpdateOne) sqlSave(ctx context.Context) (_node *Host, err error) {
 	if _u.mutation.RuntimeCleared() {
 		_spec.ClearField(host.FieldRuntime, field.TypeString)
 	}
-	if value, ok := _u.mutation.LastHeartbeat(); ok {
-		_spec.SetField(host.FieldLastHeartbeat, field.TypeTime, value)
+	if value, ok := _u.mutation.LastSeen(); ok {
+		_spec.SetField(host.FieldLastSeen, field.TypeTime, value)
 	}
-	if _u.mutation.LastHeartbeatCleared() {
-		_spec.ClearField(host.FieldLastHeartbeat, field.TypeTime)
+	if _u.mutation.LastSeenCleared() {
+		_spec.ClearField(host.FieldLastSeen, field.TypeTime)
+	}
+	if value, ok := _u.mutation.Misses(); ok {
+		_spec.SetField(host.FieldMisses, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedMisses(); ok {
+		_spec.AddField(host.FieldMisses, field.TypeInt, value)
+	}
+	if _u.mutation.MissesCleared() {
+		_spec.ClearField(host.FieldMisses, field.TypeInt)
 	}
 	if value, ok := _u.mutation.CPUFree(); ok {
 		_spec.SetField(host.FieldCPUFree, field.TypeFloat64, value)
