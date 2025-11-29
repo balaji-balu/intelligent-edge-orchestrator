@@ -16,6 +16,7 @@ import (
 	"github.com/balaji-balu/margo-hello-world/ent/component"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
 	"github.com/balaji-balu/margo-hello-world/ent/predicate"
+	"github.com/google/uuid"
 )
 
 // DeploymentProfileQuery is the builder for querying DeploymentProfile entities.
@@ -131,8 +132,8 @@ func (_q *DeploymentProfileQuery) FirstX(ctx context.Context) *DeploymentProfile
 
 // FirstID returns the first DeploymentProfile ID from the query.
 // Returns a *NotFoundError when no DeploymentProfile ID was found.
-func (_q *DeploymentProfileQuery) FirstID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (_q *DeploymentProfileQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
@@ -144,7 +145,7 @@ func (_q *DeploymentProfileQuery) FirstID(ctx context.Context) (id string, err e
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *DeploymentProfileQuery) FirstIDX(ctx context.Context) string {
+func (_q *DeploymentProfileQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -182,8 +183,8 @@ func (_q *DeploymentProfileQuery) OnlyX(ctx context.Context) *DeploymentProfile 
 // OnlyID is like Only, but returns the only DeploymentProfile ID in the query.
 // Returns a *NotSingularError when more than one DeploymentProfile ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *DeploymentProfileQuery) OnlyID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (_q *DeploymentProfileQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
@@ -199,7 +200,7 @@ func (_q *DeploymentProfileQuery) OnlyID(ctx context.Context) (id string, err er
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *DeploymentProfileQuery) OnlyIDX(ctx context.Context) string {
+func (_q *DeploymentProfileQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -227,7 +228,7 @@ func (_q *DeploymentProfileQuery) AllX(ctx context.Context) []*DeploymentProfile
 }
 
 // IDs executes the query and returns a list of DeploymentProfile IDs.
-func (_q *DeploymentProfileQuery) IDs(ctx context.Context) (ids []string, err error) {
+func (_q *DeploymentProfileQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
@@ -239,7 +240,7 @@ func (_q *DeploymentProfileQuery) IDs(ctx context.Context) (ids []string, err er
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *DeploymentProfileQuery) IDsX(ctx context.Context) []string {
+func (_q *DeploymentProfileQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -448,7 +449,7 @@ func (_q *DeploymentProfileQuery) sqlAll(ctx context.Context, hooks ...queryHook
 
 func (_q *DeploymentProfileQuery) loadComponents(ctx context.Context, query *ComponentQuery, nodes []*DeploymentProfile, init func(*DeploymentProfile), assign func(*DeploymentProfile, *Component)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[string]*DeploymentProfile)
+	nodeids := make(map[uuid.UUID]*DeploymentProfile)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -477,8 +478,8 @@ func (_q *DeploymentProfileQuery) loadComponents(ctx context.Context, query *Com
 	return nil
 }
 func (_q *DeploymentProfileQuery) loadApplicationDesc(ctx context.Context, query *ApplicationDescQuery, nodes []*DeploymentProfile, init func(*DeploymentProfile), assign func(*DeploymentProfile, *ApplicationDesc)) error {
-	ids := make([]string, 0, len(nodes))
-	nodeids := make(map[string][]*DeploymentProfile)
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*DeploymentProfile)
 	for i := range nodes {
 		fk := nodes[i].AppID
 		if _, ok := nodeids[fk]; !ok {
@@ -516,7 +517,7 @@ func (_q *DeploymentProfileQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (_q *DeploymentProfileQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(deploymentprofile.Table, deploymentprofile.Columns, sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeString))
+	_spec := sqlgraph.NewQuerySpec(deploymentprofile.Table, deploymentprofile.Columns, sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeUUID))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

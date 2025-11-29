@@ -5,6 +5,7 @@ package schema
 import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
+	"github.com/google/uuid"
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -15,7 +16,11 @@ type DeploymentProfile struct {
 }
 
 func (DeploymentProfile) Fields() []ent.Field {
-	return []ent.Field{field.String("id"),
+	return []ent.Field{
+		//field.String("id"),
+		
+		field.UUID("id", uuid.UUID{}).
+            Default(uuid.New),
 		field.String("type").Optional(),
 		field.String("description").Optional(),
 		field.Float("cpu_cores").Optional(), field.String("memory").Optional(),
@@ -23,8 +28,9 @@ func (DeploymentProfile) Fields() []ent.Field {
 		field.JSON("cpu_architectures", []string{}).Optional(),
 		field.JSON("peripherals", []map[string]interface{}{}).Optional(),
 		field.JSON("interfaces", []map[string]interface{}{}).Optional(),
-		field.String("app_id").Optional()}
-
+		//field.String("app_id").Optional()}
+		field.UUID("app_id", uuid.UUID{}).Optional(),
+	}
 }
 func (DeploymentProfile) Edges() []ent.Edge {
 	return []ent.Edge{edge.To("components", Component.Type), edge.From("application_desc", ApplicationDesc.Type).Ref("deployment_profiles").Unique().Field("app_id")}

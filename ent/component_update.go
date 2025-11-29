@@ -14,6 +14,7 @@ import (
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
 	"github.com/balaji-balu/margo-hello-world/ent/predicate"
 	"github.com/balaji-balu/margo-hello-world/pkg/application"
+	"github.com/google/uuid"
 )
 
 // ComponentUpdate is the builder for updating Component entities.
@@ -30,13 +31,13 @@ func (_u *ComponentUpdate) Where(ps ...predicate.Component) *ComponentUpdate {
 }
 
 // SetDeploymentProfileID sets the "deployment_profile_id" field.
-func (_u *ComponentUpdate) SetDeploymentProfileID(v string) *ComponentUpdate {
+func (_u *ComponentUpdate) SetDeploymentProfileID(v uuid.UUID) *ComponentUpdate {
 	_u.mutation.SetDeploymentProfileID(v)
 	return _u
 }
 
 // SetNillableDeploymentProfileID sets the "deployment_profile_id" field if the given value is not nil.
-func (_u *ComponentUpdate) SetNillableDeploymentProfileID(v *string) *ComponentUpdate {
+func (_u *ComponentUpdate) SetNillableDeploymentProfileID(v *uuid.UUID) *ComponentUpdate {
 	if v != nil {
 		_u.SetDeploymentProfileID(*v)
 	}
@@ -133,7 +134,7 @@ func (_u *ComponentUpdate) ExecX(ctx context.Context) {
 }
 
 func (_u *ComponentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(component.Table, component.Columns, sqlgraph.NewFieldSpec(component.FieldID, field.TypeUint))
+	_spec := sqlgraph.NewUpdateSpec(component.Table, component.Columns, sqlgraph.NewFieldSpec(component.FieldID, field.TypeUUID))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -161,7 +162,7 @@ func (_u *ComponentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{component.DeploymentProfileColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -174,7 +175,7 @@ func (_u *ComponentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{component.DeploymentProfileColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -203,13 +204,13 @@ type ComponentUpdateOne struct {
 }
 
 // SetDeploymentProfileID sets the "deployment_profile_id" field.
-func (_u *ComponentUpdateOne) SetDeploymentProfileID(v string) *ComponentUpdateOne {
+func (_u *ComponentUpdateOne) SetDeploymentProfileID(v uuid.UUID) *ComponentUpdateOne {
 	_u.mutation.SetDeploymentProfileID(v)
 	return _u
 }
 
 // SetNillableDeploymentProfileID sets the "deployment_profile_id" field if the given value is not nil.
-func (_u *ComponentUpdateOne) SetNillableDeploymentProfileID(v *string) *ComponentUpdateOne {
+func (_u *ComponentUpdateOne) SetNillableDeploymentProfileID(v *uuid.UUID) *ComponentUpdateOne {
 	if v != nil {
 		_u.SetDeploymentProfileID(*v)
 	}
@@ -319,7 +320,7 @@ func (_u *ComponentUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (_u *ComponentUpdateOne) sqlSave(ctx context.Context) (_node *Component, err error) {
-	_spec := sqlgraph.NewUpdateSpec(component.Table, component.Columns, sqlgraph.NewFieldSpec(component.FieldID, field.TypeUint))
+	_spec := sqlgraph.NewUpdateSpec(component.Table, component.Columns, sqlgraph.NewFieldSpec(component.FieldID, field.TypeUUID))
 	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Component.id" for update`)}
@@ -364,7 +365,7 @@ func (_u *ComponentUpdateOne) sqlSave(ctx context.Context) (_node *Component, er
 			Columns: []string{component.DeploymentProfileColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -377,7 +378,7 @@ func (_u *ComponentUpdateOne) sqlSave(ctx context.Context) (_node *Component, er
 			Columns: []string{component.DeploymentProfileColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

@@ -7,12 +7,14 @@ import (
 	"errors"
 	"fmt"
 
+	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/balaji-balu/margo-hello-world/ent/component"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
 	"github.com/balaji-balu/margo-hello-world/pkg/application"
+	"github.com/google/uuid"
 )
 
 // ComponentCreate is the builder for creating a Component entity.
@@ -24,13 +26,13 @@ type ComponentCreate struct {
 }
 
 // SetDeploymentProfileID sets the "deployment_profile_id" field.
-func (_c *ComponentCreate) SetDeploymentProfileID(v string) *ComponentCreate {
+func (_c *ComponentCreate) SetDeploymentProfileID(v uuid.UUID) *ComponentCreate {
 	_c.mutation.SetDeploymentProfileID(v)
 	return _c
 }
 
 // SetNillableDeploymentProfileID sets the "deployment_profile_id" field if the given value is not nil.
-func (_c *ComponentCreate) SetNillableDeploymentProfileID(v *string) *ComponentCreate {
+func (_c *ComponentCreate) SetNillableDeploymentProfileID(v *uuid.UUID) *ComponentCreate {
 	if v != nil {
 		_c.SetDeploymentProfileID(*v)
 	}
@@ -66,8 +68,16 @@ func (_c *ComponentCreate) SetNillableProperties(v *application.ComponentPropert
 }
 
 // SetID sets the "id" field.
-func (_c *ComponentCreate) SetID(v uint) *ComponentCreate {
+func (_c *ComponentCreate) SetID(v uuid.UUID) *ComponentCreate {
 	_c.mutation.SetID(v)
+	return _c
+}
+
+// SetNillableID sets the "id" field if the given value is not nil.
+func (_c *ComponentCreate) SetNillableID(v *uuid.UUID) *ComponentCreate {
+	if v != nil {
+		_c.SetID(*v)
+	}
 	return _c
 }
 
@@ -83,6 +93,7 @@ func (_c *ComponentCreate) Mutation() *ComponentMutation {
 
 // Save creates the Component in the database.
 func (_c *ComponentCreate) Save(ctx context.Context) (*Component, error) {
+	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -108,6 +119,14 @@ func (_c *ComponentCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (_c *ComponentCreate) defaults() {
+	if _, ok := _c.mutation.ID(); !ok {
+		v := component.DefaultID()
+		_c.mutation.SetID(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (_c *ComponentCreate) check() error {
 	return nil
@@ -124,9 +143,12 @@ func (_c *ComponentCreate) sqlSave(ctx context.Context) (*Component, error) {
 		}
 		return nil, err
 	}
-	if _spec.ID.Value != _node.ID {
-		id := _spec.ID.Value.(int64)
-		_node.ID = uint(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
+		}
 	}
 	_c.mutation.id = &_node.ID
 	_c.mutation.done = true
@@ -136,12 +158,12 @@ func (_c *ComponentCreate) sqlSave(ctx context.Context) (*Component, error) {
 func (_c *ComponentCreate) createSpec() (*Component, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Component{config: _c.config}
-		_spec = sqlgraph.NewCreateSpec(component.Table, sqlgraph.NewFieldSpec(component.FieldID, field.TypeUint))
+		_spec = sqlgraph.NewCreateSpec(component.Table, sqlgraph.NewFieldSpec(component.FieldID, field.TypeUUID))
 	)
 	_spec.OnConflict = _c.conflict
 	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
-		_spec.ID.Value = id
+		_spec.ID.Value = &id
 	}
 	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(component.FieldName, field.TypeString, value)
@@ -159,7 +181,7 @@ func (_c *ComponentCreate) createSpec() (*Component, *sqlgraph.CreateSpec) {
 			Columns: []string{component.DeploymentProfileColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -221,7 +243,7 @@ type (
 )
 
 // SetDeploymentProfileID sets the "deployment_profile_id" field.
-func (u *ComponentUpsert) SetDeploymentProfileID(v string) *ComponentUpsert {
+func (u *ComponentUpsert) SetDeploymentProfileID(v uuid.UUID) *ComponentUpsert {
 	u.Set(component.FieldDeploymentProfileID, v)
 	return u
 }
@@ -323,7 +345,7 @@ func (u *ComponentUpsertOne) Update(set func(*ComponentUpsert)) *ComponentUpsert
 }
 
 // SetDeploymentProfileID sets the "deployment_profile_id" field.
-func (u *ComponentUpsertOne) SetDeploymentProfileID(v string) *ComponentUpsertOne {
+func (u *ComponentUpsertOne) SetDeploymentProfileID(v uuid.UUID) *ComponentUpsertOne {
 	return u.Update(func(s *ComponentUpsert) {
 		s.SetDeploymentProfileID(v)
 	})
@@ -401,7 +423,12 @@ func (u *ComponentUpsertOne) ExecX(ctx context.Context) {
 }
 
 // Exec executes the UPSERT query and returns the inserted/updated ID.
-func (u *ComponentUpsertOne) ID(ctx context.Context) (id uint, err error) {
+func (u *ComponentUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: ComponentUpsertOne.ID is not supported by MySQL driver. Use ComponentUpsertOne.Exec instead")
+	}
 	node, err := u.create.Save(ctx)
 	if err != nil {
 		return id, err
@@ -410,7 +437,7 @@ func (u *ComponentUpsertOne) ID(ctx context.Context) (id uint, err error) {
 }
 
 // IDX is like ID, but panics if an error occurs.
-func (u *ComponentUpsertOne) IDX(ctx context.Context) uint {
+func (u *ComponentUpsertOne) IDX(ctx context.Context) uuid.UUID {
 	id, err := u.ID(ctx)
 	if err != nil {
 		panic(err)
@@ -437,6 +464,7 @@ func (_c *ComponentCreateBulk) Save(ctx context.Context) ([]*Component, error) {
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ComponentMutation)
 				if !ok {
@@ -464,10 +492,6 @@ func (_c *ComponentCreateBulk) Save(ctx context.Context) ([]*Component, error) {
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil && nodes[i].ID == 0 {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = uint(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})
@@ -599,7 +623,7 @@ func (u *ComponentUpsertBulk) Update(set func(*ComponentUpsert)) *ComponentUpser
 }
 
 // SetDeploymentProfileID sets the "deployment_profile_id" field.
-func (u *ComponentUpsertBulk) SetDeploymentProfileID(v string) *ComponentUpsertBulk {
+func (u *ComponentUpsertBulk) SetDeploymentProfileID(v uuid.UUID) *ComponentUpsertBulk {
 	return u.Update(func(s *ComponentUpsert) {
 		s.SetDeploymentProfileID(v)
 	})

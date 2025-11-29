@@ -37,6 +37,16 @@ atlas migrate apply --env local
 ```
 uses atlas.hcl at the root directory
 
+### check db
+```
+docker exec -it postgres psql -U postgres -d orchestration
+
+boltbrowser ~/.lo/<siteid>/bolt.db
+```
+## seeding
+docker cp tests/seeds/site.sql postgres:/tmp/site.sql
+docker exec -it postgres psql -U postgres -d orchestration -f ./tmp/site.sql
+
 ## 💬 Ways to Contribute
 
 You can help the project in many ways:

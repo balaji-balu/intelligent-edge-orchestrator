@@ -17,15 +17,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	//"go.uber.org/zap"
-	"entgo.io/ent/dialect"
-	"entgo.io/ent/dialect/sql"
-	_ "github.com/lib/pq"
-	bolt "go.etcd.io/bbolt"
+	//"entgo.io/ent/dialect"
+	//"entgo.io/ent/dialect/sql"
+	//_ "github.com/lib/pq"
+	//bolt "go.etcd.io/bbolt"
 
 	"github.com/balaji-balu/margo-hello-world/internal/lo"
 	//"github.com/balaji-balu/margo-hello-world/internal/lo/logger"
 	//cfffg "github.com/balaji-balu/margo-hello-world/internal/config"
-	"github.com/balaji-balu/margo-hello-world/ent"
+	//"github.com/balaji-balu/margo-hello-world/ent"
 	//"github.com/balaji-balu/margo-hello-world/internal/fsmloader"
 	"github.com/balaji-balu/margo-hello-world/internal/natsbroker"
 	//"github.com/balaji-balu/margo-hello-world/internal/orchestrator"
@@ -91,7 +91,7 @@ func main() {
 
 	log.Printf("siteid:%s port:%s nats url:%s ", 
 		siteID, port, natsURL, )
-
+/*
     // logger, err := zap.NewProduction()
     // if err != nil {
     //     // If Zap fails, fall back to standard log or panic
@@ -139,7 +139,7 @@ func main() {
 	// 	n.Alive = false
 	// 	orchestrator.SaveNode(db, n)
 	// }
-
+*/
 	log.Println("Connecting to", natsURL)
 	nc, err := natsbroker.New(natsURL)
 	if err != nil {
@@ -164,9 +164,10 @@ func main() {
 
 	localorch := lo.New(ctx, 
 		siteID, natsURL,  
-		"deployments", b, client, nc, gitmgr, metrics_port)
-	if localorch != nil {
+		"deployments", nc, gitmgr, metrics_port)
+	if localorch == nil {
 		log.Println("XXXXXXXXXXXXXXXXXXXXXXXX localorch is nil")
+		return
 	}
 
 	// loader := fsmloader.NewLoader(ctx)
@@ -183,6 +184,8 @@ func main() {
 	r.GET("/healthz", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+	r.GET("/hosts", localorch.HandlerGetHosts)
+	r.GET("/actual", localorch.HandlerGetActual)
 
 	//r.POST("/register", lo.RegisterRequest)
 	//r.POST("/deployment_status", lo.DeployStatus)

@@ -15,6 +15,7 @@ import (
 	"github.com/balaji-balu/margo-hello-world/ent/applicationdesc"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
 	"github.com/balaji-balu/margo-hello-world/ent/predicate"
+	"github.com/google/uuid"
 )
 
 // ApplicationDescQuery is the builder for querying ApplicationDesc entities.
@@ -107,8 +108,8 @@ func (_q *ApplicationDescQuery) FirstX(ctx context.Context) *ApplicationDesc {
 
 // FirstID returns the first ApplicationDesc ID from the query.
 // Returns a *NotFoundError when no ApplicationDesc ID was found.
-func (_q *ApplicationDescQuery) FirstID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (_q *ApplicationDescQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
@@ -120,7 +121,7 @@ func (_q *ApplicationDescQuery) FirstID(ctx context.Context) (id string, err err
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *ApplicationDescQuery) FirstIDX(ctx context.Context) string {
+func (_q *ApplicationDescQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -158,8 +159,8 @@ func (_q *ApplicationDescQuery) OnlyX(ctx context.Context) *ApplicationDesc {
 // OnlyID is like Only, but returns the only ApplicationDesc ID in the query.
 // Returns a *NotSingularError when more than one ApplicationDesc ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *ApplicationDescQuery) OnlyID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (_q *ApplicationDescQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
@@ -175,7 +176,7 @@ func (_q *ApplicationDescQuery) OnlyID(ctx context.Context) (id string, err erro
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *ApplicationDescQuery) OnlyIDX(ctx context.Context) string {
+func (_q *ApplicationDescQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -203,7 +204,7 @@ func (_q *ApplicationDescQuery) AllX(ctx context.Context) []*ApplicationDesc {
 }
 
 // IDs executes the query and returns a list of ApplicationDesc IDs.
-func (_q *ApplicationDescQuery) IDs(ctx context.Context) (ids []string, err error) {
+func (_q *ApplicationDescQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
@@ -215,7 +216,7 @@ func (_q *ApplicationDescQuery) IDs(ctx context.Context) (ids []string, err erro
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *ApplicationDescQuery) IDsX(ctx context.Context) []string {
+func (_q *ApplicationDescQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -299,12 +300,12 @@ func (_q *ApplicationDescQuery) WithDeploymentProfiles(opts ...func(*DeploymentP
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		AppID string `json:"app_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.ApplicationDesc.Query().
-//		GroupBy(applicationdesc.FieldName).
+//		GroupBy(applicationdesc.FieldAppID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (_q *ApplicationDescQuery) GroupBy(field string, fields ...string) *ApplicationDescGroupBy {
@@ -322,11 +323,11 @@ func (_q *ApplicationDescQuery) GroupBy(field string, fields ...string) *Applica
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		AppID string `json:"app_id,omitempty"`
 //	}
 //
 //	client.ApplicationDesc.Query().
-//		Select(applicationdesc.FieldName).
+//		Select(applicationdesc.FieldAppID).
 //		Scan(ctx, &v)
 func (_q *ApplicationDescQuery) Select(fields ...string) *ApplicationDescSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
@@ -407,7 +408,7 @@ func (_q *ApplicationDescQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 
 func (_q *ApplicationDescQuery) loadDeploymentProfiles(ctx context.Context, query *DeploymentProfileQuery, nodes []*ApplicationDesc, init func(*ApplicationDesc), assign func(*ApplicationDesc, *DeploymentProfile)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[string]*ApplicationDesc)
+	nodeids := make(map[uuid.UUID]*ApplicationDesc)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -446,7 +447,7 @@ func (_q *ApplicationDescQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (_q *ApplicationDescQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(applicationdesc.Table, applicationdesc.Columns, sqlgraph.NewFieldSpec(applicationdesc.FieldID, field.TypeString))
+	_spec := sqlgraph.NewQuerySpec(applicationdesc.Table, applicationdesc.Columns, sqlgraph.NewFieldSpec(applicationdesc.FieldID, field.TypeUUID))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

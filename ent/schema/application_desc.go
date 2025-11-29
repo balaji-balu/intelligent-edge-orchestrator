@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 type ApplicationDesc struct {
@@ -15,12 +16,22 @@ type ApplicationDesc struct {
 }
 
 func (ApplicationDesc) Fields() []ent.Field {
-	return []ent.Field{field.String("id").StorageKey("app_id"),
-		field.String("name").Optional(), field.String("vendor").Optional(),
-		field.String("version").Optional(), field.String("category").Optional(),
-		field.String("description").Optional(), field.String("icon").Optional(),
-		field.String("artifacturl").Optional(), field.String("site").Optional(),
-		field.String("tag_line").Optional(), field.JSON("tags", []string{}).Optional(), field.String("published").Optional()}
+	return []ent.Field{
+		field.UUID("id", uuid.UUID{}).
+            Default(uuid.New),  
+		
+		field.String("app_id").Optional(),
+		field.String("name").Optional(), 
+		field.String("vendor").Optional(),
+		field.String("version").Optional(), 
+		field.String("category").Optional(),
+		field.String("description").Optional(), 
+		field.String("icon").Optional(),
+		field.String("artifacturl").Optional(), 
+		field.String("site").Optional(),
+		field.String("tag_line").Optional(), 
+		field.JSON("tags", []string{}).Optional(), 
+		field.String("published").Optional()}
 
 	//field.JSON("tags").Optional(struct{}{})}
 

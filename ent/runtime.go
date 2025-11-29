@@ -5,7 +5,10 @@ package ent
 import (
 	"time"
 
+	"github.com/balaji-balu/margo-hello-world/ent/applicationdesc"
+	"github.com/balaji-balu/margo-hello-world/ent/component"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentcomponentstatus"
+	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentstatus"
 	"github.com/balaji-balu/margo-hello-world/ent/host"
 	"github.com/balaji-balu/margo-hello-world/ent/schema"
@@ -17,6 +20,18 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	applicationdescFields := schema.ApplicationDesc{}.Fields()
+	_ = applicationdescFields
+	// applicationdescDescID is the schema descriptor for id field.
+	applicationdescDescID := applicationdescFields[0].Descriptor()
+	// applicationdesc.DefaultID holds the default value on creation for the id field.
+	applicationdesc.DefaultID = applicationdescDescID.Default.(func() uuid.UUID)
+	componentFields := schema.Component{}.Fields()
+	_ = componentFields
+	// componentDescID is the schema descriptor for id field.
+	componentDescID := componentFields[0].Descriptor()
+	// component.DefaultID holds the default value on creation for the id field.
+	component.DefaultID = componentDescID.Default.(func() uuid.UUID)
 	deploymentcomponentstatusFields := schema.DeploymentComponentStatus{}.Fields()
 	_ = deploymentcomponentstatusFields
 	// deploymentcomponentstatusDescName is the schema descriptor for name field.
@@ -41,6 +56,12 @@ func init() {
 	deploymentcomponentstatusDescID := deploymentcomponentstatusFields[0].Descriptor()
 	// deploymentcomponentstatus.DefaultID holds the default value on creation for the id field.
 	deploymentcomponentstatus.DefaultID = deploymentcomponentstatusDescID.Default.(func() uuid.UUID)
+	deploymentprofileFields := schema.DeploymentProfile{}.Fields()
+	_ = deploymentprofileFields
+	// deploymentprofileDescID is the schema descriptor for id field.
+	deploymentprofileDescID := deploymentprofileFields[0].Descriptor()
+	// deploymentprofile.DefaultID holds the default value on creation for the id field.
+	deploymentprofile.DefaultID = deploymentprofileDescID.Default.(func() uuid.UUID)
 	deploymentstatusFields := schema.DeploymentStatus{}.Fields()
 	_ = deploymentstatusFields
 	// deploymentstatusDescState is the schema descriptor for state field.

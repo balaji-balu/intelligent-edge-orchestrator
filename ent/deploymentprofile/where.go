@@ -6,61 +6,52 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/balaji-balu/margo-hello-world/ent/predicate"
+	"github.com/google/uuid"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id string) predicate.DeploymentProfile {
+func ID(id uuid.UUID) predicate.DeploymentProfile {
 	return predicate.DeploymentProfile(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id string) predicate.DeploymentProfile {
+func IDEQ(id uuid.UUID) predicate.DeploymentProfile {
 	return predicate.DeploymentProfile(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id string) predicate.DeploymentProfile {
+func IDNEQ(id uuid.UUID) predicate.DeploymentProfile {
 	return predicate.DeploymentProfile(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...string) predicate.DeploymentProfile {
+func IDIn(ids ...uuid.UUID) predicate.DeploymentProfile {
 	return predicate.DeploymentProfile(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...string) predicate.DeploymentProfile {
+func IDNotIn(ids ...uuid.UUID) predicate.DeploymentProfile {
 	return predicate.DeploymentProfile(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id string) predicate.DeploymentProfile {
+func IDGT(id uuid.UUID) predicate.DeploymentProfile {
 	return predicate.DeploymentProfile(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id string) predicate.DeploymentProfile {
+func IDGTE(id uuid.UUID) predicate.DeploymentProfile {
 	return predicate.DeploymentProfile(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id string) predicate.DeploymentProfile {
+func IDLT(id uuid.UUID) predicate.DeploymentProfile {
 	return predicate.DeploymentProfile(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id string) predicate.DeploymentProfile {
+func IDLTE(id uuid.UUID) predicate.DeploymentProfile {
 	return predicate.DeploymentProfile(sql.FieldLTE(FieldID, id))
-}
-
-// IDEqualFold applies the EqualFold predicate on the ID field.
-func IDEqualFold(id string) predicate.DeploymentProfile {
-	return predicate.DeploymentProfile(sql.FieldEqualFold(FieldID, id))
-}
-
-// IDContainsFold applies the ContainsFold predicate on the ID field.
-func IDContainsFold(id string) predicate.DeploymentProfile {
-	return predicate.DeploymentProfile(sql.FieldContainsFold(FieldID, id))
 }
 
 // Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
@@ -89,7 +80,7 @@ func Storage(v string) predicate.DeploymentProfile {
 }
 
 // AppID applies equality check predicate on the "app_id" field. It's identical to AppIDEQ.
-func AppID(v string) predicate.DeploymentProfile {
+func AppID(v uuid.UUID) predicate.DeploymentProfile {
 	return predicate.DeploymentProfile(sql.FieldEQ(FieldAppID, v))
 }
 
@@ -474,58 +465,23 @@ func InterfacesNotNil() predicate.DeploymentProfile {
 }
 
 // AppIDEQ applies the EQ predicate on the "app_id" field.
-func AppIDEQ(v string) predicate.DeploymentProfile {
+func AppIDEQ(v uuid.UUID) predicate.DeploymentProfile {
 	return predicate.DeploymentProfile(sql.FieldEQ(FieldAppID, v))
 }
 
 // AppIDNEQ applies the NEQ predicate on the "app_id" field.
-func AppIDNEQ(v string) predicate.DeploymentProfile {
+func AppIDNEQ(v uuid.UUID) predicate.DeploymentProfile {
 	return predicate.DeploymentProfile(sql.FieldNEQ(FieldAppID, v))
 }
 
 // AppIDIn applies the In predicate on the "app_id" field.
-func AppIDIn(vs ...string) predicate.DeploymentProfile {
+func AppIDIn(vs ...uuid.UUID) predicate.DeploymentProfile {
 	return predicate.DeploymentProfile(sql.FieldIn(FieldAppID, vs...))
 }
 
 // AppIDNotIn applies the NotIn predicate on the "app_id" field.
-func AppIDNotIn(vs ...string) predicate.DeploymentProfile {
+func AppIDNotIn(vs ...uuid.UUID) predicate.DeploymentProfile {
 	return predicate.DeploymentProfile(sql.FieldNotIn(FieldAppID, vs...))
-}
-
-// AppIDGT applies the GT predicate on the "app_id" field.
-func AppIDGT(v string) predicate.DeploymentProfile {
-	return predicate.DeploymentProfile(sql.FieldGT(FieldAppID, v))
-}
-
-// AppIDGTE applies the GTE predicate on the "app_id" field.
-func AppIDGTE(v string) predicate.DeploymentProfile {
-	return predicate.DeploymentProfile(sql.FieldGTE(FieldAppID, v))
-}
-
-// AppIDLT applies the LT predicate on the "app_id" field.
-func AppIDLT(v string) predicate.DeploymentProfile {
-	return predicate.DeploymentProfile(sql.FieldLT(FieldAppID, v))
-}
-
-// AppIDLTE applies the LTE predicate on the "app_id" field.
-func AppIDLTE(v string) predicate.DeploymentProfile {
-	return predicate.DeploymentProfile(sql.FieldLTE(FieldAppID, v))
-}
-
-// AppIDContains applies the Contains predicate on the "app_id" field.
-func AppIDContains(v string) predicate.DeploymentProfile {
-	return predicate.DeploymentProfile(sql.FieldContains(FieldAppID, v))
-}
-
-// AppIDHasPrefix applies the HasPrefix predicate on the "app_id" field.
-func AppIDHasPrefix(v string) predicate.DeploymentProfile {
-	return predicate.DeploymentProfile(sql.FieldHasPrefix(FieldAppID, v))
-}
-
-// AppIDHasSuffix applies the HasSuffix predicate on the "app_id" field.
-func AppIDHasSuffix(v string) predicate.DeploymentProfile {
-	return predicate.DeploymentProfile(sql.FieldHasSuffix(FieldAppID, v))
 }
 
 // AppIDIsNil applies the IsNil predicate on the "app_id" field.
@@ -536,16 +492,6 @@ func AppIDIsNil() predicate.DeploymentProfile {
 // AppIDNotNil applies the NotNil predicate on the "app_id" field.
 func AppIDNotNil() predicate.DeploymentProfile {
 	return predicate.DeploymentProfile(sql.FieldNotNull(FieldAppID))
-}
-
-// AppIDEqualFold applies the EqualFold predicate on the "app_id" field.
-func AppIDEqualFold(v string) predicate.DeploymentProfile {
-	return predicate.DeploymentProfile(sql.FieldEqualFold(FieldAppID, v))
-}
-
-// AppIDContainsFold applies the ContainsFold predicate on the "app_id" field.
-func AppIDContainsFold(v string) predicate.DeploymentProfile {
-	return predicate.DeploymentProfile(sql.FieldContainsFold(FieldAppID, v))
 }
 
 // HasComponents applies the HasEdge predicate on the "components" edge.

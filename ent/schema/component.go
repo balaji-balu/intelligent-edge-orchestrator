@@ -5,6 +5,7 @@ package schema
 import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
+	"github.com/google/uuid"
 	//"entgo.io/ent/dialect"
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
@@ -17,8 +18,12 @@ type Component struct {
 }
 
 func (Component) Fields() []ent.Field {
-	return []ent.Field{field.Uint("id").SchemaType(map[string]string{"postgres": "serial"}),
-		field.String("deployment_profile_id").Optional(),
+	return []ent.Field{
+		//field.Uint("id").SchemaType(map[string]string{"postgres": "serial"}),
+		field.UUID("id", uuid.UUID{}).
+            Default(uuid.New),
+		//field.String("deployment_profile_id").Optional(),
+		field.UUID("deployment_profile_id", uuid.UUID{}).Optional(),
 		field.String("name").Optional(),
 		field.JSON("properties", application.ComponentProperties{}).
 			Optional(),

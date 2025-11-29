@@ -49,7 +49,8 @@ type ApplicationDescMutation struct {
 	config
 	op                         Op
 	typ                        string
-	id                         *string
+	id                         *uuid.UUID
+	app_id                     *string
 	name                       *string
 	vendor                     *string
 	version                    *string
@@ -63,8 +64,8 @@ type ApplicationDescMutation struct {
 	appendtags                 []string
 	published                  *string
 	clearedFields              map[string]struct{}
-	deployment_profiles        map[string]struct{}
-	removeddeployment_profiles map[string]struct{}
+	deployment_profiles        map[uuid.UUID]struct{}
+	removeddeployment_profiles map[uuid.UUID]struct{}
 	cleareddeployment_profiles bool
 	done                       bool
 	oldValue                   func(context.Context) (*ApplicationDesc, error)
@@ -91,7 +92,7 @@ func newApplicationDescMutation(c config, op Op, opts ...applicationdescOption) 
 }
 
 // withApplicationDescID sets the ID field of the mutation.
-func withApplicationDescID(id string) applicationdescOption {
+func withApplicationDescID(id uuid.UUID) applicationdescOption {
 	return func(m *ApplicationDescMutation) {
 		var (
 			err   error
@@ -143,13 +144,13 @@ func (m ApplicationDescMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of ApplicationDesc entities.
-func (m *ApplicationDescMutation) SetID(id string) {
+func (m *ApplicationDescMutation) SetID(id uuid.UUID) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *ApplicationDescMutation) ID() (id string, exists bool) {
+func (m *ApplicationDescMutation) ID() (id uuid.UUID, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -160,12 +161,12 @@ func (m *ApplicationDescMutation) ID() (id string, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *ApplicationDescMutation) IDs(ctx context.Context) ([]string, error) {
+func (m *ApplicationDescMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []string{id}, nil
+			return []uuid.UUID{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -173,6 +174,55 @@ func (m *ApplicationDescMutation) IDs(ctx context.Context) ([]string, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetAppID sets the "app_id" field.
+func (m *ApplicationDescMutation) SetAppID(s string) {
+	m.app_id = &s
+}
+
+// AppID returns the value of the "app_id" field in the mutation.
+func (m *ApplicationDescMutation) AppID() (r string, exists bool) {
+	v := m.app_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAppID returns the old "app_id" field's value of the ApplicationDesc entity.
+// If the ApplicationDesc object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ApplicationDescMutation) OldAppID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAppID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAppID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAppID: %w", err)
+	}
+	return oldValue.AppID, nil
+}
+
+// ClearAppID clears the value of the "app_id" field.
+func (m *ApplicationDescMutation) ClearAppID() {
+	m.app_id = nil
+	m.clearedFields[applicationdesc.FieldAppID] = struct{}{}
+}
+
+// AppIDCleared returns if the "app_id" field was cleared in this mutation.
+func (m *ApplicationDescMutation) AppIDCleared() bool {
+	_, ok := m.clearedFields[applicationdesc.FieldAppID]
+	return ok
+}
+
+// ResetAppID resets all changes to the "app_id" field.
+func (m *ApplicationDescMutation) ResetAppID() {
+	m.app_id = nil
+	delete(m.clearedFields, applicationdesc.FieldAppID)
 }
 
 // SetName sets the "name" field.
@@ -731,9 +781,9 @@ func (m *ApplicationDescMutation) ResetPublished() {
 }
 
 // AddDeploymentProfileIDs adds the "deployment_profiles" edge to the DeploymentProfile entity by ids.
-func (m *ApplicationDescMutation) AddDeploymentProfileIDs(ids ...string) {
+func (m *ApplicationDescMutation) AddDeploymentProfileIDs(ids ...uuid.UUID) {
 	if m.deployment_profiles == nil {
-		m.deployment_profiles = make(map[string]struct{})
+		m.deployment_profiles = make(map[uuid.UUID]struct{})
 	}
 	for i := range ids {
 		m.deployment_profiles[ids[i]] = struct{}{}
@@ -751,9 +801,9 @@ func (m *ApplicationDescMutation) DeploymentProfilesCleared() bool {
 }
 
 // RemoveDeploymentProfileIDs removes the "deployment_profiles" edge to the DeploymentProfile entity by IDs.
-func (m *ApplicationDescMutation) RemoveDeploymentProfileIDs(ids ...string) {
+func (m *ApplicationDescMutation) RemoveDeploymentProfileIDs(ids ...uuid.UUID) {
 	if m.removeddeployment_profiles == nil {
-		m.removeddeployment_profiles = make(map[string]struct{})
+		m.removeddeployment_profiles = make(map[uuid.UUID]struct{})
 	}
 	for i := range ids {
 		delete(m.deployment_profiles, ids[i])
@@ -762,7 +812,7 @@ func (m *ApplicationDescMutation) RemoveDeploymentProfileIDs(ids ...string) {
 }
 
 // RemovedDeploymentProfiles returns the removed IDs of the "deployment_profiles" edge to the DeploymentProfile entity.
-func (m *ApplicationDescMutation) RemovedDeploymentProfilesIDs() (ids []string) {
+func (m *ApplicationDescMutation) RemovedDeploymentProfilesIDs() (ids []uuid.UUID) {
 	for id := range m.removeddeployment_profiles {
 		ids = append(ids, id)
 	}
@@ -770,7 +820,7 @@ func (m *ApplicationDescMutation) RemovedDeploymentProfilesIDs() (ids []string) 
 }
 
 // DeploymentProfilesIDs returns the "deployment_profiles" edge IDs in the mutation.
-func (m *ApplicationDescMutation) DeploymentProfilesIDs() (ids []string) {
+func (m *ApplicationDescMutation) DeploymentProfilesIDs() (ids []uuid.UUID) {
 	for id := range m.deployment_profiles {
 		ids = append(ids, id)
 	}
@@ -818,7 +868,10 @@ func (m *ApplicationDescMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ApplicationDescMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 12)
+	if m.app_id != nil {
+		fields = append(fields, applicationdesc.FieldAppID)
+	}
 	if m.name != nil {
 		fields = append(fields, applicationdesc.FieldName)
 	}
@@ -860,6 +913,8 @@ func (m *ApplicationDescMutation) Fields() []string {
 // schema.
 func (m *ApplicationDescMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case applicationdesc.FieldAppID:
+		return m.AppID()
 	case applicationdesc.FieldName:
 		return m.Name()
 	case applicationdesc.FieldVendor:
@@ -891,6 +946,8 @@ func (m *ApplicationDescMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *ApplicationDescMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case applicationdesc.FieldAppID:
+		return m.OldAppID(ctx)
 	case applicationdesc.FieldName:
 		return m.OldName(ctx)
 	case applicationdesc.FieldVendor:
@@ -922,6 +979,13 @@ func (m *ApplicationDescMutation) OldField(ctx context.Context, name string) (en
 // type.
 func (m *ApplicationDescMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case applicationdesc.FieldAppID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAppID(v)
+		return nil
 	case applicationdesc.FieldName:
 		v, ok := value.(string)
 		if !ok {
@@ -1029,6 +1093,9 @@ func (m *ApplicationDescMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *ApplicationDescMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(applicationdesc.FieldAppID) {
+		fields = append(fields, applicationdesc.FieldAppID)
+	}
 	if m.FieldCleared(applicationdesc.FieldName) {
 		fields = append(fields, applicationdesc.FieldName)
 	}
@@ -1076,6 +1143,9 @@ func (m *ApplicationDescMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *ApplicationDescMutation) ClearField(name string) error {
 	switch name {
+	case applicationdesc.FieldAppID:
+		m.ClearAppID()
+		return nil
 	case applicationdesc.FieldName:
 		m.ClearName()
 		return nil
@@ -1117,6 +1187,9 @@ func (m *ApplicationDescMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *ApplicationDescMutation) ResetField(name string) error {
 	switch name {
+	case applicationdesc.FieldAppID:
+		m.ResetAppID()
+		return nil
 	case applicationdesc.FieldName:
 		m.ResetName()
 		return nil
@@ -1243,11 +1316,11 @@ type ComponentMutation struct {
 	config
 	op                        Op
 	typ                       string
-	id                        *uint
+	id                        *uuid.UUID
 	name                      *string
 	properties                *application.ComponentProperties
 	clearedFields             map[string]struct{}
-	deployment_profile        *string
+	deployment_profile        *uuid.UUID
 	cleareddeployment_profile bool
 	done                      bool
 	oldValue                  func(context.Context) (*Component, error)
@@ -1274,7 +1347,7 @@ func newComponentMutation(c config, op Op, opts ...componentOption) *ComponentMu
 }
 
 // withComponentID sets the ID field of the mutation.
-func withComponentID(id uint) componentOption {
+func withComponentID(id uuid.UUID) componentOption {
 	return func(m *ComponentMutation) {
 		var (
 			err   error
@@ -1326,13 +1399,13 @@ func (m ComponentMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of Component entities.
-func (m *ComponentMutation) SetID(id uint) {
+func (m *ComponentMutation) SetID(id uuid.UUID) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *ComponentMutation) ID() (id uint, exists bool) {
+func (m *ComponentMutation) ID() (id uuid.UUID, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -1343,12 +1416,12 @@ func (m *ComponentMutation) ID() (id uint, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *ComponentMutation) IDs(ctx context.Context) ([]uint, error) {
+func (m *ComponentMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uint{id}, nil
+			return []uuid.UUID{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -1359,12 +1432,12 @@ func (m *ComponentMutation) IDs(ctx context.Context) ([]uint, error) {
 }
 
 // SetDeploymentProfileID sets the "deployment_profile_id" field.
-func (m *ComponentMutation) SetDeploymentProfileID(s string) {
-	m.deployment_profile = &s
+func (m *ComponentMutation) SetDeploymentProfileID(u uuid.UUID) {
+	m.deployment_profile = &u
 }
 
 // DeploymentProfileID returns the value of the "deployment_profile_id" field in the mutation.
-func (m *ComponentMutation) DeploymentProfileID() (r string, exists bool) {
+func (m *ComponentMutation) DeploymentProfileID() (r uuid.UUID, exists bool) {
 	v := m.deployment_profile
 	if v == nil {
 		return
@@ -1375,7 +1448,7 @@ func (m *ComponentMutation) DeploymentProfileID() (r string, exists bool) {
 // OldDeploymentProfileID returns the old "deployment_profile_id" field's value of the Component entity.
 // If the Component object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ComponentMutation) OldDeploymentProfileID(ctx context.Context) (v string, err error) {
+func (m *ComponentMutation) OldDeploymentProfileID(ctx context.Context) (v uuid.UUID, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldDeploymentProfileID is only allowed on UpdateOne operations")
 	}
@@ -1519,7 +1592,7 @@ func (m *ComponentMutation) DeploymentProfileCleared() bool {
 // DeploymentProfileIDs returns the "deployment_profile" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // DeploymentProfileID instead. It exists only for internal usage by the builders.
-func (m *ComponentMutation) DeploymentProfileIDs() (ids []string) {
+func (m *ComponentMutation) DeploymentProfileIDs() (ids []uuid.UUID) {
 	if id := m.deployment_profile; id != nil {
 		ids = append(ids, *id)
 	}
@@ -1615,7 +1688,7 @@ func (m *ComponentMutation) OldField(ctx context.Context, name string) (ent.Valu
 func (m *ComponentMutation) SetField(name string, value ent.Value) error {
 	switch name {
 	case component.FieldDeploymentProfileID:
-		v, ok := value.(string)
+		v, ok := value.(uuid.UUID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -2507,7 +2580,7 @@ type DeploymentProfileMutation struct {
 	config
 	op                      Op
 	typ                     string
-	id                      *string
+	id                      *uuid.UUID
 	_type                   *string
 	description             *string
 	cpu_cores               *float64
@@ -2521,10 +2594,10 @@ type DeploymentProfileMutation struct {
 	interfaces              *[]map[string]interface{}
 	appendinterfaces        []map[string]interface{}
 	clearedFields           map[string]struct{}
-	components              map[uint]struct{}
-	removedcomponents       map[uint]struct{}
+	components              map[uuid.UUID]struct{}
+	removedcomponents       map[uuid.UUID]struct{}
 	clearedcomponents       bool
-	application_desc        *string
+	application_desc        *uuid.UUID
 	clearedapplication_desc bool
 	done                    bool
 	oldValue                func(context.Context) (*DeploymentProfile, error)
@@ -2551,7 +2624,7 @@ func newDeploymentProfileMutation(c config, op Op, opts ...deploymentprofileOpti
 }
 
 // withDeploymentProfileID sets the ID field of the mutation.
-func withDeploymentProfileID(id string) deploymentprofileOption {
+func withDeploymentProfileID(id uuid.UUID) deploymentprofileOption {
 	return func(m *DeploymentProfileMutation) {
 		var (
 			err   error
@@ -2603,13 +2676,13 @@ func (m DeploymentProfileMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of DeploymentProfile entities.
-func (m *DeploymentProfileMutation) SetID(id string) {
+func (m *DeploymentProfileMutation) SetID(id uuid.UUID) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *DeploymentProfileMutation) ID() (id string, exists bool) {
+func (m *DeploymentProfileMutation) ID() (id uuid.UUID, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -2620,12 +2693,12 @@ func (m *DeploymentProfileMutation) ID() (id string, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *DeploymentProfileMutation) IDs(ctx context.Context) ([]string, error) {
+func (m *DeploymentProfileMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []string{id}, nil
+			return []uuid.UUID{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -3097,12 +3170,12 @@ func (m *DeploymentProfileMutation) ResetInterfaces() {
 }
 
 // SetAppID sets the "app_id" field.
-func (m *DeploymentProfileMutation) SetAppID(s string) {
-	m.application_desc = &s
+func (m *DeploymentProfileMutation) SetAppID(u uuid.UUID) {
+	m.application_desc = &u
 }
 
 // AppID returns the value of the "app_id" field in the mutation.
-func (m *DeploymentProfileMutation) AppID() (r string, exists bool) {
+func (m *DeploymentProfileMutation) AppID() (r uuid.UUID, exists bool) {
 	v := m.application_desc
 	if v == nil {
 		return
@@ -3113,7 +3186,7 @@ func (m *DeploymentProfileMutation) AppID() (r string, exists bool) {
 // OldAppID returns the old "app_id" field's value of the DeploymentProfile entity.
 // If the DeploymentProfile object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *DeploymentProfileMutation) OldAppID(ctx context.Context) (v string, err error) {
+func (m *DeploymentProfileMutation) OldAppID(ctx context.Context) (v uuid.UUID, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldAppID is only allowed on UpdateOne operations")
 	}
@@ -3146,9 +3219,9 @@ func (m *DeploymentProfileMutation) ResetAppID() {
 }
 
 // AddComponentIDs adds the "components" edge to the Component entity by ids.
-func (m *DeploymentProfileMutation) AddComponentIDs(ids ...uint) {
+func (m *DeploymentProfileMutation) AddComponentIDs(ids ...uuid.UUID) {
 	if m.components == nil {
-		m.components = make(map[uint]struct{})
+		m.components = make(map[uuid.UUID]struct{})
 	}
 	for i := range ids {
 		m.components[ids[i]] = struct{}{}
@@ -3166,9 +3239,9 @@ func (m *DeploymentProfileMutation) ComponentsCleared() bool {
 }
 
 // RemoveComponentIDs removes the "components" edge to the Component entity by IDs.
-func (m *DeploymentProfileMutation) RemoveComponentIDs(ids ...uint) {
+func (m *DeploymentProfileMutation) RemoveComponentIDs(ids ...uuid.UUID) {
 	if m.removedcomponents == nil {
-		m.removedcomponents = make(map[uint]struct{})
+		m.removedcomponents = make(map[uuid.UUID]struct{})
 	}
 	for i := range ids {
 		delete(m.components, ids[i])
@@ -3177,7 +3250,7 @@ func (m *DeploymentProfileMutation) RemoveComponentIDs(ids ...uint) {
 }
 
 // RemovedComponents returns the removed IDs of the "components" edge to the Component entity.
-func (m *DeploymentProfileMutation) RemovedComponentsIDs() (ids []uint) {
+func (m *DeploymentProfileMutation) RemovedComponentsIDs() (ids []uuid.UUID) {
 	for id := range m.removedcomponents {
 		ids = append(ids, id)
 	}
@@ -3185,7 +3258,7 @@ func (m *DeploymentProfileMutation) RemovedComponentsIDs() (ids []uint) {
 }
 
 // ComponentsIDs returns the "components" edge IDs in the mutation.
-func (m *DeploymentProfileMutation) ComponentsIDs() (ids []uint) {
+func (m *DeploymentProfileMutation) ComponentsIDs() (ids []uuid.UUID) {
 	for id := range m.components {
 		ids = append(ids, id)
 	}
@@ -3200,7 +3273,7 @@ func (m *DeploymentProfileMutation) ResetComponents() {
 }
 
 // SetApplicationDescID sets the "application_desc" edge to the ApplicationDesc entity by id.
-func (m *DeploymentProfileMutation) SetApplicationDescID(id string) {
+func (m *DeploymentProfileMutation) SetApplicationDescID(id uuid.UUID) {
 	m.application_desc = &id
 }
 
@@ -3216,7 +3289,7 @@ func (m *DeploymentProfileMutation) ApplicationDescCleared() bool {
 }
 
 // ApplicationDescID returns the "application_desc" edge ID in the mutation.
-func (m *DeploymentProfileMutation) ApplicationDescID() (id string, exists bool) {
+func (m *DeploymentProfileMutation) ApplicationDescID() (id uuid.UUID, exists bool) {
 	if m.application_desc != nil {
 		return *m.application_desc, true
 	}
@@ -3226,7 +3299,7 @@ func (m *DeploymentProfileMutation) ApplicationDescID() (id string, exists bool)
 // ApplicationDescIDs returns the "application_desc" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // ApplicationDescID instead. It exists only for internal usage by the builders.
-func (m *DeploymentProfileMutation) ApplicationDescIDs() (ids []string) {
+func (m *DeploymentProfileMutation) ApplicationDescIDs() (ids []uuid.UUID) {
 	if id := m.application_desc; id != nil {
 		ids = append(ids, *id)
 	}
@@ -3420,7 +3493,7 @@ func (m *DeploymentProfileMutation) SetField(name string, value ent.Value) error
 		m.SetInterfaces(v)
 		return nil
 	case deploymentprofile.FieldAppID:
-		v, ok := value.(string)
+		v, ok := value.(uuid.UUID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}

@@ -5,6 +5,7 @@ package deploymentprofile
 import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 )
 
 const (
@@ -34,8 +35,6 @@ const (
 	EdgeComponents = "components"
 	// EdgeApplicationDesc holds the string denoting the application_desc edge name in mutations.
 	EdgeApplicationDesc = "application_desc"
-	// ApplicationDescFieldID holds the string denoting the ID field of the ApplicationDesc.
-	ApplicationDescFieldID = "app_id"
 	// Table holds the table name of the deploymentprofile in the database.
 	Table = "deployment_profile"
 	// ComponentsTable is the table that holds the components relation/edge.
@@ -77,6 +76,11 @@ func ValidColumn(column string) bool {
 	}
 	return false
 }
+
+var (
+	// DefaultID holds the default value on creation for the "id" field.
+	DefaultID func() uuid.UUID
+)
 
 // OrderOption defines the ordering options for the DeploymentProfile queries.
 type OrderOption func(*sql.Selector)
@@ -146,7 +150,7 @@ func newComponentsStep() *sqlgraph.Step {
 func newApplicationDescStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ApplicationDescInverseTable, ApplicationDescFieldID),
+		sqlgraph.To(ApplicationDescInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, ApplicationDescTable, ApplicationDescColumn),
 	)
 }

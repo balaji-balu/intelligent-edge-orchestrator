@@ -12,15 +12,16 @@ import (
 	"github.com/balaji-balu/margo-hello-world/ent/component"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
 	"github.com/balaji-balu/margo-hello-world/pkg/application"
+	"github.com/google/uuid"
 )
 
 // Component is the model entity for the Component schema.
 type Component struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID uint `json:"id,omitempty"`
+	ID uuid.UUID `json:"id,omitempty"`
 	// DeploymentProfileID holds the value of the "deployment_profile_id" field.
-	DeploymentProfileID string `json:"deployment_profile_id,omitempty"`
+	DeploymentProfileID uuid.UUID `json:"deployment_profile_id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Properties holds the value of the "properties" field.
@@ -58,10 +59,10 @@ func (*Component) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case component.FieldProperties:
 			values[i] = new([]byte)
-		case component.FieldID:
-			values[i] = new(sql.NullInt64)
-		case component.FieldDeploymentProfileID, component.FieldName:
+		case component.FieldName:
 			values[i] = new(sql.NullString)
+		case component.FieldID, component.FieldDeploymentProfileID:
+			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -78,16 +79,16 @@ func (_m *Component) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case component.FieldID:
-			value, ok := values[i].(*sql.NullInt64)
-			if !ok {
-				return fmt.Errorf("unexpected type %T for field id", value)
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value != nil {
+				_m.ID = *value
 			}
-			_m.ID = uint(value.Int64)
 		case component.FieldDeploymentProfileID:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field deployment_profile_id", values[i])
-			} else if value.Valid {
-				_m.DeploymentProfileID = value.String
+			} else if value != nil {
+				_m.DeploymentProfileID = *value
 			}
 		case component.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -145,7 +146,7 @@ func (_m *Component) String() string {
 	builder.WriteString("Component(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("deployment_profile_id=")
-	builder.WriteString(_m.DeploymentProfileID)
+	builder.WriteString(fmt.Sprintf("%v", _m.DeploymentProfileID))
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)

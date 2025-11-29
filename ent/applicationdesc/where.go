@@ -6,61 +6,57 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/balaji-balu/margo-hello-world/ent/predicate"
+	"github.com/google/uuid"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id string) predicate.ApplicationDesc {
+func ID(id uuid.UUID) predicate.ApplicationDesc {
 	return predicate.ApplicationDesc(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id string) predicate.ApplicationDesc {
+func IDEQ(id uuid.UUID) predicate.ApplicationDesc {
 	return predicate.ApplicationDesc(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id string) predicate.ApplicationDesc {
+func IDNEQ(id uuid.UUID) predicate.ApplicationDesc {
 	return predicate.ApplicationDesc(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...string) predicate.ApplicationDesc {
+func IDIn(ids ...uuid.UUID) predicate.ApplicationDesc {
 	return predicate.ApplicationDesc(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...string) predicate.ApplicationDesc {
+func IDNotIn(ids ...uuid.UUID) predicate.ApplicationDesc {
 	return predicate.ApplicationDesc(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id string) predicate.ApplicationDesc {
+func IDGT(id uuid.UUID) predicate.ApplicationDesc {
 	return predicate.ApplicationDesc(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id string) predicate.ApplicationDesc {
+func IDGTE(id uuid.UUID) predicate.ApplicationDesc {
 	return predicate.ApplicationDesc(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id string) predicate.ApplicationDesc {
+func IDLT(id uuid.UUID) predicate.ApplicationDesc {
 	return predicate.ApplicationDesc(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id string) predicate.ApplicationDesc {
+func IDLTE(id uuid.UUID) predicate.ApplicationDesc {
 	return predicate.ApplicationDesc(sql.FieldLTE(FieldID, id))
 }
 
-// IDEqualFold applies the EqualFold predicate on the ID field.
-func IDEqualFold(id string) predicate.ApplicationDesc {
-	return predicate.ApplicationDesc(sql.FieldEqualFold(FieldID, id))
-}
-
-// IDContainsFold applies the ContainsFold predicate on the ID field.
-func IDContainsFold(id string) predicate.ApplicationDesc {
-	return predicate.ApplicationDesc(sql.FieldContainsFold(FieldID, id))
+// AppID applies equality check predicate on the "app_id" field. It's identical to AppIDEQ.
+func AppID(v string) predicate.ApplicationDesc {
+	return predicate.ApplicationDesc(sql.FieldEQ(FieldAppID, v))
 }
 
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
@@ -111,6 +107,81 @@ func TagLine(v string) predicate.ApplicationDesc {
 // Published applies equality check predicate on the "published" field. It's identical to PublishedEQ.
 func Published(v string) predicate.ApplicationDesc {
 	return predicate.ApplicationDesc(sql.FieldEQ(FieldPublished, v))
+}
+
+// AppIDEQ applies the EQ predicate on the "app_id" field.
+func AppIDEQ(v string) predicate.ApplicationDesc {
+	return predicate.ApplicationDesc(sql.FieldEQ(FieldAppID, v))
+}
+
+// AppIDNEQ applies the NEQ predicate on the "app_id" field.
+func AppIDNEQ(v string) predicate.ApplicationDesc {
+	return predicate.ApplicationDesc(sql.FieldNEQ(FieldAppID, v))
+}
+
+// AppIDIn applies the In predicate on the "app_id" field.
+func AppIDIn(vs ...string) predicate.ApplicationDesc {
+	return predicate.ApplicationDesc(sql.FieldIn(FieldAppID, vs...))
+}
+
+// AppIDNotIn applies the NotIn predicate on the "app_id" field.
+func AppIDNotIn(vs ...string) predicate.ApplicationDesc {
+	return predicate.ApplicationDesc(sql.FieldNotIn(FieldAppID, vs...))
+}
+
+// AppIDGT applies the GT predicate on the "app_id" field.
+func AppIDGT(v string) predicate.ApplicationDesc {
+	return predicate.ApplicationDesc(sql.FieldGT(FieldAppID, v))
+}
+
+// AppIDGTE applies the GTE predicate on the "app_id" field.
+func AppIDGTE(v string) predicate.ApplicationDesc {
+	return predicate.ApplicationDesc(sql.FieldGTE(FieldAppID, v))
+}
+
+// AppIDLT applies the LT predicate on the "app_id" field.
+func AppIDLT(v string) predicate.ApplicationDesc {
+	return predicate.ApplicationDesc(sql.FieldLT(FieldAppID, v))
+}
+
+// AppIDLTE applies the LTE predicate on the "app_id" field.
+func AppIDLTE(v string) predicate.ApplicationDesc {
+	return predicate.ApplicationDesc(sql.FieldLTE(FieldAppID, v))
+}
+
+// AppIDContains applies the Contains predicate on the "app_id" field.
+func AppIDContains(v string) predicate.ApplicationDesc {
+	return predicate.ApplicationDesc(sql.FieldContains(FieldAppID, v))
+}
+
+// AppIDHasPrefix applies the HasPrefix predicate on the "app_id" field.
+func AppIDHasPrefix(v string) predicate.ApplicationDesc {
+	return predicate.ApplicationDesc(sql.FieldHasPrefix(FieldAppID, v))
+}
+
+// AppIDHasSuffix applies the HasSuffix predicate on the "app_id" field.
+func AppIDHasSuffix(v string) predicate.ApplicationDesc {
+	return predicate.ApplicationDesc(sql.FieldHasSuffix(FieldAppID, v))
+}
+
+// AppIDIsNil applies the IsNil predicate on the "app_id" field.
+func AppIDIsNil() predicate.ApplicationDesc {
+	return predicate.ApplicationDesc(sql.FieldIsNull(FieldAppID))
+}
+
+// AppIDNotNil applies the NotNil predicate on the "app_id" field.
+func AppIDNotNil() predicate.ApplicationDesc {
+	return predicate.ApplicationDesc(sql.FieldNotNull(FieldAppID))
+}
+
+// AppIDEqualFold applies the EqualFold predicate on the "app_id" field.
+func AppIDEqualFold(v string) predicate.ApplicationDesc {
+	return predicate.ApplicationDesc(sql.FieldEqualFold(FieldAppID, v))
+}
+
+// AppIDContainsFold applies the ContainsFold predicate on the "app_id" field.
+func AppIDContainsFold(v string) predicate.ApplicationDesc {
+	return predicate.ApplicationDesc(sql.FieldContainsFold(FieldAppID, v))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.

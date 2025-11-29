@@ -11,13 +11,14 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/balaji-balu/margo-hello-world/ent/applicationdesc"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
+	"github.com/google/uuid"
 )
 
 // DeploymentProfile is the model entity for the DeploymentProfile schema.
 type DeploymentProfile struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID string `json:"id,omitempty"`
+	ID uuid.UUID `json:"id,omitempty"`
 	// Type holds the value of the "type" field.
 	Type string `json:"type,omitempty"`
 	// Description holds the value of the "description" field.
@@ -35,7 +36,7 @@ type DeploymentProfile struct {
 	// Interfaces holds the value of the "interfaces" field.
 	Interfaces []map[string]interface{} `json:"interfaces,omitempty"`
 	// AppID holds the value of the "app_id" field.
-	AppID string `json:"app_id,omitempty"`
+	AppID uuid.UUID `json:"app_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the DeploymentProfileQuery when eager-loading is set.
 	Edges        DeploymentProfileEdges `json:"edges"`
@@ -82,8 +83,10 @@ func (*DeploymentProfile) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case deploymentprofile.FieldCPUCores:
 			values[i] = new(sql.NullFloat64)
-		case deploymentprofile.FieldID, deploymentprofile.FieldType, deploymentprofile.FieldDescription, deploymentprofile.FieldMemory, deploymentprofile.FieldStorage, deploymentprofile.FieldAppID:
+		case deploymentprofile.FieldType, deploymentprofile.FieldDescription, deploymentprofile.FieldMemory, deploymentprofile.FieldStorage:
 			values[i] = new(sql.NullString)
+		case deploymentprofile.FieldID, deploymentprofile.FieldAppID:
+			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -100,10 +103,10 @@ func (_m *DeploymentProfile) assignValues(columns []string, values []any) error 
 	for i := range columns {
 		switch columns[i] {
 		case deploymentprofile.FieldID:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value.Valid {
-				_m.ID = value.String
+			} else if value != nil {
+				_m.ID = *value
 			}
 		case deploymentprofile.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -160,10 +163,10 @@ func (_m *DeploymentProfile) assignValues(columns []string, values []any) error 
 				}
 			}
 		case deploymentprofile.FieldAppID:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field app_id", values[i])
-			} else if value.Valid {
-				_m.AppID = value.String
+			} else if value != nil {
+				_m.AppID = *value
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -236,7 +239,7 @@ func (_m *DeploymentProfile) String() string {
 	builder.WriteString(fmt.Sprintf("%v", _m.Interfaces))
 	builder.WriteString(", ")
 	builder.WriteString("app_id=")
-	builder.WriteString(_m.AppID)
+	builder.WriteString(fmt.Sprintf("%v", _m.AppID))
 	builder.WriteByte(')')
 	return builder.String()
 }

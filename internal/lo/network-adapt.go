@@ -8,7 +8,8 @@ import (
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"		
 
-	"github.com/balaji-balu/margo-hello-world/internal/lo/reconciler"
+	//"github.com/balaji-balu/margo-hello-world/internal/lo/reconciler"
+	"github.com/balaji-balu/margo-hello-world/pkg/model"
 	"github.com/balaji-balu/margo-hello-world/internal/lo/logger"
 )
 
@@ -139,34 +140,37 @@ func (l *LocalOrchestrator) handleGitPolled(data GitPolledPayload) {
 		zap.Int("deployments", len(data.Deployments)),
 	)
 
-	ctx := context.Background()
+	//ctx := context.Background()
 	for _, d := range data.Deployments {
 		logger.Info("Deploying", zap.String("deployment_id", d.DeploymentID))
-		var dep reconciler.ApplicationDeployment
+		var dep model.ApplicationDeployment
 		if err := yaml.Unmarshal([]byte(d.Content), &dep); err != nil {
 			logger.Error("Failed to unmarshal deployment YAML", zap.Error(err))
 			continue
 		}
 
-		desiredHashes := map[string]string{}
-		for _, c := range dep.Spec.DeploymentProfile.Components {
-			h, err := reconciler.HashComponentSpec(c)
-			if err != nil {
-				logger.Error("Failed to hash component spec", "component", c.Name, "err", err)
-				return //fmt.Errorf("hash component: %w", err)
-			}
-
-			desiredHashes[c.Name] = h
-
-			// Store desired
-			if err := l.boltstore.SetDesired(ctx, d.DeploymentID, c, h); err != nil {
-				logger.Error("Failed to persist desired", "err", err, "component", c.Name)
-				return //err
-			}
+		app := model.App{
+			ID: dep.Metadata.Annotations.ApplicationID,
+			Version: dep.Metadata.Annotations.Version,
+			Components: make(map[string]model.Component),
 		}
+		for _, c := range dep.Spec.DeploymentProfile.Components {
+			log.Println("comp", c)
+			comp := model.Component{
+				Name: c.Name,
+				Version: c.Properties.Revision,
+				Repository: c.Properties.Repository,
+				PackageURL: c.Properties.PackageURL,
+				KeyURL: c.Properties.KeyURL, 
+			}
+			app.Components[c.Name] = comp
+		}
+		depId := dep.Metadata.Annotations.ID
+		l.store.SetDesired(depId, app)
+
 
 		// Call reconciler here
-		if err := l.reconcile.ReconcileMulti(l.Config.Site, d.DeploymentID, dep); err != nil {
+		if err := l.reconcile.ReconcileMulti(depId); err != nil {
 			logger.Info("Reconcilemulti failed:", zap.Error(err))
     		log.Fatal(err)
 		}

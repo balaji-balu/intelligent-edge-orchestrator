@@ -2,10 +2,10 @@ package edgenode
 
 import (
 	"context"
-	"os"
+	//"os"
 	//"bytes"
 	//"encoding/json"
-	"os/exec"
+	//"os/exec"
 	"fmt"
 	"log"
 	//"net/http"
@@ -15,11 +15,11 @@ import (
 	"go.uber.org/zap"
 
 	//"github.com/balaji-balu/margo-hello-world/internal/config"
-	"github.com/balaji-balu/margo-hello-world/pkg/deployment"
+	//"github.com/balaji-balu/margo-hello-world/pkg/deployment"
 	"github.com/balaji-balu/margo-hello-world/pkg/model"
-	"github.com/balaji-balu/margo-hello-world/internal/ocifetch"
+	//"github.com/balaji-balu/margo-hello-world/internal/ocifetch"
 	"github.com/balaji-balu/margo-hello-world/internal/natsbroker"
-	"github.com/balaji-balu/margo-hello-world/internal/lo/reconciler"
+	//"github.com/balaji-balu/margo-hello-world/internal/lo/reconciler"
 )
 
 type EdgeNode struct {
@@ -78,17 +78,17 @@ func (en *EdgeNode) startHeartbeat() {
 // TBD: workload Update, delete
 func (en *EdgeNode) startDeployListener() {
 	subj := fmt.Sprintf("site.%s.deploy.%s", en.SiteID, en.HostID)
-	en.nc.Subscribe3(subj, func(req model.HostDeployRequest) {
+	en.nc.Subscribe3(subj, func(req model.DiffOp) {
 		log.Printf("req:", req)
 		log.Printf("[EN %s] deploy request received (%s)", en.HostID, en.Runtime)
 		//success := true
 		//statusMsg := "Deployment successful"
-		log.Println("req.Component:", req.Component)
+		//log.Println("req.Component:", req.Component)
 		en.UpdateStatus(req.DeploymentID, string(model.StateInstalling), 
-			req.Component.Name, nil)
+			req, nil)
 		time.Sleep(30 * time.Second)
 		en.UpdateStatus(req.DeploymentID, string(model.StateInstalled), 
-			req.Component.Name, nil)
+			req, nil)
 
 /*		
 		if en.Runtime == "wasm" {
@@ -140,55 +140,57 @@ func (en *EdgeNode) startDeployListener() {
 // Create new oci based container
 // TBD: if container is already running
 //
-func (en *EdgeNode) deployContainerd(
-	req deployment.DeployRequest, compName string,
-) error {
-	deploymentID := req.DeploymentID
-	log.Println("Deploying Containerd:", req.Image)
+// func (en *EdgeNode) deployContainerd(
+// 	req deployment.DeployRequest, compName string,
+// ) error {
+// 	deploymentID := req.DeploymentID
+// 	log.Println("Deploying Containerd:", req.Image)
 
-    // 1️⃣ PENDING
-    // en.UpdateStatus(deploymentID, string(model.StatePending), compName, nil)
+//     // 1️⃣ PENDING
+//     // en.UpdateStatus(deploymentID, string(model.StatePending), compName, nil)
 
-    // 2️⃣ INSTALLING (OCI Fetch)
-    en.UpdateStatus(deploymentID, string(model.StateInstalling), compName, nil)
-    fetcher := ocifetch.Fetcher{
-        Image: req.Image,
-        Tag:   req.Revision,
-        Token: os.Getenv("GITHUB_TOKEN"),
-    }
-    if err := fetcher.Fetch(en.ctx); err != nil {
-        en.UpdateStatus(deploymentID, string(model.StateFailed), compName, err)
-        //http.Error(w, fmt.Sprintf("OCI fetch failed: %v", err), 500)
-        return err
-    }
+//     // 2️⃣ INSTALLING (OCI Fetch)
+//     en.UpdateStatus(deploymentID, string(model.StateInstalling), compName, nil)
+//     fetcher := ocifetch.Fetcher{
+//         Image: req.Image,
+//         Tag:   req.Revision,
+//         Token: os.Getenv("GITHUB_TOKEN"),
+//     }
+//     if err := fetcher.Fetch(en.ctx); err != nil {
+//         en.UpdateStatus(deploymentID, string(model.StateFailed), compName, err)
+//         //http.Error(w, fmt.Sprintf("OCI fetch failed: %v", err), 500)
+//         return err
+//     }
 
-    // 3️⃣ Run container
-    image := fmt.Sprintf("%s:%s", req.Image, req.Revision)
-    cmd := exec.Command("docker", "run", "-d", "--name", req.Revision, image)
-    out, err := cmd.CombinedOutput()
-    if err != nil {
-        en.UpdateStatus(deploymentID, string(model.StateFailed), compName, fmt.Errorf("docker run failed: %v, %s", err, out))
-        //http.Error(w, string(out), 500)
-        return err
-    }
+//     // 3️⃣ Run container
+//     image := fmt.Sprintf("%s:%s", req.Image, req.Revision)
+//     cmd := exec.Command("docker", "run", "-d", "--name", req.Revision, image)
+//     out, err := cmd.CombinedOutput()
+//     if err != nil {
+//         en.UpdateStatus(deploymentID, string(model.StateFailed), compName, fmt.Errorf("docker run failed: %v, %s", err, out))
+//         //http.Error(w, string(out), 500)
+//         return err
+//     }
 	
-    // 4️⃣ INSTALLED (success)
-    en.UpdateStatus(deploymentID, string(model.StateInstalled), compName, nil)
-    //w.WriteHeader(http.StatusOK)
-    //w.Write([]byte(fmt.Sprintf("✅ Deployment completed: %s", image)))	
-	return nil
-}
+//     // 4️⃣ INSTALLED (success)
+//     en.UpdateStatus(deploymentID, string(model.StateInstalled), compName, nil)
+//     //w.WriteHeader(http.StatusOK)
+//     //w.Write([]byte(fmt.Sprintf("✅ Deployment completed: %s", image)))	
+// 	return nil
+// }
 
 // deployment status of an component is sent
 func (en *EdgeNode) UpdateStatus(
-	deploymentID string, state string, compName string, err error,
+	deploymentID string, state string, op model.DiffOp, err error,
 ) {
+	op.Status = state
 
-	ds := reconciler.DeploymentComponentStatus {}
-	ds.ComponentName = compName
-	ds.DeploymentID = deploymentID
-	ds.Status = state
-	ds.HostID = en.HostID
+	log.Println("op.Status", op.Status)
+	// ds := model.DeploymentComponentStatus {}
+	// ds.ComponentName = compName
+	// ds.DeploymentID = deploymentID
+	// ds.Status = state
+	// ds.HostID = en.HostID
 	// if err != nil {
     //     ds.Error = model.StatusError{
     //         Code:    "DEPLOYMENT_FAILED",
@@ -196,7 +198,8 @@ func (en *EdgeNode) UpdateStatus(
     //     }		
 	// }
 
+
 	statusSubj := fmt.Sprintf("status.%s.%s", en.SiteID, en.HostID)
-    en.nc.Publish(statusSubj, ds)
+    en.nc.Publish(statusSubj, op)
 }
 

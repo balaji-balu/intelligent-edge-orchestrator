@@ -15,6 +15,7 @@ import (
 	"github.com/balaji-balu/margo-hello-world/ent/component"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
 	"github.com/balaji-balu/margo-hello-world/ent/predicate"
+	"github.com/google/uuid"
 )
 
 // DeploymentProfileUpdate is the builder for updating DeploymentProfile entities.
@@ -192,13 +193,13 @@ func (_u *DeploymentProfileUpdate) ClearInterfaces() *DeploymentProfileUpdate {
 }
 
 // SetAppID sets the "app_id" field.
-func (_u *DeploymentProfileUpdate) SetAppID(v string) *DeploymentProfileUpdate {
+func (_u *DeploymentProfileUpdate) SetAppID(v uuid.UUID) *DeploymentProfileUpdate {
 	_u.mutation.SetAppID(v)
 	return _u
 }
 
 // SetNillableAppID sets the "app_id" field if the given value is not nil.
-func (_u *DeploymentProfileUpdate) SetNillableAppID(v *string) *DeploymentProfileUpdate {
+func (_u *DeploymentProfileUpdate) SetNillableAppID(v *uuid.UUID) *DeploymentProfileUpdate {
 	if v != nil {
 		_u.SetAppID(*v)
 	}
@@ -212,14 +213,14 @@ func (_u *DeploymentProfileUpdate) ClearAppID() *DeploymentProfileUpdate {
 }
 
 // AddComponentIDs adds the "components" edge to the Component entity by IDs.
-func (_u *DeploymentProfileUpdate) AddComponentIDs(ids ...uint) *DeploymentProfileUpdate {
+func (_u *DeploymentProfileUpdate) AddComponentIDs(ids ...uuid.UUID) *DeploymentProfileUpdate {
 	_u.mutation.AddComponentIDs(ids...)
 	return _u
 }
 
 // AddComponents adds the "components" edges to the Component entity.
 func (_u *DeploymentProfileUpdate) AddComponents(v ...*Component) *DeploymentProfileUpdate {
-	ids := make([]uint, len(v))
+	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -227,13 +228,13 @@ func (_u *DeploymentProfileUpdate) AddComponents(v ...*Component) *DeploymentPro
 }
 
 // SetApplicationDescID sets the "application_desc" edge to the ApplicationDesc entity by ID.
-func (_u *DeploymentProfileUpdate) SetApplicationDescID(id string) *DeploymentProfileUpdate {
+func (_u *DeploymentProfileUpdate) SetApplicationDescID(id uuid.UUID) *DeploymentProfileUpdate {
 	_u.mutation.SetApplicationDescID(id)
 	return _u
 }
 
 // SetNillableApplicationDescID sets the "application_desc" edge to the ApplicationDesc entity by ID if the given value is not nil.
-func (_u *DeploymentProfileUpdate) SetNillableApplicationDescID(id *string) *DeploymentProfileUpdate {
+func (_u *DeploymentProfileUpdate) SetNillableApplicationDescID(id *uuid.UUID) *DeploymentProfileUpdate {
 	if id != nil {
 		_u = _u.SetApplicationDescID(*id)
 	}
@@ -257,14 +258,14 @@ func (_u *DeploymentProfileUpdate) ClearComponents() *DeploymentProfileUpdate {
 }
 
 // RemoveComponentIDs removes the "components" edge to Component entities by IDs.
-func (_u *DeploymentProfileUpdate) RemoveComponentIDs(ids ...uint) *DeploymentProfileUpdate {
+func (_u *DeploymentProfileUpdate) RemoveComponentIDs(ids ...uuid.UUID) *DeploymentProfileUpdate {
 	_u.mutation.RemoveComponentIDs(ids...)
 	return _u
 }
 
 // RemoveComponents removes "components" edges to Component entities.
 func (_u *DeploymentProfileUpdate) RemoveComponents(v ...*Component) *DeploymentProfileUpdate {
-	ids := make([]uint, len(v))
+	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -305,7 +306,7 @@ func (_u *DeploymentProfileUpdate) ExecX(ctx context.Context) {
 }
 
 func (_u *DeploymentProfileUpdate) sqlSave(ctx context.Context) (_node int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(deploymentprofile.Table, deploymentprofile.Columns, sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeString))
+	_spec := sqlgraph.NewUpdateSpec(deploymentprofile.Table, deploymentprofile.Columns, sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeUUID))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -387,7 +388,7 @@ func (_u *DeploymentProfileUpdate) sqlSave(ctx context.Context) (_node int, err 
 			Columns: []string{deploymentprofile.ComponentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(component.FieldID, field.TypeUint),
+				IDSpec: sqlgraph.NewFieldSpec(component.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -400,7 +401,7 @@ func (_u *DeploymentProfileUpdate) sqlSave(ctx context.Context) (_node int, err 
 			Columns: []string{deploymentprofile.ComponentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(component.FieldID, field.TypeUint),
+				IDSpec: sqlgraph.NewFieldSpec(component.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -416,7 +417,7 @@ func (_u *DeploymentProfileUpdate) sqlSave(ctx context.Context) (_node int, err 
 			Columns: []string{deploymentprofile.ComponentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(component.FieldID, field.TypeUint),
+				IDSpec: sqlgraph.NewFieldSpec(component.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -432,7 +433,7 @@ func (_u *DeploymentProfileUpdate) sqlSave(ctx context.Context) (_node int, err 
 			Columns: []string{deploymentprofile.ApplicationDescColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(applicationdesc.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(applicationdesc.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -445,7 +446,7 @@ func (_u *DeploymentProfileUpdate) sqlSave(ctx context.Context) (_node int, err 
 			Columns: []string{deploymentprofile.ApplicationDescColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(applicationdesc.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(applicationdesc.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -635,13 +636,13 @@ func (_u *DeploymentProfileUpdateOne) ClearInterfaces() *DeploymentProfileUpdate
 }
 
 // SetAppID sets the "app_id" field.
-func (_u *DeploymentProfileUpdateOne) SetAppID(v string) *DeploymentProfileUpdateOne {
+func (_u *DeploymentProfileUpdateOne) SetAppID(v uuid.UUID) *DeploymentProfileUpdateOne {
 	_u.mutation.SetAppID(v)
 	return _u
 }
 
 // SetNillableAppID sets the "app_id" field if the given value is not nil.
-func (_u *DeploymentProfileUpdateOne) SetNillableAppID(v *string) *DeploymentProfileUpdateOne {
+func (_u *DeploymentProfileUpdateOne) SetNillableAppID(v *uuid.UUID) *DeploymentProfileUpdateOne {
 	if v != nil {
 		_u.SetAppID(*v)
 	}
@@ -655,14 +656,14 @@ func (_u *DeploymentProfileUpdateOne) ClearAppID() *DeploymentProfileUpdateOne {
 }
 
 // AddComponentIDs adds the "components" edge to the Component entity by IDs.
-func (_u *DeploymentProfileUpdateOne) AddComponentIDs(ids ...uint) *DeploymentProfileUpdateOne {
+func (_u *DeploymentProfileUpdateOne) AddComponentIDs(ids ...uuid.UUID) *DeploymentProfileUpdateOne {
 	_u.mutation.AddComponentIDs(ids...)
 	return _u
 }
 
 // AddComponents adds the "components" edges to the Component entity.
 func (_u *DeploymentProfileUpdateOne) AddComponents(v ...*Component) *DeploymentProfileUpdateOne {
-	ids := make([]uint, len(v))
+	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -670,13 +671,13 @@ func (_u *DeploymentProfileUpdateOne) AddComponents(v ...*Component) *Deployment
 }
 
 // SetApplicationDescID sets the "application_desc" edge to the ApplicationDesc entity by ID.
-func (_u *DeploymentProfileUpdateOne) SetApplicationDescID(id string) *DeploymentProfileUpdateOne {
+func (_u *DeploymentProfileUpdateOne) SetApplicationDescID(id uuid.UUID) *DeploymentProfileUpdateOne {
 	_u.mutation.SetApplicationDescID(id)
 	return _u
 }
 
 // SetNillableApplicationDescID sets the "application_desc" edge to the ApplicationDesc entity by ID if the given value is not nil.
-func (_u *DeploymentProfileUpdateOne) SetNillableApplicationDescID(id *string) *DeploymentProfileUpdateOne {
+func (_u *DeploymentProfileUpdateOne) SetNillableApplicationDescID(id *uuid.UUID) *DeploymentProfileUpdateOne {
 	if id != nil {
 		_u = _u.SetApplicationDescID(*id)
 	}
@@ -700,14 +701,14 @@ func (_u *DeploymentProfileUpdateOne) ClearComponents() *DeploymentProfileUpdate
 }
 
 // RemoveComponentIDs removes the "components" edge to Component entities by IDs.
-func (_u *DeploymentProfileUpdateOne) RemoveComponentIDs(ids ...uint) *DeploymentProfileUpdateOne {
+func (_u *DeploymentProfileUpdateOne) RemoveComponentIDs(ids ...uuid.UUID) *DeploymentProfileUpdateOne {
 	_u.mutation.RemoveComponentIDs(ids...)
 	return _u
 }
 
 // RemoveComponents removes "components" edges to Component entities.
 func (_u *DeploymentProfileUpdateOne) RemoveComponents(v ...*Component) *DeploymentProfileUpdateOne {
-	ids := make([]uint, len(v))
+	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -761,7 +762,7 @@ func (_u *DeploymentProfileUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (_u *DeploymentProfileUpdateOne) sqlSave(ctx context.Context) (_node *DeploymentProfile, err error) {
-	_spec := sqlgraph.NewUpdateSpec(deploymentprofile.Table, deploymentprofile.Columns, sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeString))
+	_spec := sqlgraph.NewUpdateSpec(deploymentprofile.Table, deploymentprofile.Columns, sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeUUID))
 	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "DeploymentProfile.id" for update`)}
@@ -860,7 +861,7 @@ func (_u *DeploymentProfileUpdateOne) sqlSave(ctx context.Context) (_node *Deplo
 			Columns: []string{deploymentprofile.ComponentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(component.FieldID, field.TypeUint),
+				IDSpec: sqlgraph.NewFieldSpec(component.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -873,7 +874,7 @@ func (_u *DeploymentProfileUpdateOne) sqlSave(ctx context.Context) (_node *Deplo
 			Columns: []string{deploymentprofile.ComponentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(component.FieldID, field.TypeUint),
+				IDSpec: sqlgraph.NewFieldSpec(component.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -889,7 +890,7 @@ func (_u *DeploymentProfileUpdateOne) sqlSave(ctx context.Context) (_node *Deplo
 			Columns: []string{deploymentprofile.ComponentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(component.FieldID, field.TypeUint),
+				IDSpec: sqlgraph.NewFieldSpec(component.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -905,7 +906,7 @@ func (_u *DeploymentProfileUpdateOne) sqlSave(ctx context.Context) (_node *Deplo
 			Columns: []string{deploymentprofile.ApplicationDescColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(applicationdesc.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(applicationdesc.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -918,7 +919,7 @@ func (_u *DeploymentProfileUpdateOne) sqlSave(ctx context.Context) (_node *Deplo
 			Columns: []string{deploymentprofile.ApplicationDescColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(applicationdesc.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(applicationdesc.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

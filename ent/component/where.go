@@ -6,55 +6,56 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/balaji-balu/margo-hello-world/ent/predicate"
+	"github.com/google/uuid"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id uint) predicate.Component {
+func ID(id uuid.UUID) predicate.Component {
 	return predicate.Component(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id uint) predicate.Component {
+func IDEQ(id uuid.UUID) predicate.Component {
 	return predicate.Component(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id uint) predicate.Component {
+func IDNEQ(id uuid.UUID) predicate.Component {
 	return predicate.Component(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...uint) predicate.Component {
+func IDIn(ids ...uuid.UUID) predicate.Component {
 	return predicate.Component(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...uint) predicate.Component {
+func IDNotIn(ids ...uuid.UUID) predicate.Component {
 	return predicate.Component(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id uint) predicate.Component {
+func IDGT(id uuid.UUID) predicate.Component {
 	return predicate.Component(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id uint) predicate.Component {
+func IDGTE(id uuid.UUID) predicate.Component {
 	return predicate.Component(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id uint) predicate.Component {
+func IDLT(id uuid.UUID) predicate.Component {
 	return predicate.Component(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id uint) predicate.Component {
+func IDLTE(id uuid.UUID) predicate.Component {
 	return predicate.Component(sql.FieldLTE(FieldID, id))
 }
 
 // DeploymentProfileID applies equality check predicate on the "deployment_profile_id" field. It's identical to DeploymentProfileIDEQ.
-func DeploymentProfileID(v string) predicate.Component {
+func DeploymentProfileID(v uuid.UUID) predicate.Component {
 	return predicate.Component(sql.FieldEQ(FieldDeploymentProfileID, v))
 }
 
@@ -64,58 +65,23 @@ func Name(v string) predicate.Component {
 }
 
 // DeploymentProfileIDEQ applies the EQ predicate on the "deployment_profile_id" field.
-func DeploymentProfileIDEQ(v string) predicate.Component {
+func DeploymentProfileIDEQ(v uuid.UUID) predicate.Component {
 	return predicate.Component(sql.FieldEQ(FieldDeploymentProfileID, v))
 }
 
 // DeploymentProfileIDNEQ applies the NEQ predicate on the "deployment_profile_id" field.
-func DeploymentProfileIDNEQ(v string) predicate.Component {
+func DeploymentProfileIDNEQ(v uuid.UUID) predicate.Component {
 	return predicate.Component(sql.FieldNEQ(FieldDeploymentProfileID, v))
 }
 
 // DeploymentProfileIDIn applies the In predicate on the "deployment_profile_id" field.
-func DeploymentProfileIDIn(vs ...string) predicate.Component {
+func DeploymentProfileIDIn(vs ...uuid.UUID) predicate.Component {
 	return predicate.Component(sql.FieldIn(FieldDeploymentProfileID, vs...))
 }
 
 // DeploymentProfileIDNotIn applies the NotIn predicate on the "deployment_profile_id" field.
-func DeploymentProfileIDNotIn(vs ...string) predicate.Component {
+func DeploymentProfileIDNotIn(vs ...uuid.UUID) predicate.Component {
 	return predicate.Component(sql.FieldNotIn(FieldDeploymentProfileID, vs...))
-}
-
-// DeploymentProfileIDGT applies the GT predicate on the "deployment_profile_id" field.
-func DeploymentProfileIDGT(v string) predicate.Component {
-	return predicate.Component(sql.FieldGT(FieldDeploymentProfileID, v))
-}
-
-// DeploymentProfileIDGTE applies the GTE predicate on the "deployment_profile_id" field.
-func DeploymentProfileIDGTE(v string) predicate.Component {
-	return predicate.Component(sql.FieldGTE(FieldDeploymentProfileID, v))
-}
-
-// DeploymentProfileIDLT applies the LT predicate on the "deployment_profile_id" field.
-func DeploymentProfileIDLT(v string) predicate.Component {
-	return predicate.Component(sql.FieldLT(FieldDeploymentProfileID, v))
-}
-
-// DeploymentProfileIDLTE applies the LTE predicate on the "deployment_profile_id" field.
-func DeploymentProfileIDLTE(v string) predicate.Component {
-	return predicate.Component(sql.FieldLTE(FieldDeploymentProfileID, v))
-}
-
-// DeploymentProfileIDContains applies the Contains predicate on the "deployment_profile_id" field.
-func DeploymentProfileIDContains(v string) predicate.Component {
-	return predicate.Component(sql.FieldContains(FieldDeploymentProfileID, v))
-}
-
-// DeploymentProfileIDHasPrefix applies the HasPrefix predicate on the "deployment_profile_id" field.
-func DeploymentProfileIDHasPrefix(v string) predicate.Component {
-	return predicate.Component(sql.FieldHasPrefix(FieldDeploymentProfileID, v))
-}
-
-// DeploymentProfileIDHasSuffix applies the HasSuffix predicate on the "deployment_profile_id" field.
-func DeploymentProfileIDHasSuffix(v string) predicate.Component {
-	return predicate.Component(sql.FieldHasSuffix(FieldDeploymentProfileID, v))
 }
 
 // DeploymentProfileIDIsNil applies the IsNil predicate on the "deployment_profile_id" field.
@@ -126,16 +92,6 @@ func DeploymentProfileIDIsNil() predicate.Component {
 // DeploymentProfileIDNotNil applies the NotNil predicate on the "deployment_profile_id" field.
 func DeploymentProfileIDNotNil() predicate.Component {
 	return predicate.Component(sql.FieldNotNull(FieldDeploymentProfileID))
-}
-
-// DeploymentProfileIDEqualFold applies the EqualFold predicate on the "deployment_profile_id" field.
-func DeploymentProfileIDEqualFold(v string) predicate.Component {
-	return predicate.Component(sql.FieldEqualFold(FieldDeploymentProfileID, v))
-}
-
-// DeploymentProfileIDContainsFold applies the ContainsFold predicate on the "deployment_profile_id" field.
-func DeploymentProfileIDContainsFold(v string) predicate.Component {
-	return predicate.Component(sql.FieldContainsFold(FieldDeploymentProfileID, v))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.

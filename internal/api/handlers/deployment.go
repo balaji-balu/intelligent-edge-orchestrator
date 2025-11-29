@@ -51,6 +51,8 @@ type HostMapping struct {
 type App struct {
 	AppID     string        `json:"app_id"`
 	AppName   string 		`json:"app_name"`
+	Version   string 		`json:"version"`
+	Category 	string		`json:"category"`
 	//ProfileID string        `json:"profile_id"`
 	Sites     []HostMapping `json:"sites"`
 	DeployType string 		`json:"deploy_type"`
@@ -144,8 +146,9 @@ func buildApplicationDeployment(
 				"app": appDesc.Name,
 			},
 			Annotations: deployment.Annotations{
-				ApplicationID: appDesc.ID,
-				ID:            id, //"deployment-1", // could generate UUID here
+				ApplicationID: appDesc.ID.String(),
+				ID:            id, 
+				Version: appDesc.Version, 
 			},
 		},
 		Spec: deployment.Spec{
@@ -222,10 +225,19 @@ func CreateDeployment(c *gin.Context,co *co.CO,  client *ent.Client, cfg *config
 	// Build a conditional filter
 	if app.AppID != "" {
 		log.Println("searching id....", app.AppID)
-		q = q.Where(applicationdesc.IDEQ(app.AppID))
+		uid, err := uuid.Parse(app.AppID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid uuid"})
+			return
+		}		
+		q = q.Where(applicationdesc.IDEQ(uid))
 	} else if app.AppName != "" {
 		log.Println("searching name....", app.AppName)
-		q = q.Where(applicationdesc.NameEQ(app.AppName))
+		q = q.Where(
+			applicationdesc.CategoryEQ(app.Category),
+			applicationdesc.NameEQ(app.AppName),
+			applicationdesc.VersionEQ(app.Version),
+		)
 	} else {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "app_id or app name must be provided"})
 		return

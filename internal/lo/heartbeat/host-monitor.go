@@ -5,7 +5,7 @@ import (
     "sync"
     "time"
 
-    "github.com/balaji-balu/margo-hello-world/internal/lo/reconciler"
+    "github.com/balaji-balu/margo-hello-world/internal/lo/boltstore"
 )
 
 type Status int
@@ -30,11 +30,12 @@ type Monitor struct {
     OnDead     func(enID string)
     OnRecovery func(enID string)
 
-    store *reconciler.BoltStore
+    //store *reconciler.BoltStore
+    store *boltstore.StateStore
 }
 
 func NewMonitor(expectedEvery time.Duration, 
-    maxMisses int, store *reconciler.BoltStore) *Monitor {
+    maxMisses int, store *boltstore.StateStore) *Monitor {
         
     return &Monitor{
         state:         make(map[string]*NodeState),
@@ -42,6 +43,10 @@ func NewMonitor(expectedEvery time.Duration,
         MaxMisses:     maxMisses,
         store:         store,
     }
+}
+
+func pathForHeartbeat(status string) []string {
+	return []string{"heartbeat", status} 
 }
 
 func (m *Monitor) Update(enID string) {
@@ -58,7 +63,8 @@ func (m *Monitor) Update(enID string) {
             Status:   Alive,
             Misses:   0,
         }
-        _ = m.store.SetHostAlive(enID, now) // stores alive + misses=0
+        //_ = m.store.SetHostAlive(enID, now) // stores alive + misses=0
+        _ = m.store.SaveState(pathForHeartbeat("alive"), enID, now)
         log.Printf("[INFO] EN %s ALIVE (new)", enID)
         return
     }
@@ -69,7 +75,8 @@ func (m *Monitor) Update(enID string) {
         s.LastSeen = now
         s.Misses = 0
 
-        _ = m.store.SetHostAlive(enID, now) // updates status=alive + misses=0
+        //_ = m.store.SetHostAlive(enID, now) // updates status=alive + misses=0
+        _ = m.store.SaveState(pathForHeartbeat("alive"), enID, now)
         log.Printf("[INFO] EN %s RECOVERED", enID)
 
         if m.OnRecovery != nil {
@@ -82,7 +89,8 @@ func (m *Monitor) Update(enID string) {
     s.LastSeen = now
     s.Misses = 0
 
-    _ = m.store.SetHostAlive(enID, now) // always resets misses=0
+    //_ = m.store.SetHostAlive(enID, now) // always resets misses=0
+    _ = m.store.SaveState(pathForHeartbeat("alive"), enID, now)
 }
 
 
@@ -111,13 +119,16 @@ func (m *Monitor) check() {
         if now.Sub(s.LastSeen) > m.ExpectedEvery {
             s.Misses++
 
-            _ = m.store.IncrementMisses(enID, s.Misses)
+            //_ = m.store.IncrementMisses(enID, s.Misses)
+            _ = m.store.SaveState(pathForHeartbeat("misses"), enID, now)
             log.Printf("[WARN] EN %s missed %d/%d", enID, s.Misses, m.MaxMisses)
 
             if s.Misses >= m.MaxMisses {
                 s.Status = Dead
 
-                _ = m.store.SetHostDead(enID, s.LastSeen)
+                //_ = m.store.SetHostDead(enID, s.LastSeen)
+                _ = m.store.SaveState(pathForHeartbeat("notactive"), enID, now)
+
                 log.Printf("[ERROR] EN %s declared DEAD", enID)
 
                 if m.OnDead != nil {

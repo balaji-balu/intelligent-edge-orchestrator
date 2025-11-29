@@ -335,7 +335,7 @@ func (c *ApplicationDescClient) UpdateOne(_m *ApplicationDesc) *ApplicationDescU
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *ApplicationDescClient) UpdateOneID(id string) *ApplicationDescUpdateOne {
+func (c *ApplicationDescClient) UpdateOneID(id uuid.UUID) *ApplicationDescUpdateOne {
 	mutation := newApplicationDescMutation(c.config, OpUpdateOne, withApplicationDescID(id))
 	return &ApplicationDescUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -352,7 +352,7 @@ func (c *ApplicationDescClient) DeleteOne(_m *ApplicationDesc) *ApplicationDescD
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *ApplicationDescClient) DeleteOneID(id string) *ApplicationDescDeleteOne {
+func (c *ApplicationDescClient) DeleteOneID(id uuid.UUID) *ApplicationDescDeleteOne {
 	builder := c.Delete().Where(applicationdesc.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -369,12 +369,12 @@ func (c *ApplicationDescClient) Query() *ApplicationDescQuery {
 }
 
 // Get returns a ApplicationDesc entity by its id.
-func (c *ApplicationDescClient) Get(ctx context.Context, id string) (*ApplicationDesc, error) {
+func (c *ApplicationDescClient) Get(ctx context.Context, id uuid.UUID) (*ApplicationDesc, error) {
 	return c.Query().Where(applicationdesc.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *ApplicationDescClient) GetX(ctx context.Context, id string) *ApplicationDesc {
+func (c *ApplicationDescClient) GetX(ctx context.Context, id uuid.UUID) *ApplicationDesc {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -484,7 +484,7 @@ func (c *ComponentClient) UpdateOne(_m *Component) *ComponentUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *ComponentClient) UpdateOneID(id uint) *ComponentUpdateOne {
+func (c *ComponentClient) UpdateOneID(id uuid.UUID) *ComponentUpdateOne {
 	mutation := newComponentMutation(c.config, OpUpdateOne, withComponentID(id))
 	return &ComponentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -501,7 +501,7 @@ func (c *ComponentClient) DeleteOne(_m *Component) *ComponentDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *ComponentClient) DeleteOneID(id uint) *ComponentDeleteOne {
+func (c *ComponentClient) DeleteOneID(id uuid.UUID) *ComponentDeleteOne {
 	builder := c.Delete().Where(component.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -518,12 +518,12 @@ func (c *ComponentClient) Query() *ComponentQuery {
 }
 
 // Get returns a Component entity by its id.
-func (c *ComponentClient) Get(ctx context.Context, id uint) (*Component, error) {
+func (c *ComponentClient) Get(ctx context.Context, id uuid.UUID) (*Component, error) {
 	return c.Query().Where(component.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *ComponentClient) GetX(ctx context.Context, id uint) *Component {
+func (c *ComponentClient) GetX(ctx context.Context, id uuid.UUID) *Component {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -782,7 +782,7 @@ func (c *DeploymentProfileClient) UpdateOne(_m *DeploymentProfile) *DeploymentPr
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *DeploymentProfileClient) UpdateOneID(id string) *DeploymentProfileUpdateOne {
+func (c *DeploymentProfileClient) UpdateOneID(id uuid.UUID) *DeploymentProfileUpdateOne {
 	mutation := newDeploymentProfileMutation(c.config, OpUpdateOne, withDeploymentProfileID(id))
 	return &DeploymentProfileUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -799,7 +799,7 @@ func (c *DeploymentProfileClient) DeleteOne(_m *DeploymentProfile) *DeploymentPr
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *DeploymentProfileClient) DeleteOneID(id string) *DeploymentProfileDeleteOne {
+func (c *DeploymentProfileClient) DeleteOneID(id uuid.UUID) *DeploymentProfileDeleteOne {
 	builder := c.Delete().Where(deploymentprofile.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -816,12 +816,12 @@ func (c *DeploymentProfileClient) Query() *DeploymentProfileQuery {
 }
 
 // Get returns a DeploymentProfile entity by its id.
-func (c *DeploymentProfileClient) Get(ctx context.Context, id string) (*DeploymentProfile, error) {
+func (c *DeploymentProfileClient) Get(ctx context.Context, id uuid.UUID) (*DeploymentProfile, error) {
 	return c.Query().Where(deploymentprofile.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *DeploymentProfileClient) GetX(ctx context.Context, id string) *DeploymentProfile {
+func (c *DeploymentProfileClient) GetX(ctx context.Context, id uuid.UUID) *DeploymentProfile {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)

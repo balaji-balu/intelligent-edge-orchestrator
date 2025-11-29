@@ -11,7 +11,8 @@ import (
 var (
 	// ApplicationDescColumns holds the columns for the "application_desc" table.
 	ApplicationDescColumns = []*schema.Column{
-		{Name: "app_id", Type: field.TypeString},
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "app_id", Type: field.TypeString, Nullable: true},
 		{Name: "name", Type: field.TypeString, Nullable: true},
 		{Name: "vendor", Type: field.TypeString, Nullable: true},
 		{Name: "version", Type: field.TypeString, Nullable: true},
@@ -32,10 +33,10 @@ var (
 	}
 	// ComponentColumns holds the columns for the "component" table.
 	ComponentColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUint, Increment: true, SchemaType: map[string]string{"postgres": "serial"}},
+		{Name: "id", Type: field.TypeUUID},
 		{Name: "name", Type: field.TypeString, Nullable: true},
 		{Name: "properties", Type: field.TypeJSON, Nullable: true},
-		{Name: "deployment_profile_id", Type: field.TypeString, Nullable: true},
+		{Name: "deployment_profile_id", Type: field.TypeUUID, Nullable: true},
 	}
 	// ComponentTable holds the schema information for the "component" table.
 	ComponentTable = &schema.Table{
@@ -78,7 +79,7 @@ var (
 	}
 	// DeploymentProfileColumns holds the columns for the "deployment_profile" table.
 	DeploymentProfileColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeString},
+		{Name: "id", Type: field.TypeUUID},
 		{Name: "type", Type: field.TypeString, Nullable: true},
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "cpu_cores", Type: field.TypeFloat64, Nullable: true},
@@ -87,7 +88,7 @@ var (
 		{Name: "cpu_architectures", Type: field.TypeJSON, Nullable: true},
 		{Name: "peripherals", Type: field.TypeJSON, Nullable: true},
 		{Name: "interfaces", Type: field.TypeJSON, Nullable: true},
-		{Name: "app_id", Type: field.TypeString, Nullable: true},
+		{Name: "app_id", Type: field.TypeUUID, Nullable: true},
 	}
 	// DeploymentProfileTable holds the schema information for the "deployment_profile" table.
 	DeploymentProfileTable = &schema.Table{

@@ -9,29 +9,54 @@ import (
 	"github.com/balaji-balu/margo-hello-world/pkg/application"
 )
 
-func Persist(ctx context.Context, client *ent.Client, ad *application.ApplicationDescription) error {
+func Persist(ctx context.Context, client *ent.Client, localAppName, category string, ad *application.ApplicationDescription) error {
 	//ad := ads[0]
 	log.Println("[CO] persisting app desc 1:", ad)
 	//return nil
 
 	// save catlog info
-	_, err := client.ApplicationDesc.
+	appcreate := client.ApplicationDesc.
 		Create().
-		SetID(ad.Metadata.ID).
-		SetName(ad.Metadata.Name).
-		SetVersion(ad.Metadata.Version).
-		SetTags(ad.Metadata.Catalog.Application.Tags).
-		SetTagLine(ad.Metadata.Catalog.Application.Tagline).
-		SetVendor(ad.Metadata.Catalog.Application.Site).
-		SetCategory(ad.Metadata.Catalog.Application.Site).
-		SetDescription(ad.Metadata.Catalog.Application.DescriptionFile).
-		SetIcon(ad.Metadata.Catalog.Application.Icon).
-		SetSite(ad.Metadata.Catalog.Application.Site).
-		Save(ctx)
-	if err != nil {
+		SetAppID(ad.Metadata.ID).
+		SetName(localAppName).
+		SetVersion(ad.Metadata.Version)
+		//SetVendor(ad.Metadata.Catalog.Application.Site).
+		//SetDescription(ad.Metadata.Catalog.Application.DescriptionFile)
+		//Save(ctx)
+		if category != "" {
+			appcreate.SetCategory(category)
+		}
+		desc := ad.Metadata.Description
+		if desc != ""{
+			appcreate.SetDescription(desc)
+		}
+		orgs := ad.Metadata.Catalog.Organization
+		if orgs != nil {
+			appcreate.SetVendor(ad.Metadata.Catalog.Organization[0].Name)
+		}
+		app := ad.Metadata.Catalog.Application
+		if app != nil { 
+			if app.Tags != nil {
+				appcreate.SetTags(ad.Metadata.Catalog.Application.Tags)
+			}
+			if app.Tagline != "" {
+				appcreate.SetTagLine(ad.Metadata.Catalog.Application.Tagline)
+			}
+			if app.Icon != "" {
+				appcreate.SetIcon(ad.Metadata.Catalog.Application.Icon)
+			}
+			if app.Site != "" {
+				appcreate.SetCategory(ad.Metadata.Catalog.Application.Site).
+						 SetSite(ad.Metadata.Catalog.Application.Site)
+			}	
+		}
+	appObj, err := appcreate.Save(ctx)	
+	if err != nil {	
 		return err
 	}
-
+	appID := appObj.ID
+	
+	
 	// // Store
 	log.Println("number of dep profiles: ", len(ad.DeploymentProfiles))
 
@@ -39,9 +64,9 @@ func Persist(ctx context.Context, client *ent.Client, ad *application.Applicatio
 
 		dpCreate := client.DeploymentProfile.
 			Create().
-			SetID(spec.ID).
+			//SetID(spec.ID).
 			SetType(spec.Type).
-			SetAppID(ad.Metadata.ID)
+			SetAppID(appID)
 
 		if spec.Description != "" {
 			dpCreate.SetDescription(spec.Description)
@@ -63,20 +88,18 @@ func Persist(ctx context.Context, client *ent.Client, ad *application.Applicatio
 			log.Println("Skipping RequiredResources, it is nil")
 			//continue
 		}
-		_, err := dpCreate.Save(ctx)
+		dpObj, err := dpCreate.Save(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to create deployment profile: %w", err)
 		}
-		if err != nil {
-			return err
-		}
+		dpid := dpObj.ID
 
 		// components
 		for _, component := range spec.Components {
 			_, err := client.Component.
 				Create().
 				SetName(component.Name).
-				SetDeploymentProfileID(spec.ID).
+				SetDeploymentProfileID(dpid).
 				SetProperties(application.ComponentProperties{
 					Repository:      component.Properties.Repository,
 					Revision:        component.Properties.Revision,

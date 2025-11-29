@@ -14,6 +14,7 @@ import (
 	"github.com/balaji-balu/margo-hello-world/ent/component"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
 	"github.com/balaji-balu/margo-hello-world/ent/predicate"
+	"github.com/google/uuid"
 )
 
 // ComponentQuery is the builder for querying Component entities.
@@ -106,8 +107,8 @@ func (_q *ComponentQuery) FirstX(ctx context.Context) *Component {
 
 // FirstID returns the first Component ID from the query.
 // Returns a *NotFoundError when no Component ID was found.
-func (_q *ComponentQuery) FirstID(ctx context.Context) (id uint, err error) {
-	var ids []uint
+func (_q *ComponentQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
@@ -119,7 +120,7 @@ func (_q *ComponentQuery) FirstID(ctx context.Context) (id uint, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *ComponentQuery) FirstIDX(ctx context.Context) uint {
+func (_q *ComponentQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -157,8 +158,8 @@ func (_q *ComponentQuery) OnlyX(ctx context.Context) *Component {
 // OnlyID is like Only, but returns the only Component ID in the query.
 // Returns a *NotSingularError when more than one Component ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *ComponentQuery) OnlyID(ctx context.Context) (id uint, err error) {
-	var ids []uint
+func (_q *ComponentQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
@@ -174,7 +175,7 @@ func (_q *ComponentQuery) OnlyID(ctx context.Context) (id uint, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *ComponentQuery) OnlyIDX(ctx context.Context) uint {
+func (_q *ComponentQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -202,7 +203,7 @@ func (_q *ComponentQuery) AllX(ctx context.Context) []*Component {
 }
 
 // IDs executes the query and returns a list of Component IDs.
-func (_q *ComponentQuery) IDs(ctx context.Context) (ids []uint, err error) {
+func (_q *ComponentQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
@@ -214,7 +215,7 @@ func (_q *ComponentQuery) IDs(ctx context.Context) (ids []uint, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *ComponentQuery) IDsX(ctx context.Context) []uint {
+func (_q *ComponentQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -298,7 +299,7 @@ func (_q *ComponentQuery) WithDeploymentProfile(opts ...func(*DeploymentProfileQ
 // Example:
 //
 //	var v []struct {
-//		DeploymentProfileID string `json:"deployment_profile_id,omitempty"`
+//		DeploymentProfileID uuid.UUID `json:"deployment_profile_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
@@ -321,7 +322,7 @@ func (_q *ComponentQuery) GroupBy(field string, fields ...string) *ComponentGrou
 // Example:
 //
 //	var v []struct {
-//		DeploymentProfileID string `json:"deployment_profile_id,omitempty"`
+//		DeploymentProfileID uuid.UUID `json:"deployment_profile_id,omitempty"`
 //	}
 //
 //	client.Component.Query().
@@ -402,8 +403,8 @@ func (_q *ComponentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Co
 }
 
 func (_q *ComponentQuery) loadDeploymentProfile(ctx context.Context, query *DeploymentProfileQuery, nodes []*Component, init func(*Component), assign func(*Component, *DeploymentProfile)) error {
-	ids := make([]string, 0, len(nodes))
-	nodeids := make(map[string][]*Component)
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Component)
 	for i := range nodes {
 		fk := nodes[i].DeploymentProfileID
 		if _, ok := nodeids[fk]; !ok {
@@ -441,7 +442,7 @@ func (_q *ComponentQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (_q *ComponentQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(component.Table, component.Columns, sqlgraph.NewFieldSpec(component.FieldID, field.TypeUint))
+	_spec := sqlgraph.NewQuerySpec(component.Table, component.Columns, sqlgraph.NewFieldSpec(component.FieldID, field.TypeUUID))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

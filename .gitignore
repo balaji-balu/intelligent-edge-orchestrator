@@ -12,3 +12,6 @@ loki-data
 orchestrator-old
 localorch-old
 reconciler-old
+db-to-be-deleted
+reconciler-last
+reconiler-new

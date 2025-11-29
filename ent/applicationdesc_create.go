@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/balaji-balu/margo-hello-world/ent/applicationdesc"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
+	"github.com/google/uuid"
 )
 
 // ApplicationDescCreate is the builder for creating a ApplicationDesc entity.
@@ -21,6 +22,20 @@ type ApplicationDescCreate struct {
 	mutation *ApplicationDescMutation
 	hooks    []Hook
 	conflict []sql.ConflictOption
+}
+
+// SetAppID sets the "app_id" field.
+func (_c *ApplicationDescCreate) SetAppID(v string) *ApplicationDescCreate {
+	_c.mutation.SetAppID(v)
+	return _c
+}
+
+// SetNillableAppID sets the "app_id" field if the given value is not nil.
+func (_c *ApplicationDescCreate) SetNillableAppID(v *string) *ApplicationDescCreate {
+	if v != nil {
+		_c.SetAppID(*v)
+	}
+	return _c
 }
 
 // SetName sets the "name" field.
@@ -170,20 +185,28 @@ func (_c *ApplicationDescCreate) SetNillablePublished(v *string) *ApplicationDes
 }
 
 // SetID sets the "id" field.
-func (_c *ApplicationDescCreate) SetID(v string) *ApplicationDescCreate {
+func (_c *ApplicationDescCreate) SetID(v uuid.UUID) *ApplicationDescCreate {
 	_c.mutation.SetID(v)
 	return _c
 }
 
+// SetNillableID sets the "id" field if the given value is not nil.
+func (_c *ApplicationDescCreate) SetNillableID(v *uuid.UUID) *ApplicationDescCreate {
+	if v != nil {
+		_c.SetID(*v)
+	}
+	return _c
+}
+
 // AddDeploymentProfileIDs adds the "deployment_profiles" edge to the DeploymentProfile entity by IDs.
-func (_c *ApplicationDescCreate) AddDeploymentProfileIDs(ids ...string) *ApplicationDescCreate {
+func (_c *ApplicationDescCreate) AddDeploymentProfileIDs(ids ...uuid.UUID) *ApplicationDescCreate {
 	_c.mutation.AddDeploymentProfileIDs(ids...)
 	return _c
 }
 
 // AddDeploymentProfiles adds the "deployment_profiles" edges to the DeploymentProfile entity.
 func (_c *ApplicationDescCreate) AddDeploymentProfiles(v ...*DeploymentProfile) *ApplicationDescCreate {
-	ids := make([]string, len(v))
+	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -197,6 +220,7 @@ func (_c *ApplicationDescCreate) Mutation() *ApplicationDescMutation {
 
 // Save creates the ApplicationDesc in the database.
 func (_c *ApplicationDescCreate) Save(ctx context.Context) (*ApplicationDesc, error) {
+	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -222,6 +246,14 @@ func (_c *ApplicationDescCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (_c *ApplicationDescCreate) defaults() {
+	if _, ok := _c.mutation.ID(); !ok {
+		v := applicationdesc.DefaultID()
+		_c.mutation.SetID(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (_c *ApplicationDescCreate) check() error {
 	return nil
@@ -239,10 +271,10 @@ func (_c *ApplicationDescCreate) sqlSave(ctx context.Context) (*ApplicationDesc,
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(string); ok {
-			_node.ID = id
-		} else {
-			return nil, fmt.Errorf("unexpected ApplicationDesc.ID type: %T", _spec.ID.Value)
+		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
 		}
 	}
 	_c.mutation.id = &_node.ID
@@ -253,12 +285,16 @@ func (_c *ApplicationDescCreate) sqlSave(ctx context.Context) (*ApplicationDesc,
 func (_c *ApplicationDescCreate) createSpec() (*ApplicationDesc, *sqlgraph.CreateSpec) {
 	var (
 		_node = &ApplicationDesc{config: _c.config}
-		_spec = sqlgraph.NewCreateSpec(applicationdesc.Table, sqlgraph.NewFieldSpec(applicationdesc.FieldID, field.TypeString))
+		_spec = sqlgraph.NewCreateSpec(applicationdesc.Table, sqlgraph.NewFieldSpec(applicationdesc.FieldID, field.TypeUUID))
 	)
 	_spec.OnConflict = _c.conflict
 	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
-		_spec.ID.Value = id
+		_spec.ID.Value = &id
+	}
+	if value, ok := _c.mutation.AppID(); ok {
+		_spec.SetField(applicationdesc.FieldAppID, field.TypeString, value)
+		_node.AppID = value
 	}
 	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(applicationdesc.FieldName, field.TypeString, value)
@@ -312,7 +348,7 @@ func (_c *ApplicationDescCreate) createSpec() (*ApplicationDesc, *sqlgraph.Creat
 			Columns: []string{applicationdesc.DeploymentProfilesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -327,7 +363,7 @@ func (_c *ApplicationDescCreate) createSpec() (*ApplicationDesc, *sqlgraph.Creat
 // of the `INSERT` statement. For example:
 //
 //	client.ApplicationDesc.Create().
-//		SetName(v).
+//		SetAppID(v).
 //		OnConflict(
 //			// Update the row with the new values
 //			// the was proposed for insertion.
@@ -336,7 +372,7 @@ func (_c *ApplicationDescCreate) createSpec() (*ApplicationDesc, *sqlgraph.Creat
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.ApplicationDescUpsert) {
-//			SetName(v+v).
+//			SetAppID(v+v).
 //		}).
 //		Exec(ctx)
 func (_c *ApplicationDescCreate) OnConflict(opts ...sql.ConflictOption) *ApplicationDescUpsertOne {
@@ -371,6 +407,24 @@ type (
 		*sql.UpdateSet
 	}
 )
+
+// SetAppID sets the "app_id" field.
+func (u *ApplicationDescUpsert) SetAppID(v string) *ApplicationDescUpsert {
+	u.Set(applicationdesc.FieldAppID, v)
+	return u
+}
+
+// UpdateAppID sets the "app_id" field to the value that was provided on create.
+func (u *ApplicationDescUpsert) UpdateAppID() *ApplicationDescUpsert {
+	u.SetExcluded(applicationdesc.FieldAppID)
+	return u
+}
+
+// ClearAppID clears the value of the "app_id" field.
+func (u *ApplicationDescUpsert) ClearAppID() *ApplicationDescUpsert {
+	u.SetNull(applicationdesc.FieldAppID)
+	return u
+}
 
 // SetName sets the "name" field.
 func (u *ApplicationDescUpsert) SetName(v string) *ApplicationDescUpsert {
@@ -616,6 +670,27 @@ func (u *ApplicationDescUpsertOne) Update(set func(*ApplicationDescUpsert)) *App
 		set(&ApplicationDescUpsert{UpdateSet: update})
 	}))
 	return u
+}
+
+// SetAppID sets the "app_id" field.
+func (u *ApplicationDescUpsertOne) SetAppID(v string) *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetAppID(v)
+	})
+}
+
+// UpdateAppID sets the "app_id" field to the value that was provided on create.
+func (u *ApplicationDescUpsertOne) UpdateAppID() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateAppID()
+	})
+}
+
+// ClearAppID clears the value of the "app_id" field.
+func (u *ApplicationDescUpsertOne) ClearAppID() *ApplicationDescUpsertOne {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearAppID()
+	})
 }
 
 // SetName sets the "name" field.
@@ -865,7 +940,7 @@ func (u *ApplicationDescUpsertOne) ExecX(ctx context.Context) {
 }
 
 // Exec executes the UPSERT query and returns the inserted/updated ID.
-func (u *ApplicationDescUpsertOne) ID(ctx context.Context) (id string, err error) {
+func (u *ApplicationDescUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
 	if u.create.driver.Dialect() == dialect.MySQL {
 		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
 		// fields from the database since MySQL does not support the RETURNING clause.
@@ -879,7 +954,7 @@ func (u *ApplicationDescUpsertOne) ID(ctx context.Context) (id string, err error
 }
 
 // IDX is like ID, but panics if an error occurs.
-func (u *ApplicationDescUpsertOne) IDX(ctx context.Context) string {
+func (u *ApplicationDescUpsertOne) IDX(ctx context.Context) uuid.UUID {
 	id, err := u.ID(ctx)
 	if err != nil {
 		panic(err)
@@ -906,6 +981,7 @@ func (_c *ApplicationDescCreateBulk) Save(ctx context.Context) ([]*ApplicationDe
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ApplicationDescMutation)
 				if !ok {
@@ -984,7 +1060,7 @@ func (_c *ApplicationDescCreateBulk) ExecX(ctx context.Context) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.ApplicationDescUpsert) {
-//			SetName(v+v).
+//			SetAppID(v+v).
 //		}).
 //		Exec(ctx)
 func (_c *ApplicationDescCreateBulk) OnConflict(opts ...sql.ConflictOption) *ApplicationDescUpsertBulk {
@@ -1061,6 +1137,27 @@ func (u *ApplicationDescUpsertBulk) Update(set func(*ApplicationDescUpsert)) *Ap
 		set(&ApplicationDescUpsert{UpdateSet: update})
 	}))
 	return u
+}
+
+// SetAppID sets the "app_id" field.
+func (u *ApplicationDescUpsertBulk) SetAppID(v string) *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.SetAppID(v)
+	})
+}
+
+// UpdateAppID sets the "app_id" field to the value that was provided on create.
+func (u *ApplicationDescUpsertBulk) UpdateAppID() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.UpdateAppID()
+	})
+}
+
+// ClearAppID clears the value of the "app_id" field.
+func (u *ApplicationDescUpsertBulk) ClearAppID() *ApplicationDescUpsertBulk {
+	return u.Update(func(s *ApplicationDescUpsert) {
+		s.ClearAppID()
+	})
 }
 
 // SetName sets the "name" field.

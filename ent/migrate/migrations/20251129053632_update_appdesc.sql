@@ -1,6 +1,7 @@
 -- Create "application_desc" table
 CREATE TABLE "application_desc" (
-  "app_id" character varying NOT NULL,
+  "id" uuid NOT NULL,
+  "app_id" character varying NULL,
   "name" character varying NULL,
   "vendor" character varying NULL,
   "version" character varying NULL,
@@ -12,7 +13,7 @@ CREATE TABLE "application_desc" (
   "tag_line" character varying NULL,
   "tags" jsonb NULL,
   "published" character varying NULL,
-  PRIMARY KEY ("app_id")
+  PRIMARY KEY ("id")
 );
 -- Create "users" table
 CREATE TABLE "users" (
@@ -21,7 +22,7 @@ CREATE TABLE "users" (
 );
 -- Create "deployment_profile" table
 CREATE TABLE "deployment_profile" (
-  "id" character varying NOT NULL,
+  "id" uuid NOT NULL,
   "type" character varying NULL,
   "description" character varying NULL,
   "cpu_cores" double precision NULL,
@@ -30,16 +31,16 @@ CREATE TABLE "deployment_profile" (
   "cpu_architectures" jsonb NULL,
   "peripherals" jsonb NULL,
   "interfaces" jsonb NULL,
-  "app_id" character varying NULL,
+  "app_id" uuid NULL,
   PRIMARY KEY ("id"),
-  CONSTRAINT "deployment_profile_application_desc_deployment_profiles" FOREIGN KEY ("app_id") REFERENCES "application_desc" ("app_id") ON UPDATE NO ACTION ON DELETE SET NULL
+  CONSTRAINT "deployment_profile_application_desc_deployment_profiles" FOREIGN KEY ("app_id") REFERENCES "application_desc" ("id") ON UPDATE NO ACTION ON DELETE SET NULL
 );
 -- Create "component" table
 CREATE TABLE "component" (
-  "id" serial NOT NULL,
+  "id" uuid NOT NULL,
   "name" character varying NULL,
   "properties" jsonb NULL,
-  "deployment_profile_id" character varying NULL,
+  "deployment_profile_id" uuid NULL,
   PRIMARY KEY ("id"),
   CONSTRAINT "component_deployment_profile_components" FOREIGN KEY ("deployment_profile_id") REFERENCES "deployment_profile" ("id") ON UPDATE NO ACTION ON DELETE SET NULL
 );
@@ -49,6 +50,7 @@ CREATE TABLE "deployment_status" (
   "state" character varying NOT NULL DEFAULT 'pending',
   "error_code" character varying NULL,
   "error_message" character varying NULL,
+  "host_id" character varying NULL,
   "created_at" timestamptz NOT NULL,
   "updated_at" timestamptz NOT NULL,
   PRIMARY KEY ("id")
@@ -98,7 +100,8 @@ CREATE TABLE "host" (
   "id" uuid NOT NULL,
   "host_id" character varying NOT NULL,
   "runtime" character varying NULL,
-  "last_heartbeat" timestamptz NULL,
+  "last_seen" timestamptz NULL,
+  "misses" bigint NULL,
   "cpu_free" double precision NULL,
   "status" character varying NULL,
   "hostname" character varying NULL,

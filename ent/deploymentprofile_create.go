@@ -14,6 +14,7 @@ import (
 	"github.com/balaji-balu/margo-hello-world/ent/applicationdesc"
 	"github.com/balaji-balu/margo-hello-world/ent/component"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
+	"github.com/google/uuid"
 )
 
 // DeploymentProfileCreate is the builder for creating a DeploymentProfile entity.
@@ -113,13 +114,13 @@ func (_c *DeploymentProfileCreate) SetInterfaces(v []map[string]interface{}) *De
 }
 
 // SetAppID sets the "app_id" field.
-func (_c *DeploymentProfileCreate) SetAppID(v string) *DeploymentProfileCreate {
+func (_c *DeploymentProfileCreate) SetAppID(v uuid.UUID) *DeploymentProfileCreate {
 	_c.mutation.SetAppID(v)
 	return _c
 }
 
 // SetNillableAppID sets the "app_id" field if the given value is not nil.
-func (_c *DeploymentProfileCreate) SetNillableAppID(v *string) *DeploymentProfileCreate {
+func (_c *DeploymentProfileCreate) SetNillableAppID(v *uuid.UUID) *DeploymentProfileCreate {
 	if v != nil {
 		_c.SetAppID(*v)
 	}
@@ -127,20 +128,28 @@ func (_c *DeploymentProfileCreate) SetNillableAppID(v *string) *DeploymentProfil
 }
 
 // SetID sets the "id" field.
-func (_c *DeploymentProfileCreate) SetID(v string) *DeploymentProfileCreate {
+func (_c *DeploymentProfileCreate) SetID(v uuid.UUID) *DeploymentProfileCreate {
 	_c.mutation.SetID(v)
 	return _c
 }
 
+// SetNillableID sets the "id" field if the given value is not nil.
+func (_c *DeploymentProfileCreate) SetNillableID(v *uuid.UUID) *DeploymentProfileCreate {
+	if v != nil {
+		_c.SetID(*v)
+	}
+	return _c
+}
+
 // AddComponentIDs adds the "components" edge to the Component entity by IDs.
-func (_c *DeploymentProfileCreate) AddComponentIDs(ids ...uint) *DeploymentProfileCreate {
+func (_c *DeploymentProfileCreate) AddComponentIDs(ids ...uuid.UUID) *DeploymentProfileCreate {
 	_c.mutation.AddComponentIDs(ids...)
 	return _c
 }
 
 // AddComponents adds the "components" edges to the Component entity.
 func (_c *DeploymentProfileCreate) AddComponents(v ...*Component) *DeploymentProfileCreate {
-	ids := make([]uint, len(v))
+	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -148,13 +157,13 @@ func (_c *DeploymentProfileCreate) AddComponents(v ...*Component) *DeploymentPro
 }
 
 // SetApplicationDescID sets the "application_desc" edge to the ApplicationDesc entity by ID.
-func (_c *DeploymentProfileCreate) SetApplicationDescID(id string) *DeploymentProfileCreate {
+func (_c *DeploymentProfileCreate) SetApplicationDescID(id uuid.UUID) *DeploymentProfileCreate {
 	_c.mutation.SetApplicationDescID(id)
 	return _c
 }
 
 // SetNillableApplicationDescID sets the "application_desc" edge to the ApplicationDesc entity by ID if the given value is not nil.
-func (_c *DeploymentProfileCreate) SetNillableApplicationDescID(id *string) *DeploymentProfileCreate {
+func (_c *DeploymentProfileCreate) SetNillableApplicationDescID(id *uuid.UUID) *DeploymentProfileCreate {
 	if id != nil {
 		_c = _c.SetApplicationDescID(*id)
 	}
@@ -173,6 +182,7 @@ func (_c *DeploymentProfileCreate) Mutation() *DeploymentProfileMutation {
 
 // Save creates the DeploymentProfile in the database.
 func (_c *DeploymentProfileCreate) Save(ctx context.Context) (*DeploymentProfile, error) {
+	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -198,6 +208,14 @@ func (_c *DeploymentProfileCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (_c *DeploymentProfileCreate) defaults() {
+	if _, ok := _c.mutation.ID(); !ok {
+		v := deploymentprofile.DefaultID()
+		_c.mutation.SetID(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (_c *DeploymentProfileCreate) check() error {
 	return nil
@@ -215,10 +233,10 @@ func (_c *DeploymentProfileCreate) sqlSave(ctx context.Context) (*DeploymentProf
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(string); ok {
-			_node.ID = id
-		} else {
-			return nil, fmt.Errorf("unexpected DeploymentProfile.ID type: %T", _spec.ID.Value)
+		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
 		}
 	}
 	_c.mutation.id = &_node.ID
@@ -229,12 +247,12 @@ func (_c *DeploymentProfileCreate) sqlSave(ctx context.Context) (*DeploymentProf
 func (_c *DeploymentProfileCreate) createSpec() (*DeploymentProfile, *sqlgraph.CreateSpec) {
 	var (
 		_node = &DeploymentProfile{config: _c.config}
-		_spec = sqlgraph.NewCreateSpec(deploymentprofile.Table, sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeString))
+		_spec = sqlgraph.NewCreateSpec(deploymentprofile.Table, sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeUUID))
 	)
 	_spec.OnConflict = _c.conflict
 	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
-		_spec.ID.Value = id
+		_spec.ID.Value = &id
 	}
 	if value, ok := _c.mutation.GetType(); ok {
 		_spec.SetField(deploymentprofile.FieldType, field.TypeString, value)
@@ -276,7 +294,7 @@ func (_c *DeploymentProfileCreate) createSpec() (*DeploymentProfile, *sqlgraph.C
 			Columns: []string{deploymentprofile.ComponentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(component.FieldID, field.TypeUint),
+				IDSpec: sqlgraph.NewFieldSpec(component.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -292,7 +310,7 @@ func (_c *DeploymentProfileCreate) createSpec() (*DeploymentProfile, *sqlgraph.C
 			Columns: []string{deploymentprofile.ApplicationDescColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(applicationdesc.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(applicationdesc.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -504,7 +522,7 @@ func (u *DeploymentProfileUpsert) ClearInterfaces() *DeploymentProfileUpsert {
 }
 
 // SetAppID sets the "app_id" field.
-func (u *DeploymentProfileUpsert) SetAppID(v string) *DeploymentProfileUpsert {
+func (u *DeploymentProfileUpsert) SetAppID(v uuid.UUID) *DeploymentProfileUpsert {
 	u.Set(deploymentprofile.FieldAppID, v)
 	return u
 }
@@ -745,7 +763,7 @@ func (u *DeploymentProfileUpsertOne) ClearInterfaces() *DeploymentProfileUpsertO
 }
 
 // SetAppID sets the "app_id" field.
-func (u *DeploymentProfileUpsertOne) SetAppID(v string) *DeploymentProfileUpsertOne {
+func (u *DeploymentProfileUpsertOne) SetAppID(v uuid.UUID) *DeploymentProfileUpsertOne {
 	return u.Update(func(s *DeploymentProfileUpsert) {
 		s.SetAppID(v)
 	})
@@ -781,7 +799,7 @@ func (u *DeploymentProfileUpsertOne) ExecX(ctx context.Context) {
 }
 
 // Exec executes the UPSERT query and returns the inserted/updated ID.
-func (u *DeploymentProfileUpsertOne) ID(ctx context.Context) (id string, err error) {
+func (u *DeploymentProfileUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
 	if u.create.driver.Dialect() == dialect.MySQL {
 		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
 		// fields from the database since MySQL does not support the RETURNING clause.
@@ -795,7 +813,7 @@ func (u *DeploymentProfileUpsertOne) ID(ctx context.Context) (id string, err err
 }
 
 // IDX is like ID, but panics if an error occurs.
-func (u *DeploymentProfileUpsertOne) IDX(ctx context.Context) string {
+func (u *DeploymentProfileUpsertOne) IDX(ctx context.Context) uuid.UUID {
 	id, err := u.ID(ctx)
 	if err != nil {
 		panic(err)
@@ -822,6 +840,7 @@ func (_c *DeploymentProfileCreateBulk) Save(ctx context.Context) ([]*DeploymentP
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*DeploymentProfileMutation)
 				if !ok {
@@ -1155,7 +1174,7 @@ func (u *DeploymentProfileUpsertBulk) ClearInterfaces() *DeploymentProfileUpsert
 }
 
 // SetAppID sets the "app_id" field.
-func (u *DeploymentProfileUpsertBulk) SetAppID(v string) *DeploymentProfileUpsertBulk {
+func (u *DeploymentProfileUpsertBulk) SetAppID(v uuid.UUID) *DeploymentProfileUpsertBulk {
 	return u.Update(func(s *DeploymentProfileUpsert) {
 		s.SetAppID(v)
 	})

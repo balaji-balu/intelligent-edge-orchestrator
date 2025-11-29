@@ -1,179 +1,326 @@
-package reconciler 
+package reconciler
 
 import (
-	"context"
+	"log"
+	"fmt"
+	//"time"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
-	"sync"
 
-	"github.com/balaji-balu/margo-hello-world/internal/lo/logger"
+	"github.com/balaji-balu/margo-hello-world/pkg/model"
+	"github.com/balaji-balu/margo-hello-world/internal/lo/boltstore"
+
 )
 
-type Reconciler struct {
-	store    Store
-	actuator Actuator
-	reporter Reporter
-	mu       sync.Mutex
+/*
+desired 
+	<deploymentid>
+		apps 
+			<app1> : json {id: app1, version:v1} 
+actual 
+	<hostAA> 
+		<app1>: json {id: app1, version:v0.9} 
+		<app2>: json {id: app2, version v0.5}
+*/
+// -------------------- Utilities --------------------
+func ComputeHash(content string) string {
+    h := sha256.Sum256([]byte(content))
+    return hex.EncodeToString(h[:])
 }
 
-func NewReconciler(s Store, a Actuator, r Reporter) *Reconciler {
-	return &Reconciler{store: s, actuator: a, reporter: r}
+func ComputeAppHash(app model.App) string {
+    b, _ := json.Marshal(app)   // components + content + version + id
+    h := sha256.Sum256(b)
+    return hex.EncodeToString(h[:])
 }
 
-func HashComponentSpec(spec interface{}) (string, error) {
-	b, err := json.Marshal(spec)
-	if err != nil { return "", err }
-	sum := sha256.Sum256(b)
-	return hex.EncodeToString(sum[:]), nil
+func pretty(v interface{}) string {
+	b, _ := json.MarshalIndent(v, "", "  ")
+	return string(b)
 }
 
-// diffMulti compares desiredHashes vs actualHashes and returns operations per host
-func diffMulti(
-	components []ComponentSpec,
-	deploymentID string,
-	desiredHashes map[string]string,
-	actual map[string]map[string]string,
-	hosts []*Host,
-) map[string][]Operation {
+// this is used for remove_app, remove_comp only
+func copyApp(actualApp model.ActualApp) (model.App) {
+	copied := make(map[string]model.Component, len(actualApp.Components))
+	for k, v := range actualApp.Components {
+		copied[k] = model.Component{
+			Name:    v.Name,
+			Version: v.Version,
+			//Config:  v.Config,
+			// add the rest of the fields if needed
+    	}
+	}
 
-	result := make(map[string][]Operation)
+	return model.App{
+		ID: actualApp.ID,
+		Version: actualApp.Version,
+		Components: copied, 
+	}
+}
 
+
+// func PathForDesired(depID string) []string {
+// 	return []string{"desired", depID}
+// }
+
+// func pathForActual(hostID string) []string {
+// 	return []string{"actual", hostID}
+// }
+
+// func pathForOperation() []string {
+// 	return []string{"operations"} 
+// }
+
+func computeDiff(desired model.App, 
+	actual model.ActualState, hosts map[string]model.Host) []model.DiffOp {
+	var ops []model.DiffOp
+
+	desiredAppHash := ComputeAppHash(desired)
+
+	//fmt.Println("Hosts:", len(hosts))
 	for _, host := range hosts {
-		if host.Status != "alive" {
-			logger.Debug("Skipping host because not alive", "hostID", host.ID, "status", host.Status)
-			continue
-		}
+
 		hostID := host.ID
-		actualForHost := map[string]string{}
-		if actual != nil {
-			if a, ok := actual[hostID]; ok {
-				actualForHost = a
-			}
+		appID := desired.ID
+		desiredApp := desired //.DesiredApp
+		// ensure maps exist to avoid nil panics
+		if actual.AppsByHost == nil {
+			actual.AppsByHost = map[string]map[string]model.ActualApp{}
+		}
+		if actual.AppsByHost[hostID] == nil {
+			actual.AppsByHost[hostID] = map[string]model.ActualApp{}
 		}
 
-		for _, comp := range components {
-			if len(comp.Properties.NodeSelector) > 0 && !nodeMatches(comp.Properties.NodeSelector, host.Labels) {
-				logger.Debug("Skipping component due to node selector mismatch", "component", comp.Name, "hostID", hostID)
+		//fmt.Println("hostid:", hostID, "appID:",  appID)
+		// if appID == "" {
+		// 	log.Println("desired AppId is null")
+		// 	continue
+		// }
+
+		if appID != "" {
+			actualApp, appExists := actual.AppsByHost[hostID][appID]
+			if !appExists {
+				ops = append(ops, model.DiffOp{
+					Action: model.ActionAddApp, 
+					SiteID: "", 
+					HostID: hostID, 
+					App: desiredApp,
+				})
 				continue
 			}
 
-			dHash := desiredHashes[comp.Name]
-			aHash := ""
-			if actualForHost != nil {
-				aHash = actualForHost[comp.Name]
-			}
-
-			if aHash == "" {
-				op := Operation{
-					Type:         OpInstall,
-					DeploymentID: deploymentID,
-					Component:    comp,
-					DesiredHash:  dHash,
-					Actual:       nil,
-					TargetNode:   hostID,
-				}
-				result[hostID] = append(result[hostID], op)
+			// NO-OP: if app-level hash matches exactly, skip
+			// (actualApp.Hash may be empty if you haven't set it previously)
+			if actualApp.Hash != "" && actualApp.Hash == desiredAppHash {
+				// nothing changed for this host/app
+				log.Println("No-Op")
 				continue
 			}
 
-			if aHash != dHash {
-				op := Operation{
-					Type:         OpUpdate,
-					DeploymentID: deploymentID,
-					Component:    comp,
-					DesiredHash:  dHash,
-					Actual: &DeploymentComponentStatus{
-						DeploymentID:  deploymentID,
-						HostID:        hostID,
-						ComponentName: comp.Name,
-						ActualHash:    aHash,
-						DesiredHash:   dHash,
-					},
-					TargetNode:   hostID,
+			// if app version differs -> full app update
+			//log.Println("versions:", actualApp.Version, desiredApp.Version)
+			if desiredApp.Version != "" && actualApp.Version != desiredApp.Version {
+				log.Println("UpdateApp", actualApp.Version, desiredApp.Version)
+				ops = append(ops, model.DiffOp{
+					Action: model.ActionUpdateApp, 
+					SiteID: "", 
+					HostID: hostID, 
+					App: desiredApp,
+				})
+				continue
+			}
+
+			// same app version; compare 
+			//fmt.Println("components length:", len(desiredApp.Components))
+			for _, desiredComp := range desiredApp.Components {
+				compName := desiredComp.Name
+				//fmt.Println("compname", compName)
+				actualComp, compExists := actualApp.Components[compName]
+				if !compExists {
+					ops = append(ops, model.DiffOp{
+						Action: model.ActionAddComp, 
+						SiteID: "", 
+						HostID: hostID, 
+						App: desiredApp, 
+						CompName: compName, 
+					})
+					continue
 				}
-				result[hostID] = append(result[hostID], op)
+
+				if actualComp.Version != desiredComp.Version {
+					ops = append(ops, model.DiffOp{
+						Action:   model.ActionUpdateComp,
+						SiteID:   "",
+						HostID:   hostID,
+						App:      desiredApp,
+						CompName: compName,
+					})
+					continue
+				}
+
+				if actualComp.Hash != "" && desiredComp.Content != "" {
+					desiredCompHash := ComputeHash(desiredComp.Content)
+					if actualComp.Hash != desiredCompHash {
+						ops = append(ops, model.DiffOp{
+							Action: model.ActionUpdateComp, 
+							SiteID: "", 
+							HostID: hostID, 
+							App: desiredApp, 
+							CompName: compName,
+						})
+					}
+				}	
+			}
+
+			// components in actual but not in desired -> remove
+			for _, actualComp := range actualApp.Components {
+				compName := actualComp.Name
+				fmt.Println("xxxxxxxxxxxxxxx", desired.Components)
+				if _, exists := desiredApp.Components[compName]; !exists {
+					log.Println("update component...")
+					ops = append(ops, model.DiffOp{
+						Action: model.ActionRemoveComp, 
+						SiteID: "", 
+						HostID: hostID, 
+						App: copyApp(actualApp), 
+						CompName: compName,
+					})
+				}
 			}
 		}
-	}
 
-	return result
+		// removeapp
+		if desiredApp.ID == "" {
+			log.Println("removeapp desird is null", actual)
+			// desired has no app at all → remove everything
+			for _, actualApp := range actual.AppsByHost[hostID] {
+				ops = append(ops, model.DiffOp{
+					Action: model.ActionRemoveApp,
+					HostID: hostID,
+					App:    copyApp(actualApp),
+				})
+			}
+		} else {
+			log.Println("removeapp desird is not null", actual.AppsByHost[hostID])
+
+			// desired has exactly one app → remove all others
+			for _, actualApp := range actual.AppsByHost[hostID] {
+				if actualApp.ID != desiredApp.ID {
+					ops = append(ops, model.DiffOp{
+						Action: model.ActionRemoveApp,
+						HostID: hostID,
+						App:    copyApp(actualApp),
+					})
+				}
+			}
+		}
+
+	}
+	return ops	
 }
 
-func nodeMatches(selector map[string]string, labels map[string]string) bool {
-	for k, v := range selector {
-		if labels[k] != v {
-			return false
+type Actuator interface {
+	Execute(op model.DiffOp) error
+}
+
+type Reconciler struct {
+	actuator Actuator
+	store *boltstore.StateStore
+}
+
+func NewReconciler(s *boltstore.StateStore, a Actuator) *Reconciler {
+	return &Reconciler{store: s, actuator: a}
+}
+
+func (r *Reconciler) ReconcileMulti( 
+	depId string) (error) {
+	//maxRetries int, debug bool
+
+	log.Println("dep id", depId)
+
+	// var desired model.App
+	// path := PathForDesired(depId)
+	// key := "app" // could also be "deploy-" + appID or version
+	// if err := r.store.LoadState(path, key, &desired); err != nil {
+	// 	log.Fatalf("failed to save desired state for %s/%s: %v", path, key, err)
+	// }
+	desired, _ := r.store.GetDesired(depId)	
+	log.Printf("Desired App:%v", desired)
+
+	hosts, _ := r.store.LoadAllHosts()
+	log.Println("hosts", hosts)
+
+	actual, _ := r.store.GetActual()
+	log.Printf("Actual App:%v", actual)	
+	// actual := model.ActualState{
+	// 	AppsByHost: map[string]map[string]model.ActualApp{},
+	// }
+	// for hostid, _ := range hosts {
+	// 	a, err := r.store.LoadActualForHost(hostid)
+	// 	if err != nil {
+    //         // log and continue if host state not found; or return - choose one
+    //         //log.Printf("load actual for host %s: %v (continuing)", hostid, err)
+    //         a = map[string]model.ActualApp{}
+    //     }
+	// 	actual.AppsByHost[hostid] = a
+	// }
+
+	//if debug {
+		fmt.Println("======= Desired State =======")
+		fmt.Println(pretty(desired))
+		fmt.Println("======= Actual State (before) =======")
+		fmt.Println(pretty(actual))
+		fmt.Println("======= Hosts =======")
+		fmt.Println(pretty(hosts))
+	//}
+
+	// 2️⃣ Filter alive hosts only
+	aliveHosts := map[string]model.Host{}
+	for id, host := range hosts {
+		if host.Alive {
+			aliveHosts[id] = host
+		} else  {
+			fmt.Printf("[SKIP] Host offline: %s\n", id)
 		}
 	}
-	return true
-}
 
-// ReconcileMulti updated to use SetDesired + GetActualHashes
-func (r *Reconciler) ReconcileMulti(siteID string, 
-	deploymentID string, dep ApplicationDeployment) error {
-    
-	ctx := context.Background()
-    logger.Info("ReconcileMulti: enter", "siteID", siteID, "deploymentID", deploymentID)
-
-    r.mu.Lock()
-    defer func() {
-        r.mu.Unlock()
-        logger.Info("ReconcileMulti: exit", "siteID", siteID, "deploymentID", deploymentID)
-    }()
-
-	components := dep.Spec.DeploymentProfile.Components
-	//deploymentID := desired.Metadata.Annotations.ID
-
-    // 1. READ desired from store instead of computing
-    desiredHashes, err := r.store.GetDesiredHashes(ctx, deploymentID)
-    if err != nil {
-        logger.Error("Failed to get desired hashes", "err", err)
-        return fmt.Errorf("get desired hashes: %w", err)
-    }
-
-    // 2. fetch nodes
-    nodes, err := r.store.GetNodes(ctx, siteID)
-    if err != nil {
-        logger.Error("Failed to get nodes", "err", err, "siteID", siteID)
-        return fmt.Errorf("get nodes: %w", err)
-    }
-
-    // 3. fetch actual hashes (per-host)
-    actualHashes, err := r.store.GetActualHashes(ctx, deploymentID)
-    if err != nil {
-        logger.Error("Failed to get actual hashes", "err", err)
-        return fmt.Errorf("get actual hashes: %w", err)
-    }
-
-    // 4. compute operations
-    opMap := diffMulti(components, deploymentID, desiredHashes, actualHashes, nodes)
+	// 3️⃣ Compute diff only for alive hosts
+	ops := computeDiff(desired, actual, aliveHosts)
+	//if debug {
+		fmt.Println("=== Diff Ops ===")
+		for _, op := range ops {
+			op.DeploymentID = depId
+			fmt.Printf("%+v\n", op)
+			//key := fmt.Sprintf("%s-%d", depId, time.Now().UnixNano())
+			//r.store.SaveState(pathForOperation(), key, op)
+			r.store.SetOperation(depId, op)
+		}
+	//}
 
     // 5. execute operations per node
-    for nodeID, ops := range opMap {
-        for _, op := range ops {
-            op.TargetNode = nodeID
-            logger.Info("Executing operation", "deploymentID", op.DeploymentID, "nodeID", nodeID, "component", op.Component.Name, "opType", op.Type)
+	for hostid, _ := range aliveHosts {
+		log.Println("hostid:", hostid)
+		for _, op := range ops {
+			log.Println("op:", op)
+			op.DeploymentID = depId 
+			if err := r.actuator.Execute(op); err != nil {
+				log.Println("Actuator Error:", err)
+			}
+		}
+	}
 
-            if err := r.actuator.Execute(op); err != nil {
-                logger.Error("Operation execution failed", "deploymentID", op.DeploymentID, "nodeID", nodeID, "component", op.Component.Name, "opType", op.Type, "err", err)
-            }
-        }
-    }
+    // for nodeID, ops := range ops {
+    //     for _, op := range ops {
+    //         op.TargetNode = nodeID
+    //         logger.Info("Executing operation", "deploymentID", op.DeploymentID, "nodeID", nodeID, "component", op.Component.Name, "opType", op.Type)
 
-    // 6. fetch updated actual for reporting
-    updatedActual, err := r.store.GetActual(ctx, deploymentID)
-    if err != nil {
-        logger.Error("Failed to fetch updated actual", "err", err)
-        return fmt.Errorf("fetch updated actual: %w", err)
-    }
+    //         if err := r.actuator.Execute(op); err != nil {
+    //             logger.Error("Operation execution failed", "deploymentID", op.DeploymentID, "nodeID", nodeID, "component", op.Component.Name, "opType", op.Type, "err", err)
+    //         }
+    //     }
+    // }
 
-    if r.reporter != nil {
-        if err := r.reporter.ReportState(deploymentID, updatedActual); err != nil {
-            logger.Error("Reporter failed", "err", err, "deploymentID", deploymentID)
-        }
-    }
-
-    return nil
+	return nil
 }
+

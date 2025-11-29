@@ -10,13 +10,16 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/balaji-balu/margo-hello-world/ent/applicationdesc"
+	"github.com/google/uuid"
 )
 
 // ApplicationDesc is the model entity for the ApplicationDesc schema.
 type ApplicationDesc struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID string `json:"id,omitempty"`
+	ID uuid.UUID `json:"id,omitempty"`
+	// AppID holds the value of the "app_id" field.
+	AppID string `json:"app_id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Vendor holds the value of the "vendor" field.
@@ -70,8 +73,10 @@ func (*ApplicationDesc) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case applicationdesc.FieldTags:
 			values[i] = new([]byte)
-		case applicationdesc.FieldID, applicationdesc.FieldName, applicationdesc.FieldVendor, applicationdesc.FieldVersion, applicationdesc.FieldCategory, applicationdesc.FieldDescription, applicationdesc.FieldIcon, applicationdesc.FieldArtifacturl, applicationdesc.FieldSite, applicationdesc.FieldTagLine, applicationdesc.FieldPublished:
+		case applicationdesc.FieldAppID, applicationdesc.FieldName, applicationdesc.FieldVendor, applicationdesc.FieldVersion, applicationdesc.FieldCategory, applicationdesc.FieldDescription, applicationdesc.FieldIcon, applicationdesc.FieldArtifacturl, applicationdesc.FieldSite, applicationdesc.FieldTagLine, applicationdesc.FieldPublished:
 			values[i] = new(sql.NullString)
+		case applicationdesc.FieldID:
+			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -88,10 +93,16 @@ func (_m *ApplicationDesc) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case applicationdesc.FieldID:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value != nil {
+				_m.ID = *value
+			}
+		case applicationdesc.FieldAppID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field app_id", values[i])
 			} else if value.Valid {
-				_m.ID = value.String
+				_m.AppID = value.String
 			}
 		case applicationdesc.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -202,6 +213,9 @@ func (_m *ApplicationDesc) String() string {
 	var builder strings.Builder
 	builder.WriteString("ApplicationDesc(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
+	builder.WriteString("app_id=")
+	builder.WriteString(_m.AppID)
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)
 	builder.WriteString(", ")

@@ -14,6 +14,7 @@ import (
 	"github.com/balaji-balu/margo-hello-world/ent/applicationdesc"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
 	"github.com/balaji-balu/margo-hello-world/ent/predicate"
+	"github.com/google/uuid"
 )
 
 // ApplicationDescUpdate is the builder for updating ApplicationDesc entities.
@@ -26,6 +27,26 @@ type ApplicationDescUpdate struct {
 // Where appends a list predicates to the ApplicationDescUpdate builder.
 func (_u *ApplicationDescUpdate) Where(ps ...predicate.ApplicationDesc) *ApplicationDescUpdate {
 	_u.mutation.Where(ps...)
+	return _u
+}
+
+// SetAppID sets the "app_id" field.
+func (_u *ApplicationDescUpdate) SetAppID(v string) *ApplicationDescUpdate {
+	_u.mutation.SetAppID(v)
+	return _u
+}
+
+// SetNillableAppID sets the "app_id" field if the given value is not nil.
+func (_u *ApplicationDescUpdate) SetNillableAppID(v *string) *ApplicationDescUpdate {
+	if v != nil {
+		_u.SetAppID(*v)
+	}
+	return _u
+}
+
+// ClearAppID clears the value of the "app_id" field.
+func (_u *ApplicationDescUpdate) ClearAppID() *ApplicationDescUpdate {
+	_u.mutation.ClearAppID()
 	return _u
 }
 
@@ -248,14 +269,14 @@ func (_u *ApplicationDescUpdate) ClearPublished() *ApplicationDescUpdate {
 }
 
 // AddDeploymentProfileIDs adds the "deployment_profiles" edge to the DeploymentProfile entity by IDs.
-func (_u *ApplicationDescUpdate) AddDeploymentProfileIDs(ids ...string) *ApplicationDescUpdate {
+func (_u *ApplicationDescUpdate) AddDeploymentProfileIDs(ids ...uuid.UUID) *ApplicationDescUpdate {
 	_u.mutation.AddDeploymentProfileIDs(ids...)
 	return _u
 }
 
 // AddDeploymentProfiles adds the "deployment_profiles" edges to the DeploymentProfile entity.
 func (_u *ApplicationDescUpdate) AddDeploymentProfiles(v ...*DeploymentProfile) *ApplicationDescUpdate {
-	ids := make([]string, len(v))
+	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -274,14 +295,14 @@ func (_u *ApplicationDescUpdate) ClearDeploymentProfiles() *ApplicationDescUpdat
 }
 
 // RemoveDeploymentProfileIDs removes the "deployment_profiles" edge to DeploymentProfile entities by IDs.
-func (_u *ApplicationDescUpdate) RemoveDeploymentProfileIDs(ids ...string) *ApplicationDescUpdate {
+func (_u *ApplicationDescUpdate) RemoveDeploymentProfileIDs(ids ...uuid.UUID) *ApplicationDescUpdate {
 	_u.mutation.RemoveDeploymentProfileIDs(ids...)
 	return _u
 }
 
 // RemoveDeploymentProfiles removes "deployment_profiles" edges to DeploymentProfile entities.
 func (_u *ApplicationDescUpdate) RemoveDeploymentProfiles(v ...*DeploymentProfile) *ApplicationDescUpdate {
-	ids := make([]string, len(v))
+	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -316,13 +337,19 @@ func (_u *ApplicationDescUpdate) ExecX(ctx context.Context) {
 }
 
 func (_u *ApplicationDescUpdate) sqlSave(ctx context.Context) (_node int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(applicationdesc.Table, applicationdesc.Columns, sqlgraph.NewFieldSpec(applicationdesc.FieldID, field.TypeString))
+	_spec := sqlgraph.NewUpdateSpec(applicationdesc.Table, applicationdesc.Columns, sqlgraph.NewFieldSpec(applicationdesc.FieldID, field.TypeUUID))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.AppID(); ok {
+		_spec.SetField(applicationdesc.FieldAppID, field.TypeString, value)
+	}
+	if _u.mutation.AppIDCleared() {
+		_spec.ClearField(applicationdesc.FieldAppID, field.TypeString)
 	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(applicationdesc.FieldName, field.TypeString, value)
@@ -403,7 +430,7 @@ func (_u *ApplicationDescUpdate) sqlSave(ctx context.Context) (_node int, err er
 			Columns: []string{applicationdesc.DeploymentProfilesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -416,7 +443,7 @@ func (_u *ApplicationDescUpdate) sqlSave(ctx context.Context) (_node int, err er
 			Columns: []string{applicationdesc.DeploymentProfilesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -432,7 +459,7 @@ func (_u *ApplicationDescUpdate) sqlSave(ctx context.Context) (_node int, err er
 			Columns: []string{applicationdesc.DeploymentProfilesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -458,6 +485,26 @@ type ApplicationDescUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *ApplicationDescMutation
+}
+
+// SetAppID sets the "app_id" field.
+func (_u *ApplicationDescUpdateOne) SetAppID(v string) *ApplicationDescUpdateOne {
+	_u.mutation.SetAppID(v)
+	return _u
+}
+
+// SetNillableAppID sets the "app_id" field if the given value is not nil.
+func (_u *ApplicationDescUpdateOne) SetNillableAppID(v *string) *ApplicationDescUpdateOne {
+	if v != nil {
+		_u.SetAppID(*v)
+	}
+	return _u
+}
+
+// ClearAppID clears the value of the "app_id" field.
+func (_u *ApplicationDescUpdateOne) ClearAppID() *ApplicationDescUpdateOne {
+	_u.mutation.ClearAppID()
+	return _u
 }
 
 // SetName sets the "name" field.
@@ -679,14 +726,14 @@ func (_u *ApplicationDescUpdateOne) ClearPublished() *ApplicationDescUpdateOne {
 }
 
 // AddDeploymentProfileIDs adds the "deployment_profiles" edge to the DeploymentProfile entity by IDs.
-func (_u *ApplicationDescUpdateOne) AddDeploymentProfileIDs(ids ...string) *ApplicationDescUpdateOne {
+func (_u *ApplicationDescUpdateOne) AddDeploymentProfileIDs(ids ...uuid.UUID) *ApplicationDescUpdateOne {
 	_u.mutation.AddDeploymentProfileIDs(ids...)
 	return _u
 }
 
 // AddDeploymentProfiles adds the "deployment_profiles" edges to the DeploymentProfile entity.
 func (_u *ApplicationDescUpdateOne) AddDeploymentProfiles(v ...*DeploymentProfile) *ApplicationDescUpdateOne {
-	ids := make([]string, len(v))
+	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -705,14 +752,14 @@ func (_u *ApplicationDescUpdateOne) ClearDeploymentProfiles() *ApplicationDescUp
 }
 
 // RemoveDeploymentProfileIDs removes the "deployment_profiles" edge to DeploymentProfile entities by IDs.
-func (_u *ApplicationDescUpdateOne) RemoveDeploymentProfileIDs(ids ...string) *ApplicationDescUpdateOne {
+func (_u *ApplicationDescUpdateOne) RemoveDeploymentProfileIDs(ids ...uuid.UUID) *ApplicationDescUpdateOne {
 	_u.mutation.RemoveDeploymentProfileIDs(ids...)
 	return _u
 }
 
 // RemoveDeploymentProfiles removes "deployment_profiles" edges to DeploymentProfile entities.
 func (_u *ApplicationDescUpdateOne) RemoveDeploymentProfiles(v ...*DeploymentProfile) *ApplicationDescUpdateOne {
-	ids := make([]string, len(v))
+	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -760,7 +807,7 @@ func (_u *ApplicationDescUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (_u *ApplicationDescUpdateOne) sqlSave(ctx context.Context) (_node *ApplicationDesc, err error) {
-	_spec := sqlgraph.NewUpdateSpec(applicationdesc.Table, applicationdesc.Columns, sqlgraph.NewFieldSpec(applicationdesc.FieldID, field.TypeString))
+	_spec := sqlgraph.NewUpdateSpec(applicationdesc.Table, applicationdesc.Columns, sqlgraph.NewFieldSpec(applicationdesc.FieldID, field.TypeUUID))
 	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "ApplicationDesc.id" for update`)}
@@ -784,6 +831,12 @@ func (_u *ApplicationDescUpdateOne) sqlSave(ctx context.Context) (_node *Applica
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.AppID(); ok {
+		_spec.SetField(applicationdesc.FieldAppID, field.TypeString, value)
+	}
+	if _u.mutation.AppIDCleared() {
+		_spec.ClearField(applicationdesc.FieldAppID, field.TypeString)
 	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(applicationdesc.FieldName, field.TypeString, value)
@@ -864,7 +917,7 @@ func (_u *ApplicationDescUpdateOne) sqlSave(ctx context.Context) (_node *Applica
 			Columns: []string{applicationdesc.DeploymentProfilesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -877,7 +930,7 @@ func (_u *ApplicationDescUpdateOne) sqlSave(ctx context.Context) (_node *Applica
 			Columns: []string{applicationdesc.DeploymentProfilesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -893,7 +946,7 @@ func (_u *ApplicationDescUpdateOne) sqlSave(ctx context.Context) (_node *Applica
 			Columns: []string{applicationdesc.DeploymentProfilesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(deploymentprofile.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

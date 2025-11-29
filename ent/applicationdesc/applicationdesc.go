@@ -5,13 +5,16 @@ package applicationdesc
 import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 )
 
 const (
 	// Label holds the string label denoting the applicationdesc type in the database.
 	Label = "application_desc"
 	// FieldID holds the string denoting the id field in the database.
-	FieldID = "app_id"
+	FieldID = "id"
+	// FieldAppID holds the string denoting the app_id field in the database.
+	FieldAppID = "app_id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldVendor holds the string denoting the vendor field in the database.
@@ -36,8 +39,6 @@ const (
 	FieldPublished = "published"
 	// EdgeDeploymentProfiles holds the string denoting the deployment_profiles edge name in mutations.
 	EdgeDeploymentProfiles = "deployment_profiles"
-	// DeploymentProfileFieldID holds the string denoting the ID field of the DeploymentProfile.
-	DeploymentProfileFieldID = "id"
 	// Table holds the table name of the applicationdesc in the database.
 	Table = "application_desc"
 	// DeploymentProfilesTable is the table that holds the deployment_profiles relation/edge.
@@ -52,6 +53,7 @@ const (
 // Columns holds all SQL columns for applicationdesc fields.
 var Columns = []string{
 	FieldID,
+	FieldAppID,
 	FieldName,
 	FieldVendor,
 	FieldVersion,
@@ -75,12 +77,22 @@ func ValidColumn(column string) bool {
 	return false
 }
 
+var (
+	// DefaultID holds the default value on creation for the "id" field.
+	DefaultID func() uuid.UUID
+)
+
 // OrderOption defines the ordering options for the ApplicationDesc queries.
 type OrderOption func(*sql.Selector)
 
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByAppID orders the results by the app_id field.
+func ByAppID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAppID, opts...).ToFunc()
 }
 
 // ByName orders the results by the name field.
@@ -149,7 +161,7 @@ func ByDeploymentProfiles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOptio
 func newDeploymentProfilesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(DeploymentProfilesInverseTable, DeploymentProfileFieldID),
+		sqlgraph.To(DeploymentProfilesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, DeploymentProfilesTable, DeploymentProfilesColumn),
 	)
 }
