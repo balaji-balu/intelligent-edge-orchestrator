@@ -5,9 +5,9 @@ services:
     image: docker.io/library/postgres:15.3
     container_name: postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: orchestration
+      POSTGRES_USER: ${{ secrets.PG_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
+      POSTGRES_DB: ${{ secrets.PG_DB }}
     ports:
       - "5432:5432"
     volumes:
@@ -89,8 +89,11 @@ services:
     depends_on:
       - postgres
     environment:
-      DATABASE_URL: ${DATABASE_URL}
-      GITHUB_TOKEN: ${GITHUB_TOKEN}
+      env:
+      DATABASE_URL: postgres://${{ secrets.PG_USER }}:${{ secrets.PG_PASSWORD }}@${{ secrets.PG_HOST }}:5432/${{ secrets.PG_DB }}?sslmode=disable
+    # postgres://postgres:postgres@postgres:5432/orchestration?sslmode=disable
+      # DATABASE_URL: ${DATABASE_URL}
+      GITHUB_TOKEN: ${{ secrets.GTHUB_TOKEN }}
       PORT: 9001
       SITE_ID: 
     networks:
@@ -109,9 +112,10 @@ services:
       - postgres
       - nats
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: postgres://${{ secrets.PG_USER }}:${{ secrets.PG_PASSWORD }}@${{ secrets.PG_HOST }}:5432/${{ secrets.PG_DB }}?sslmode=disable
+      # DATABASE_URL: ${DATABASE_URL}
       NATS_URL: nats://nats:4222
-      GITHUB_TOKEN: ${GITHUB_TOKEN} 
+      GITHUB_TOKEN: ${{ secrets.GTHUB_TOKEN }}
       PORT: 9010
       REPO: 
       CO_URL: http://co:9001/api/v1
@@ -134,9 +138,10 @@ services:
       - postgres
       - nats
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: postgres://${{ secrets.PG_USER }}:${{ secrets.PG_PASSWORD }}@${{ secrets.PG_HOST }}:5432/${{ secrets.PG_DB }}?sslmode=disable
+      # DATABASE_URL: ${DATABASE_URL}
       NATS_URL: nats://nats:4222
-      GITHUB_TOKEN: ${GITHUB_TOKEN} 
+      GITHUB_TOKEN: ${{ secrets.GTHUB_TOKEN }} 
       PORT: 9011
       REPO: 
       CO_URL: http://co:9001/api/v1
@@ -157,7 +162,7 @@ services:
       - nats
     environment:
       NATS_URL: nats://nats:4222
-      GITHUB_TOKEN: ${GITHUB_TOKEN} 
+      GITHUB_TOKEN: ${{ secrets.GTHUB_TOKEN }} 
       RUNTIME: containerd
       NODE_ID: node_id_1
       SITE_ID: 379871e1-d4c4-4cef-8545-353e4535f08e 
@@ -180,7 +185,7 @@ services:
       - nats
     environment:
       NATS_URL: nats://nats:4222
-      GITHUB_TOKEN: ${GITHUB_TOKEN} 
+      GITHUB_TOKEN: ${{ secrets.GTHUB_TOKEN }} 
       RUNTIME: containerd
       NODE_ID: node_id_2
       SITE_ID: 68370fbd-421e-4a6c-9d22-0fa7167d3de7 
