@@ -64,9 +64,14 @@ jobs:
 
       - name: Run migrations inside compose
         run: |
-          docker exec co atlas migrate apply \
-            --url "postgres://$PG_USER:$PG_PASSWORD@postgres:5432/$PG_DB?sslmode=disable" \
-            --dir file://migrations --force
+          docker exec intelligent-edge-orchestrator-co-1 \
+            atlas migrate apply \
+              --url "postgres://$PG_USER:$PG_PASSWORD@$PG_HOST:5432/$PG_DB?sslmode=disable" \
+              --dir file://ent/migrate --force
+
+          # docker exec co atlas migrate apply \
+          #   --url "postgres://$PG_USER:$PG_PASSWORD@postgres:5432/$PG_DB?sslmode=disable" \
+          #   --dir file://migrations --force
 
       - name: Seed data
         run: |
