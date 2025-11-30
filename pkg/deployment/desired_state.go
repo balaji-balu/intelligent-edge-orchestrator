@@ -24,6 +24,7 @@ type Metadata struct {
 type Annotations struct {
 	ApplicationID string `yaml:"applicationId"`
 	ID            string `yaml:"id"`
+	Version			string `yaml:"version"`
 }
 
 type Spec struct {
