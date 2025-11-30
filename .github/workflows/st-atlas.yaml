@@ -44,12 +44,12 @@ jobs:
       - name: Docker Compose Up
         run: |
           docker compose -f docker-compose.yml up -d --build
-          docker compose -f docker-compose.yml ps
+          docker compose -f docker-compose.yml ps | tee containers.txt
 
       - name: Wait for Postgres
         run: |
           for i in {1..20}; do
-            docker exec intelligent-edge-orchestrator-postgres-1 pg_isready -U $PG_USER && break
+            docker exec postgres pg_isready -U $PG_USER && break
             sleep 3
           done
 
