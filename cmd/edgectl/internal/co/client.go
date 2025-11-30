@@ -137,6 +137,8 @@ func (c *Client) AddApp(category, appName, version, artifact string) error {
 	body, _ := json.Marshal(app)
 
 	url := fmt.Sprintf("%s/api/v1/apps", c.BaseURL)
+
+	fmt.Println("Sending to url:", url, app)
 	resp, err := c.client.Post(url, "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		return fmt.Errorf("failed to contact CO: %w", err)
