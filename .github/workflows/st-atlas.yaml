@@ -36,8 +36,11 @@ jobs:
       - name: Install Atlas
         run: curl -s https://atlasgo.sh | sh
 
-      - name: Generate Ent
-        run: ent generate ./ent/schema
+      # - name: Generate Ent
+      #   run: ent generate ./ent/schema
+
+      - name: Run ent generate without installing CLI
+        run: go run entgo.io/ent/cmd/ent generate ./ent/schema
 
       - name: Validate migrations
         run: atlas migrate validate --dir file://migrations
