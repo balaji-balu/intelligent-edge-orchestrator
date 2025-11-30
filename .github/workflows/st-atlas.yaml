@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  # push:
+  #   branches: [main, develop]
+  # pull_request:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    env:
+      # PG_USER: ${{ secrets.PG_USER }}
+      # PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+      # PG_DB: ${{ secrets.PG_DB }}
+      # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PG_USER: ${{ secrets.PG_USER }}
+      PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+      PG_DB: ${{ secrets.PG_DB }}
+      PG_HOST: postgres
+      EDGECTL_CO_URL: http://localhost:9001
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Install Atlas
+        run: curl -s https://atlasgo.sh | sh
+
+      - name: Generate Ent
+        run: ent generate ./ent/schema
+
+      - name: Validate migrations
+        run: atlas migrate validate --dir file://migrations
+
+      - name: Docker Compose Up (CO + LO + Postgres)
+        run: |
+          docker compose -f docker-compose.yml up -d --build
+          docker compose -f docker-compose.yml ps
+
+      - name: Wait for Postgres (inside compose)
+        run: |
+          for i in {1..20}; do
+            docker exec postgres pg_isready -U $PG_USER && break
+            sleep 2
+          done
+
+      - name: Run migrations inside compose
+        run: |
+          docker exec co atlas migrate apply \
+            --url "postgres://$PG_USER:$PG_PASSWORD@postgres:5432/$PG_DB?sslmode=disable" \
+            --dir file://migrations --force
+
+      - name: Seed data
+        run: |
+          docker exec postgres psql \
+            "postgres://$PG_USER:$PG_PASSWORD@localhost:5432/$PG_DB" \
+            -f /docker-entrypoint-initdb.d/seed.sql
+
+      - name: Check health
+        run: |
+          curl -s http://localhost:9001/api/v1/healthz
+          curl -s http://localhost:9010/healthz
+          curl -s http://localhost:9011/healthz
+
+      - name: Smoke test using CLI
+        run: |
+          docker exec co cli co add app --name sample/hello/1.0 --artifact https://github.com/app-registry
+          docker exec co cli co deploy --app sample/hello/1.0 --sites lo_1
+
+      - name: Logs
+        if: failure()
+        run: docker compose -f docker-compose.ci.yml logs
+
+      - name: Shutdown
+        if: always()
+        run: docker compose -f docker-compose.ci.yml down -v
