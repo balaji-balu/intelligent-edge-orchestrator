@@ -19,7 +19,7 @@ jobs:
       EDGECTL_CO_URL: http://localhost:9001
       EDGECTL_LO_1_URL: http://localhost:9010
       EDGECTL_LO_2_URL: http://localhost:9011
-      
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -86,7 +86,7 @@ jobs:
 
           ./edgectl co deploy app \
             --app retail/pos/1.0.0 \
-            --deploytype helm.v3 
+            --deploytype helm.v3 \          
             --site 379871e1-d4c4-4cef-8545-353e4535f08e
 
 
