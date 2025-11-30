@@ -16,6 +16,9 @@ jobs:
       PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
       PG_DB: ${{ secrets.PG_DB }}
       PG_HOST: postgres
+      EDGECTL_CO_URL: http://localhost:9001/
+      # EDGECTL_LO_URL: http://localhost:9001/
+      # EDGECTL_EN_URL: http://
 
     steps:
       - name: Checkout source code
@@ -54,7 +57,7 @@ jobs:
         run: |
           ./edgectl co add app \
             --name retail/pos/1.0 \
-            --artifact https://github.com/edge-orchestration-platform/app-registry/raw/main/artifacts/pos-v1.tar.gz
+            --artifact https://github.com/edge-orchestration-platform/app-registry/
 
           ./edgectl co deploy app \
             --name retail/pos/1.0 \
