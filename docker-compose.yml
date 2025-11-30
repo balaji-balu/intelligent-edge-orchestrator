@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_USER: ${PG_USER}
       POSTGRES_PASSWORD: ${PG_PASSWORD}
-      POSTGRES_DB: ${secrets.PG_DB}
+      POSTGRES_DB: ${PG_DB}
     ports:
       - "5432:5432"
     volumes:
@@ -93,7 +93,7 @@ services:
       DATABASE_URL: postgres://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:5432/${PG_DB}?sslmode=disable
     # postgres://postgres:postgres@postgres:5432/orchestration?sslmode=disable
       # DATABASE_URL: ${DATABASE_URL}
-      GITHUB_TOKEN: ${{ secrets.GTHUB_TOKEN }}
+      GITHUB_TOKEN: ${GTHUB_TOKEN}
       PORT: 9001
       SITE_ID: 
     networks:
