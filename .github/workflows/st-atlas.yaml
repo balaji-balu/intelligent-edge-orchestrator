@@ -86,8 +86,8 @@ jobs:
 
           ./edgectl co deploy app \
             --app retail/pos/1.0.0 \
-            --deploytype helm.v3 \          
-            --site 379871e1-d4c4-4cef-8545-353e4535f08e
+            --site 379871e1-d4c4-4cef-8545-353e4535f08e \
+            --deploytype helm.v3       
 
 
       # - name: Smoke test
