@@ -94,7 +94,7 @@ services:
       DATABASE_URL: postgres://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:5432/${PG_DB}?sslmode=disable
     # postgres://postgres:postgres@postgres:5432/orchestration?sslmode=disable
       # DATABASE_URL: ${DATABASE_URL}
-      GITHUB_TOKEN: ${GTHUB_TOKEN}
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
       PORT: 9001
       SITE_ID: 
     networks:
@@ -116,7 +116,7 @@ services:
       # DATABASE_URL: postgres://${{ secrets.PG_USER }}:${{ secrets.PG_PASSWORD }}@${{ secrets.PG_HOST }}:5432/${{ secrets.PG_DB }}?sslmode=disable
       # DATABASE_URL: ${DATABASE_URL}
       NATS_URL: nats://nats:4222
-      GITHUB_TOKEN: ${GTHUB_TOKEN}
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
       PORT: 9010
       REPO: 
       CO_URL: http://co:9001/api/v1
@@ -142,7 +142,7 @@ services:
       # DATABASE_URL: postgres://${{ secrets.PG_USER }}:${{ secrets.PG_PASSWORD }}@${{ secrets.PG_HOST }}:5432/${{ secrets.PG_DB }}?sslmode=disable
       # DATABASE_URL: ${DATABASE_URL}
       NATS_URL: nats://nats:4222
-      GITHUB_TOKEN: ${GTHUB_TOKEN} 
+      GITHUB_TOKEN: ${GITHUB_TOKEN} 
       PORT: 9011
       REPO: 
       CO_URL: http://co:9001/api/v1
@@ -163,7 +163,7 @@ services:
       - nats
     environment:
       NATS_URL: nats://nats:4222
-      GITHUB_TOKEN: ${GTHUB_TOKEN} 
+      GITHUB_TOKEN: ${GITHUB_TOKEN} 
       RUNTIME: containerd
       NODE_ID: node_id_1
       SITE_ID: 379871e1-d4c4-4cef-8545-353e4535f08e 

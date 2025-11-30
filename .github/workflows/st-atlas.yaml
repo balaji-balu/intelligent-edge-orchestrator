@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GTHUB_TOKEN }}
       PG_USER: ${{ secrets.PG_USER }}
       PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
       PG_DB: ${{ secrets.PG_DB }}
