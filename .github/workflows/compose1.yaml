@@ -25,8 +25,8 @@ jobs:
 
       - name: Build and start all services
         run: |
-          docker-compose -f docker-compose.yml up -d --build
-          docker-compose ps
+          docker compose -f docker-compose.yml up -d --build
+          docker compose ps
 
       - name: Wait for services to be ready
         run: |
@@ -40,4 +40,4 @@ jobs:
           docker exec lo_2 curl -s http://localhost:9011/health || echo "LO_2 not ready"
 
       - name: Stop all containers
-        run: docker-compose -f docker-compose.yml down -v
+        run: docker compose -f docker-compose.yml down -v
