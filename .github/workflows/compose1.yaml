@@ -24,7 +24,7 @@ jobs:
           echo "PG_DB=${{ secrets.PG_DB }}" >> $GITHUB_ENV
           echo "PG_HOST=${{ secrets.PG_HOST }}" >> $GITHUB_ENV
           echo "GTHUB_TOKEN=${{ secrets.GTHUB_TOKEN }}" >> $GITHUB_ENV
-          
+
       - name: Log in to Docker Hub (optional)
         uses: docker/login-action@v2
         with:
@@ -49,9 +49,9 @@ jobs:
 
       - name: Health check
         run: |
-          curl -s http://localhost:9001/health || echo "CO not ready"
-          curl -s http://localhost:9010/health || echo "LO_1 not ready"
-          curl -s http://localhost:9011/health || echo "LO_2 not ready"
+          curl -s http://localhost:9001/healthz || echo "CO not ready"
+          curl -s http://localhost:9010/healthz || echo "LO_1 not ready"
+          curl -s http://localhost:9011/healthz || echo "LO_2 not ready"
 
 
       # - name: Run smoke test
