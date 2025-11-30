@@ -79,8 +79,8 @@ jobs:
 
       - name: Logs
         if: failure()
-        run: docker compose -f docker-compose.ci.yml logs
+        run: docker compose -f docker-compose.yml logs
 
       - name: Shutdown
         if: always()
-        run: docker compose -f docker-compose.ci.yml down -v
+        run: docker compose -f docker-compose.yml down -v
