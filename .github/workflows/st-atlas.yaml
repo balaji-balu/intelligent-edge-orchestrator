@@ -39,6 +39,11 @@ jobs:
       # - name: Generate Ent
       #   run: ent generate ./ent/schema
 
+      - name: Add ent deps to go.sum
+        run: |
+          go get entgo.io/ent/cmd/ent@latest
+          go mod tidy
+          
       - name: Run ent generate without installing CLI
         run: go run entgo.io/ent/cmd/ent generate ./ent/schema
 
