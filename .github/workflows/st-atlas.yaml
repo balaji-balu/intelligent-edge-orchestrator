@@ -57,8 +57,8 @@ jobs:
         run: |
           atlas migrate apply \
             --url "postgres://$PG_USER:$PG_PASSWORD@localhost:5432/$PG_DB?sslmode=disable" \
-            --dir file://ent/migrate --force
-
+            --dir file://ent/migrate 
+            
       - name: Seed Database
         run: |
           psql "postgres://$PG_USER:$PG_PASSWORD@localhost:5432/$PG_DB" < seed.sql
