@@ -49,7 +49,7 @@ jobs:
 
       - name: Health check
         run: |
-          curl -s http://localhost:9001/healthz || echo "CO not ready"
+          curl -s http://localhost:9001/api/v1/healthz || echo "CO not ready"
           curl -s http://localhost:9010/healthz || echo "LO_1 not ready"
           curl -s http://localhost:9011/healthz || echo "LO_2 not ready"
 
