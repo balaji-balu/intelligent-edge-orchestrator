@@ -94,10 +94,10 @@ func makeDirName(siteID string) (string) {
 	dirPath := filepath.Join(home, ".lo", siteID)
 
 	// // Create the directory (including parents)
-	// err = os.MkdirAll(dirPath, 0o755)
-	// if err != nil {
-	// 	panic(err)
-	// }
+	err = os.MkdirAll(dirPath, 0o755)
+	if err != nil {
+		panic(err)
+	}
 
 	// Full file path
 	filePath := filepath.Join(dirPath, filename)
