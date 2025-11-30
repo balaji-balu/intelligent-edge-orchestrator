@@ -79,11 +79,11 @@ jobs:
       - name: Smoke Test - Deploy Sample App
         run: |
           ./edgectl co add app \
-            --name retail/pos/1.0 \
+            --name retail/pos/1.0.0 \
             --artifact https://github.com/edge-orchestration-platform/app-registry/
 
           ./edgectl co deploy app \
-            --name retail/pos/1.0 \
+            --name retail/pos/1.0.0 \
             --sites 379871e1-d4c4-4cef-8545-353e4535f08e
 
 
