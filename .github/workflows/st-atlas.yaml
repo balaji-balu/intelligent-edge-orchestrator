@@ -43,12 +43,12 @@ jobs:
         run: |
           go get entgo.io/ent/cmd/ent@latest
           go mod tidy
-          
+
       - name: Run ent generate without installing CLI
         run: go run entgo.io/ent/cmd/ent generate ./ent/schema
 
       - name: Validate migrations
-        run: atlas migrate validate --dir file://migrations
+        run: atlas migrate validate --dir file://ent/migrate
 
       - name: Docker Compose Up (CO + LO + Postgres)
         run: |
