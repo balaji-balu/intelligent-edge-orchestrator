@@ -44,7 +44,7 @@ jobs:
       - name: Docker Compose Up
         run: |
           docker compose -f docker-compose.yml up -d --build
-          docker compose -f docker-compose.yml ps | tee containers.txt
+          docker compose -f docker-compose.yml ps 
 
       - name: Wait for Postgres
         run: |
@@ -57,7 +57,7 @@ jobs:
         run: |
           atlas migrate apply \
             --url "postgres://$PG_USER:$PG_PASSWORD@localhost:5432/$PG_DB?sslmode=disable" \
-            --dir file://ent/migrate 
+            --dir file://ent/migrate/migrations 
 
       - name: Seed Database
         run: |
