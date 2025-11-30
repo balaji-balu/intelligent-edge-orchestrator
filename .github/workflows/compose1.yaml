@@ -35,9 +35,11 @@ jobs:
 
       - name: Run smoke test
         run: |
-          docker exec co curl -s http://localhost:9001/health || echo "CO not ready"
-          docker exec lo_1 curl -s http://localhost:9010/health || echo "LO_1 not ready"
-          docker exec lo_2 curl -s http://localhost:9011/health || echo "LO_2 not ready"
-
+          # docker exec co curl -s http://localhost:9001/health || echo "CO not ready"
+          # docker exec lo_1 curl -s http://localhost:9010/health || echo "LO_1 not ready"
+          # docker exec lo_2 curl -s http://localhost:9011/health || echo "LO_2 not ready"
+          docker exec intelligent-edge-orchestrator-co-1 curl -s http://localhost:9001/health || echo "CO not ready"
+          docker exec intelligent-edge-orchestrator-lo_1-1 curl -s http://localhost:9010/health || echo "LO_1 not ready"
+          docker exec intelligent-edge-orchestrator-lo_2-1 curl -s http://localhost:9011/health || echo "LO_2 not ready"
       - name: Stop all containers
         run: docker compose -f docker-compose.yml down -v
