@@ -18,7 +18,7 @@ import (
 	"gopkg.in/yaml.v3"
 	"github.com/gin-gonic/gin"
 
-	pb "github.com/balaji-balu/margo-hello-world/proto_generated"
+	//pb "github.com/balaji-balu/margo-hello-world/proto_generated"
 	"github.com/balaji-balu/margo-hello-world/ent"
 	"github.com/balaji-balu/margo-hello-world/ent/component"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
@@ -38,10 +38,10 @@ var (
 )
 
 // server implements CentralOrchestrator gRPC interface
-type server struct {
-	pb.UnimplementedCentralOrchestratorServer
-	//sm *streammanager.StreamManager
-}
+// type server struct {
+// 	pb.UnimplementedCentralOrchestratorServer
+// 	//sm *streammanager.StreamManager
+// }
 
 type HostMapping struct {
 	SiteID  string   `json:"site_id"`
