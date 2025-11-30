@@ -73,6 +73,9 @@ jobs:
           curl -s http://localhost:9010/healthz
           curl -s http://localhost:9011/healthz
 
+      - name: Build CLI
+        run: go build -o edgectl ./cmd/edgectl
+
       - name: Smoke Test - Deploy Sample App
         run: |
           ./edgectl co add app \
