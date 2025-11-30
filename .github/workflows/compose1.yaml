@@ -25,7 +25,7 @@ jobs:
 
       - name: Build and start all services
         run: |
-          docker compose -f docker-compose.yml up -d --build
+          docker compose -f docker-compose.yml --env-file .env.staging up -d --build
           docker compose ps
 
       - name: Wait for services to be ready
