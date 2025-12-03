@@ -13,7 +13,7 @@ jobs:
       matrix:
         os: [linux]
         arch: [amd64, arm64]
-        cmd: [edgectl, co, lo, era]
+        cmd: [edgectl, co, lo]
 
     steps:
       - uses: actions/checkout@v4
