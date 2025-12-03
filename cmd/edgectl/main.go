@@ -2,7 +2,7 @@ package main
 
 import (
 	"os"
-	"log"
+	//"log"
 	 "github.com/joho/godotenv"
 	"github.com/balaji-balu/margo-hello-world/cmd/edgectl/cmd"
 )
