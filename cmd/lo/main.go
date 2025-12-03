@@ -12,7 +12,7 @@ import (
 	//"sync"
 	"syscall"
 	"time"
-	"path/filepath"
+	//"path/filepath"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -237,18 +237,18 @@ func main() {
 	log.Println("🧹 All systems stopped. Goodbye!")
 }
 
-func boltDBPath(siteID string) (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
+// func boltDBPath(siteID string) (string, error) {
+// 	home, err := os.UserHomeDir()
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	// ~/.lo/<siteID>/boltz.db
-	dir := filepath.Join(home, ".lo", siteID)
+// 	// ~/.lo/<siteID>/boltz.db
+// 	dir := filepath.Join(home, ".lo", siteID)
 
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return "", err
-	}
+// 	if err := os.MkdirAll(dir, 0o755); err != nil {
+// 		return "", err
+// 	}
 
-	return filepath.Join(dir, "boltz.db"), nil
-}
+// 	return filepath.Join(dir, "boltz.db"), nil
+// }

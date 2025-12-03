@@ -3,7 +3,7 @@ package reconciler
 import (
 	"log"
 	"fmt"
-	//"time"
+	"time"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -289,26 +289,32 @@ func (r *Reconciler) ReconcileMulti(
 	ops := computeDiff(desired, actual, aliveHosts)
 	//if debug {
 		fmt.Println("=== Diff Ops ===")
-		for _, op := range ops {
-			op.DeploymentID = depId
-			fmt.Printf("%+v\n", op)
-			//key := fmt.Sprintf("%s-%d", depId, time.Now().UnixNano())
-			//r.store.SaveState(pathForOperation(), key, op)
-			r.store.SetOperation(depId, op)
+		for range aliveHosts {
+			for _, op := range ops {
+				op.DeploymentID = depId
+				op.TimeStamp = time.Now().UnixNano()
+				fmt.Printf("%+v\n", op)
+				//key := fmt.Sprintf("%s-%d", depId, time.Now().UnixNano())
+				//r.store.SaveState(pathForOperation(), key, op)
+				r.store.SetOperation(depId, op)
+				if err := r.actuator.Execute(op); err != nil {
+					log.Println("Actuator Error:", err)
+				}			
+			}
 		}
 	//}
 
-    // 5. execute operations per node
-	for hostid, _ := range aliveHosts {
-		log.Println("hostid:", hostid)
-		for _, op := range ops {
-			log.Println("op:", op)
-			op.DeploymentID = depId 
-			if err := r.actuator.Execute(op); err != nil {
-				log.Println("Actuator Error:", err)
-			}
-		}
-	}
+    // // 5. execute operations per node
+	// for hostid, _ := range aliveHosts {
+	// 	log.Println("hostid:", hostid)
+	// 	for _, op := range ops {
+	// 		log.Println("op:", op)
+	// 		op.DeploymentID = depId 
+	// 		if err := r.actuator.Execute(op); err != nil {
+	// 			log.Println("Actuator Error:", err)
+	// 		}
+	// 	}
+	// }
 
     // for nodeID, ops := range ops {
     //     for _, op := range ops {

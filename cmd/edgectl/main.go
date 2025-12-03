@@ -9,7 +9,7 @@ import (
 
 func init() {
     envPath := os.Getenv("EDGECTL_ENV_PATH")
-	log.Println("inside cli", envPath)
+	//log.Println("inside cli", envPath)
     if envPath != "" {
         godotenv.Load(envPath)
     } else {

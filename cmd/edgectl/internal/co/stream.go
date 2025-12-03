@@ -55,7 +55,7 @@ func (c *Client) StreamStatus(ctx context.Context, id string, onEvent func(ev De
 		var ev DeployEvent
 		if err := json.Unmarshal([]byte(line[5:]), &ev); err == nil {
 			onEvent(ev)
-			if ev.Status == "completed" || ev.Status == "failed" {
+			if ev.Status == "installed" || ev.Status == "failed" {
 				fmt.Printf("✅ Stream for %s finished (%s)\n", id, ev.Status)
 				return nil
 			}

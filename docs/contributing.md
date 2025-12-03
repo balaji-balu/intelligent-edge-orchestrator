@@ -7,12 +7,22 @@ This project is part of the **Edge Orchestration Platform (CO, LO, EN)** ecosyst
 
 ---
 
-## Code 
-```
-go run ./cmd/co --config=./configs/co.yml
-go run ./cmd/lo 
-go run ./cmd/en
-```
+## Get Started
+
+// setup nats, postgres
+podman-compose -f docker-compose.dev.yaml up -d
+
+In separate terminal, start co
+`go run ./cmd/co` 
+
+In separate terminal, start lo
+`go run ./cmd/lo` 
+
+In separate terminal, start en
+`go run ./cmd/en`
+
+run cli
+`go run ./cmd/edgectl`
 
 #### Configuration
 ```

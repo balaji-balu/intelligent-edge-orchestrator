@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
-	"time"
+	//"time"
 
 	bolt "go.etcd.io/bbolt"
 	"github.com/balaji-balu/margo-hello-world/pkg/model"
@@ -278,6 +278,19 @@ func (s *StateStore) SetActual(hostid string, app model.ActualApp) (error) {
 
 func (s *StateStore) SetOperation(depId string, op model.DiffOp){
 	path := []string{"operations"}
-	key := fmt.Sprintf("%s-%d", depId, time.Now().UnixNano())
+	key := fmt.Sprintf("%s-%d", depId, op.TimeStamp)
 	s.SaveState(path, key, op)
+}
+
+func (s *StateStore) GetOperation(depId string, timestamp int64) (model.DiffOp, error) {
+    path := []string{"operations"}
+    key := fmt.Sprintf("%s-%d", depId, timestamp)
+
+    var op model.DiffOp
+    err := s.LoadState(path, key, &op)
+    if err != nil {
+        return model.DiffOp{}, err
+    }
+
+    return op, nil
 }

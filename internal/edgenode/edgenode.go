@@ -67,7 +67,7 @@ func (en *EdgeNode) startHeartbeat() {
 			if err := en.nc.Publish(subj, msg); err != nil {
 				log.Println("Heart publish failed:", err)
 			} else {
-				log.Println("Heart msg published", subj, msg)
+				//log.Println("Heart msg published", subj, msg)
 				en.nc.Flush()
 			}
 			//log.Println("Heart msg published", id)
@@ -84,8 +84,8 @@ func (en *EdgeNode) startDeployListener() {
 		//success := true
 		//statusMsg := "Deployment successful"
 		//log.Println("req.Component:", req.Component)
-		en.UpdateStatus(req.DeploymentID, string(model.StateInstalling), 
-			req, nil)
+		//en.UpdateStatus(req.DeploymentID, string(model.StateInstalling), 
+		//	req, nil)
 		time.Sleep(30 * time.Second)
 		en.UpdateStatus(req.DeploymentID, string(model.StateInstalled), 
 			req, nil)
@@ -183,23 +183,101 @@ func (en *EdgeNode) startDeployListener() {
 func (en *EdgeNode) UpdateStatus(
 	deploymentID string, state string, op model.DiffOp, err error,
 ) {
-	op.Status = state
+	//op.Status = state
+	
+	//log.Println("op.Status", op.Status)
+	ds := model.DeploymentStatus {}
+	ds.DeploymentID = deploymentID
+	ds.TimeStamp = op.TimeStamp 
+	for _, comp := range op.App.Components {
+		st := model.StateInstalled //RandComponentState()
 
-	log.Println("op.Status", op.Status)
-	// ds := model.DeploymentComponentStatus {}
-	// ds.ComponentName = compName
-	// ds.DeploymentID = deploymentID
-	// ds.Status = state
-	// ds.HostID = en.HostID
-	// if err != nil {
-    //     ds.Error = model.StatusError{
-    //         Code:    "DEPLOYMENT_FAILED",
-    //         Message: err.Error(),
-    //     }		
-	// }
+		var serr model.StatusError
+		if st == model.StateFailed && err != nil {
+			serr = model.StatusError{
+				Code:    "DEPLOYMENT_FAILED",
+				Message: err.Error(),
+			}
+		}
 
+		dc := model.DeploymentComponent{
+			Name:  comp.Name,
+			State: string(st),
+			Error: serr,
+		}
 
+		ds.Components = append(ds.Components, dc)
+	}
+
+	overall := inheritState(ds.Components)
+
+	var overallErr model.StatusError
+	if overall == model.StateFailed {
+		// Pick the first failed component's error
+		for _, c := range ds.Components {
+			if c.State == string(model.StateFailed) {
+				overallErr = c.Error
+				break
+			}
+		}
+	}
+
+	ds.Status = model.DeploymentState{
+		State: string(overall),
+		Error: overallErr,
+	}
+
+	en.logger.Info("deployment status:", zap.Any("ds", ds))
 	statusSubj := fmt.Sprintf("status.%s.%s", en.SiteID, en.HostID)
-    en.nc.Publish(statusSubj, op)
+    en.nc.Publish(statusSubj, ds)
 }
 
+func inheritState(comps []model.DeploymentComponent) model.DeploymentStage {
+	if len(comps) == 0 {
+		return model.StatePending
+	}
+
+	overall := model.StateInstalled
+
+	for _, c := range comps {
+		switch c.State {
+		case "failed":
+			// Highest priority
+			return model.StateFailed
+
+		case "installing":
+			// Only upgrade if overall is not Failed (we return Failed earlier)
+			if overall != model.StateInstalling {
+				overall = model.StateInstalling
+			}
+
+		case "pending":
+			// Only set if nothing more important seen yet
+			if overall == model.StateInstalled {
+				overall = model.StatePending
+			}
+
+		case "installed":
+			// Do nothing (lowest priority)
+		}
+	}
+
+	return overall
+}
+
+func RandComponentState() model.DeploymentStage {
+    rand.Seed(time.Now().UnixNano())
+
+    r := rand.Intn(100) // 0–99
+
+    switch {
+    case r < 70:
+        return model.StateInstalled    // 70%
+    case r < 85:
+        return model.StateInstalling   // 15%
+    case r < 95:
+        return model.StatePending      // 10%
+    default:
+        return model.StateFailed       // 5%
+    }
+}

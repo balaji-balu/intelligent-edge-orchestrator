@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"encoding/json"
 	"sync"
 	"github.com/spf13/cobra"
 	"github.com/balaji-balu/margo-hello-world/cmd/edgectl/internal/co"
@@ -22,7 +23,7 @@ func newCOCmd() *cobra.Command {
 		newCOStatusCmd(),
 		newCOAddAppCmd(),
 		newCODeleteAppCmd(),
-		newCODeloymentsList(),
+		newCODeploymentsCmd(),
 	)
 
 	return cmd
@@ -295,24 +296,86 @@ func newCOStatusCmd() *cobra.Command {
 	}
 }
 
+func newCODeploymentsCmd() *cobra.Command {
+    cmd := &cobra.Command{
+        Use:   "deployments",
+        Short: "Manage deployments",
+    }
 
-func newCODeloymentsList() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "deployments",
-		Short: "Manage deployments",
-	}
-	cmd.AddCommand(&cobra.Command{
-		Use:   "list",
-		Short: "Show all deployment status",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Printf("Display all deployments")
-			return nil
-		},
-	})
+    cmd.AddCommand(newCODeploymentsListCmd())
+    cmd.AddCommand(newCODeploymentStatusCmd())
 
-	return cmd
+    return cmd
 }
 
+func newCODeploymentsListCmd() *cobra.Command {
+    return &cobra.Command{
+        Use:   "list",
+        Short: "Show all deployment statuses",
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cfg, err := util.Load()
+            if err != nil {
+                return fmt.Errorf("failed to load config: %v", err)
+            }
 
+			fmt.Println(cfg)
+            // client := co.NewClient(cfg.Coordinator.URL)
+            // deployments, err := client.Deployments()
+            // if err != nil {
+            //     return fmt.Errorf("❌ failed to fetch deployments: %v", err)
+            // }
 
+            // fmt.Println("📦 Deployments:")
+            // for _, d := range deployments {
+            //     fmt.Printf("- %s (%s)\n", d.ID, d.State)
+            // }
+
+            return nil
+        },
+    }
+}
+
+func newCODeploymentStatusCmd() *cobra.Command {
+    var depID string
+
+    cmd := &cobra.Command{
+        Use:   "status",
+        Short: "Show the deployment status for a specific deployment",
+        RunE: func(cmd *cobra.Command, args []string) error {
+
+            cfg, err := util.Load()
+            if err != nil {
+                return fmt.Errorf("failed to load config: %v", err)
+            }
+
+            client := co.NewClient(cfg.Coordinator.URL)
+            resp, err := client.DeploymentStatus(depID)
+            if err != nil {
+                return fmt.Errorf("❌ %v", err)
+            }
+			fmt.Println(pretty(resp))
+
+            // fmt.Printf("📦 Deployment: %s\n", depID)
+            // fmt.Printf("State: %s\n", resp.State)
+            // fmt.Printf("Error: %s\n", resp.ErrorMessage)
+
+            // fmt.Println("🧩 Components:")
+            // for _, c := range resp.Components {
+            //     fmt.Printf("- %s : %s (%s)\n", c.Name, c.State, c.ErrorMessage)
+            // }
+
+            return nil
+        },
+    }
+
+    cmd.Flags().StringVar(&depID, "depid", "", "Deployment ID")
+    cmd.MarkFlagRequired("depid")
+
+    return cmd
+}
+
+func pretty(v interface{}) string {
+	b, _ := json.MarshalIndent(v, "", "  ")
+	return string(b)
+}
 

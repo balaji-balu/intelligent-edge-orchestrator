@@ -102,7 +102,7 @@ func UpdateDeploymentStatus(ctx context.Context,
 }
 
 // GetDeploymentsStatus returns all deployment statuses with components
-func GetDeploymentsStatus(c *gin.Context, client *ent.Client) {
+/*func GetDeploymentsStatus(c *gin.Context, client *ent.Client) {
     ctx := c.Request.Context()
 
     // Query all DeploymentStatuses and eager-load components
@@ -143,5 +143,95 @@ func GetDeploymentsStatus(c *gin.Context, client *ent.Client) {
 
     c.JSON(http.StatusOK, gin.H{
         "deployments": result,
+    })
+}
+*/
+func fetchDeployment(ctx context.Context, client *ent.Client, id string) (*ent.DeploymentStatus, error) {
+    return client.DeploymentStatus.
+        Query().
+        Where(deploymentstatus.IDEQ(uuid.MustParse(id))).
+        WithComponents().
+        Only(ctx)
+}
+
+
+func ListDeploymentsStatus(c *gin.Context, client *ent.Client) {
+    ctx := c.Request.Context()
+
+    deployments, err := client.DeploymentStatus.
+        Query().
+        WithComponents().
+        All(ctx)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "error":   "failed to fetch deployment statuses",
+            "details": err.Error(),
+        })
+        return
+    }
+
+    result := make([]gin.H, 0, len(deployments))
+
+    for _, d := range deployments {
+        components := make([]gin.H, 0, len(d.Edges.Components))
+        for _, comp := range d.Edges.Components {
+            components = append(components, gin.H{
+                "name":         comp.Name,
+                "state":        comp.State,
+                "errorCode":    comp.ErrorCode,
+                "errorMessage": comp.ErrorMessage,
+            })
+        }
+
+        result = append(result, gin.H{
+            "id":           d.ID,
+            "deploymentID": d.ID.String(),
+            "state":        d.State,
+            "errorCode":    d.ErrorCode,
+            "errorMessage": d.ErrorMessage,
+            "components":   components,
+        })
+    }
+
+    c.JSON(http.StatusOK, gin.H{"deployments": result})
+}
+
+
+func GetDeploymentStatus(c *gin.Context, client *ent.Client) {
+    ctx := c.Request.Context()
+    id := c.Param("id")
+
+    log.Println("GetDeploymentStatus: enter", id)
+
+    deployment, err := fetchDeployment(ctx, client, id)
+    if ent.IsNotFound(err) {
+        c.JSON(http.StatusNotFound, gin.H{"error": "deployment not found"})
+        return
+    }
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "error":   "failed to fetch deployment",
+            "details": err.Error(),
+        })
+        return
+    }
+
+    components := make([]gin.H, 0, len(deployment.Edges.Components))
+    for _, comp := range deployment.Edges.Components {
+        components = append(components, gin.H{
+            "name":         comp.Name,
+            "state":        comp.State,
+            "errorCode":    comp.ErrorCode,
+            "errorMessage": comp.ErrorMessage,
+        })
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "id":           deployment.ID,
+        "deploymentID": deployment.ID.String(),
+        "state":        deployment.State,
+        "errorCode":    deployment.ErrorCode,
+        "errorMessage": deployment.ErrorMessage,
+        "components":   components,
     })
 }

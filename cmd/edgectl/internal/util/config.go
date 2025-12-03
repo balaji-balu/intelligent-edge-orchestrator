@@ -65,7 +65,7 @@ func Load() (*Config, error) {
 
 	// 3. Set defaults if still empty
 	if cfg.Coordinator.URL == "" {
-		cfg.Coordinator.URL = "http://localhost:9101"
+		cfg.Coordinator.URL = "http://localhost:8080"
 	}
 	if cfg.LocalOrchestrator.URL == "" {
 		cfg.LocalOrchestrator.URL = "http://localhost:8081"

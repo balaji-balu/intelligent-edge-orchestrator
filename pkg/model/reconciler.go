@@ -107,7 +107,8 @@ type DiffOp struct {
 	App				App `json:"app"`
 	CompName		string `json:"comp_name,omitempty"` // empty for app-level ops
 	DeploymentID	string `json:"deployment_id"`
-	Status 			string `json:"status"`	
+	Status 			string `json:"status"`
+	TimeStamp		int64	`json:"time_stamp"`	
 }
 
 

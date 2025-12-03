@@ -1,117 +1,150 @@
-package e2e
+package edgectl_test
 
 import (
+    "bytes"
+    "encoding/json"
+    "io/ioutil"
+    "fmt"
     "os"
-	"strings"
     "os/exec"
     "path/filepath"
+    "strings"
+    "regexp"
     "testing"
 )
 
-var edgectlBin string
-
-func TestMain(m *testing.M) {
-    // Expand ~
-    home, _ := os.UserHomeDir()
-    edgectlPath := filepath.Join(
-        home,
-        "edge-orchestration-workspace/prototypes/edgectl",
-    )
-
-    // Output binary path
-    edgectlBin = filepath.Join(os.TempDir(), "edgectl-test-bin")
-    os.MkdirAll(edgectlBin, 0755)
-    edgectlBin = filepath.Join(edgectlBin, "edgectl")
-
-    // Build the CLI
-    cmd := exec.Command(
-        "go", "build",
-        "-o", edgectlBin,
-        ".",
-    )
-    cmd.Dir = edgectlPath
-
-    out, err := cmd.CombinedOutput()
-    if err != nil {
-        panic("failed to build edgectl:\n" + string(out))
-    }
-
-    // Tell CLI where to read .env from
-    os.Setenv("EDGECTL_ENV_PATH",
-        "/home/balaji/edge-orchestration-workspace/prototypes/edgectl/.env",
-    )
-
-    // Run tests
-    os.Exit(m.Run())
-}
-
-func runCLI(t *testing.T, args ...string) (string, error) {
+// runCommand runs a CLI command and fails the test if it errors
+func runCommand(t *testing.T, args ...string) string {
     t.Helper()
-    cmd := exec.Command(edgectlBin, args...)
-    out, err := cmd.CombinedOutput()
-    return string(out), err
-}
-
-
-func initGit(t *testing.T) {
-    exec.Command("git", "init").Run()
-    exec.Command("git", "config", "user.email", "test@test.com").Run()
-    exec.Command("git", "config", "user.name", "tester").Run()
-
-    // Add an initial commit (required for many Git ops)
-    os.WriteFile("README.md", []byte("test repo"), 0644)
-    exec.Command("git", "add", ".").Run()
-    exec.Command("git", "commit", "-m", "init").Run()
-}
-
-func TestDeploy_E2E(t *testing.T) {
-    // Create isolated workspace
-    dir := t.TempDir()
-    old := os.Getenv("PWD")
-    os.Chdir(dir)
-    defer os.Chdir(old)
-
-    // Init git repository
-    initGit(t)
-
-    // 1. Create or add an app first
-    // (co deploy expects app exists)
-    out, err := runCLI(t,
-        "co", "add", "app",
-        "--name", "retail/pos/1.1",
-        "--artifact", "file://testdata/pos",
-    )
+    cmd := exec.Command("../../edgectl", args...)
+    var out bytes.Buffer
+    var stderr bytes.Buffer
+    cmd.Stdout = &out
+    cmd.Stderr = &stderr
+    err := cmd.Run()
     if err != nil {
-        t.Fatalf("add app failed: %v\nout: %s", err, out)
+        t.Fatalf("Failed to run 'edgectl %s': %v\nstderr: %s", strings.Join(args, " "), err, stderr.String())
     }
+    return out.String()
+}
 
-    // 2. Deploy the app
-    out, err = runCLI(t,
-        "co", "deploy",
-        "--app", "retail/pos/1.1",
-        "--site", "store-121",
-    )
+// createTempApp creates a temporary directory representing an app version
+func createTempApp(t *testing.T, appName, version string) string {
+    t.Helper()
+    tempDir, err := ioutil.TempDir("", appName+"-"+version)
     if err != nil {
-        t.Fatalf("deploy failed: %v\nout: %s", err, out)
+        t.Fatalf("Failed to create temp dir for %s: %v", appName, err)
     }
 
-    // 3. Validate output
-    if !strings.Contains(out, "Deployment created") &&
-       !strings.Contains(out, "Success") {
-        t.Fatalf("unexpected deploy output: %s", out)
+    // Dummy margo.yaml
+    margoContent := []byte("name: " + appName + "\nversion: " + version + "\ncomponents: []\n")
+    err = ioutil.WriteFile(filepath.Join(tempDir, "margo.yaml"), margoContent, 0644)
+    if err != nil {
+        t.Fatalf("Failed to write margo.yaml: %v", err)
     }
 
-    // 4. Verify desired state file got generated
-    dsFile := "desiredstate/store-121/retail-pos-1.1.yaml"
-    if _, err := os.Stat(dsFile); err != nil {
-        t.Fatalf("desired state not generated: expected %s", dsFile)
+    return tempDir
+}
+
+// DeploymentStatus represents a simple structure returned by `edgectl status`
+// Adapt this to your actual CO/LO/ERA status JSON structure
+type DeploymentStatus struct {
+    App     string `json:"app"`
+    Version string `json:"version"`
+    Site    string `json:"site"`
+    Status  string `json:"status"` // e.g., "deployed"
+}
+
+// checkDeployment validates that the app version is deployed to all sites
+func checkDeployment(t *testing.T, app, version string, sites []string) {
+    t.Helper()
+    out := runCommand(t, "co", "deployments", "status", "--depid", app)
+    
+    var statuses []DeploymentStatus
+    if err := json.Unmarshal([]byte(out), &statuses); err != nil {
+        t.Fatalf("Failed to parse JSON status for app %s: %v\nOutput: %s", app, err, out)
     }
 
-    // 5. Verify commit happened in Git
-    gitLog, _ := exec.Command("git", "log", "--oneline", "-1").CombinedOutput()
-    if !strings.Contains(string(gitLog), "deploy") &&
-       !strings.Contains(string(gitLog), "desiredstate") {
-        t.Fatalf("deploy did not create a git commit: %s", gitLog)
+    siteMap := make(map[string]DeploymentStatus)
+    for _, s := range statuses {
+        siteMap[s.Site] = s
+    }
+
+    for _, site := range sites {
+        st, ok := siteMap[site]
+        if !ok {
+            t.Errorf("No deployment found for app %s on site %s", app, site)
+        } else if st.Version != version || st.Status != "deployed" {
+            t.Errorf("Deployment mismatch for app %s on site %s: got version=%s, status=%s; want version=%s, status=deployed",
+                app, site, st.Version, st.Status, version)
+        }
     }
 }
 
+func TestDeployMultipleAppsWithValidation(t *testing.T) {
+    apps := map[string][]string{
+        "retail/pos": {"1.1.0"},
+        "retail/inventory": {"2.0.0"},
+        //retail/edge-checkout/0.9.0
+        //"retail/app2": {"v1.0.0"},
+    }
+    sites := []string{"a7f3174c-2aa0-4fb7-8e62-984c5703284d", "siteB"}
+    var tempDirs []string
+
+    for app, versions := range apps {
+        for _, version := range versions {
+            //tempDir := createTempApp(t, app, version)
+            //tempDirs = append(tempDirs, tempDir)
+
+            // t.Logf("Adding app %s version %s from %s", app, version, tempDir)
+            // runCommand(t, "co add app", "--path", tempDir)
+
+            t.Logf("Deploying app %s version %s to sites %v", app, version, sites)
+            s :=  fmt.Sprintf("%s/%s", app, version)
+            
+            runCommand(t, "co", "deploy", "--app", s, "--site", sites[0], "--deploytype", "helm.v3")
+            t.Logf("finished runcommand")
+            //deploymentID := extractDeploymentID(t, out)
+
+            //t.Logf("Parsed DeploymentID = %s", deploymentID)
+
+            // Validate deployed state
+            checkDeployment(t, app, version, sites)
+
+            // Optional update
+            newVersion := version + "-update"
+            tempUpdateDir := createTempApp(t, app, newVersion)
+            tempDirs = append(tempDirs, tempUpdateDir)
+
+            t.Logf("Updating app %s from %s to %s", app, version, newVersion)
+            runCommand(t, "update-app", "--app", app, "--version", newVersion, "--sites", strings.Join(sites, ","))
+
+            // Validate updated deployment
+            checkDeployment(t, app, newVersion, sites)
+        }
+    }
+
+    // Cleanup temp dirs
+    for _, dir := range tempDirs {
+        os.RemoveAll(dir)
+    }
+}
+
+func extractDeploymentID(t *testing.T, out string) string {
+    t.Helper()
+
+    // 1. Try JSON pattern
+    jsonRe := regexp.MustCompile(`"deploymentId"\s*:\s*"([a-f0-9\-]+)"`)
+    if m := jsonRe.FindStringSubmatch(out); len(m) == 2 {
+        return m[1]
+    }
+
+    // 2. Try CLI text output
+    textRe := regexp.MustCompile(`(?i)deployment[-_ ]?id[: ]+([a-f0-9\-]+)`)
+    if m := textRe.FindStringSubmatch(out); len(m) == 2 {
+        return m[1]
+    }
+
+    t.Fatalf("Could not extract deployment ID from output:\n%s", out)
+    return ""
+}

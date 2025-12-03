@@ -16,7 +16,7 @@ type DeploymentStatus struct {
     Status       DeploymentState        `json:"status"`  
     Components   []DeploymentComponent  `json:"components"`
     SiteID       string                 `json:"site_id"`
-    
+    TimeStamp int64 `json:"time_stamp"`
 }
 
 type DeploymentState struct {

@@ -202,3 +202,45 @@ func (c *Client) Health() (*HealthResponse, error) {
 	}
 	return &h, nil
 }
+
+type ComponentStatus struct {
+    Name         string `json:"name"`
+    State        string `json:"state"`
+    ErrorCode    string `json:"errorCode"`
+    ErrorMessage string `json:"errorMessage"`
+}
+
+type DeploymentStatusResponse struct {
+    ID           string            `json:"id"`
+    DeploymentID string            `json:"deploymentID"`
+    State        string            `json:"state"`
+    ErrorCode    string            `json:"errorCode"`
+    ErrorMessage string            `json:"errorMessage"`
+    Components   []ComponentStatus `json:"components"`
+}
+
+func (c *Client) DeploymentStatus(depID string) (*DeploymentStatusResponse, error) {
+    url := fmt.Sprintf("%s/api/v1/deployments/%s/status", c.BaseURL, depID)
+    //fmt.Printf("📡 Calling CO: %s\n", url)
+
+    resp, err := c.client.Get(url)
+    if err != nil {
+        return nil, fmt.Errorf("failed to reach CO service: %w", err)
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        body, _ := io.ReadAll(resp.Body)
+        return nil, fmt.Errorf("CO returned error %d: %s", resp.StatusCode, string(body))
+    }
+
+    var result DeploymentStatusResponse
+    if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+        return nil, fmt.Errorf("failed to parse CO response: %w", err)
+    }
+
+    //fmt.Println(pretty(result))
+    return &result, nil
+}
+
+

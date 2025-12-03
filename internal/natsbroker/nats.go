@@ -55,9 +55,9 @@ func (b *Broker) Subscribe3(topic string, handler func(model.DiffOp)) error {
 	return err
 }
 
-func (b *Broker) Subscribe4(topic string, handler func(model.DiffOp)) error {
+func (b *Broker) Subscribe4(topic string, handler func(model.DeploymentStatus)) error {
 	_, err := b.conn.Subscribe(topic, func(m *nats.Msg) {
-		var ev model.DiffOp
+		var ev model.DeploymentStatus
 		_ = json.Unmarshal(m.Data, &ev)
 		handler(ev)
 	})

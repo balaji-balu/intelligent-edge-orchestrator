@@ -13,7 +13,7 @@ import (
     //"github.com/nats-io/nats.go"
 
     "github.com/balaji-balu/margo-hello-world/internal/natsbroker"
-	//"github.com/balaji-balu/margo-hello-world/internal/lo/reconciler"
+	"github.com/balaji-balu/margo-hello-world/internal/lo/reconciler"
     "github.com/balaji-balu/margo-hello-world/internal/lo/boltstore"
 	"github.com/balaji-balu/margo-hello-world/pkg/model"
 )
@@ -108,15 +108,32 @@ func (a *NatsActuator) Execute(op model.DiffOp) error {
 func (a *NatsActuator) ReceiveStatus() {
 	go func() {
 		subStatus := fmt.Sprintf("status.%s.*", a.siteId)
-		err := a.nc.Subscribe4(subStatus, func(s model.DiffOp) {
+		err := a.nc.Subscribe4(subStatus, func(s model.DeploymentStatus) {
 			//log.Printf("[LO] status %s from %s: success=%v, msg=%s",
 			//	s.DeploymentID, s.NodeID, s.Status, s.Message)
 			log.Println("[LO] component state:", s, s.DeploymentID)
 
-            log.Println("xxxxxxxxxxxxxxxxx status:", s.Status)
-            if s.Status == string(model.StateInstalled) {
-                a.ApplySuccessOp(s.DeploymentID, s)
+            // log.Println("xxxxxxxxxxxxxxxxx status:", s.Status)
+            if s.Status.State == string(model.StateInstalled) {
+                a.ApplySuccessOp(s.DeploymentID, s.TimeStamp)
             }
+
+            // ds := model.DeploymentStatus{
+            //    Status: {
+            //         State: s.Status
+            //         Error : StatusError{}
+            //    } 
+   
+            // }
+            // for {
+            //     compStatus := model.DeploymentComponent{
+            //         Name:
+            //         State: 
+            //         Error: StatusError{}
+            //    }
+            //    Components:= append(Components, compStatus)
+            // }
+
                 
 			//if s.Status == "installed" {
 				//ctx := context.Background()
@@ -141,7 +158,7 @@ func (a *NatsActuator) ReceiveStatus() {
 			// l.sendStatusToCO(s)			
 
 			//forward to CO
-			//forwardToCO(coUrl, s)
+			forwardToCO("http://localhost:8080/api/v1", s)
 
 		})
 		if err != nil {
@@ -180,11 +197,13 @@ func forwardToCO(baseurl string, report model.DeploymentStatus) {
 func (a *NatsActuator) ApplySuccessOp(
     //boltstore *store.StateStore,
 	depId string,
+    timeStamp int64,
     //siteID string,
-    op model.DiffOp,
+    //op model.DiffOp,
     //desired model.DesiredState,
 ) error {
 
+    op, _ := a.store.GetOperation(depId, timeStamp)
 	desired,_ := a.store.GetDesired(depId)
 
 	actual, _ := a.store.GetActual()
@@ -260,6 +279,7 @@ func (a *NatsActuator) ApplySuccessOp(
     // 2. Save updated state
     log.Println("ApplySuccessOp: ", op.HostID, "appid:", op.App.ID)
     updatedApp := actual.AppsByHost[op.HostID][op.App.ID]
+    updatedApp.Hash = reconciler.ComputeAppHash(desired)
 	if err := a.store.SetActual(op.HostID, updatedApp); err != nil {
         return fmt.Errorf("save actual app for host %s app %s: %w", op.HostID, op.App.ID, err)
 	}

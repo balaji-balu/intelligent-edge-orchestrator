@@ -146,7 +146,7 @@ func buildApplicationDeployment(
 				"app": appDesc.Name,
 			},
 			Annotations: deployment.Annotations{
-				ApplicationID: appDesc.ID.String(),
+				ApplicationID: appDesc.AppID,
 				ID:            id, 
 				Version: appDesc.Version, 
 			},
@@ -374,25 +374,25 @@ func CreateDeployment(c *gin.Context,co *co.CO,  client *ent.Client, cfg *config
 	return
 }
 
-func GetDeploymentStatus(c *gin.Context, client *ent.Client) {
-	//id := c.Param("id")
+// func GetDeploymentStatus(c *gin.Context, client *ent.Client) {
+// 	//id := c.Param("id")
 
-	// ctx := context.Background()
-	// deployment, err := client.DeploymentProfile.Query().Where(deploymentprofile.ID(id)).Only(ctx)
-	// if err != nil {
-	// 	c.JSON(http.StatusNotFound, gin.H{"error": "deployment.Get(ctx, id)) not found"})
-	// 	return
-	// }
+// 	// ctx := context.Background()
+// 	// deployment, err := client.DeploymentProfile.Query().Where(deploymentprofile.ID(id)).Only(ctx)
+// 	// if err != nil {
+// 	// 	c.JSON(http.StatusNotFound, gin.H{"error": "deployment.Get(ctx, id)) not found"})
+// 	// 	return
+// 	// }
 
-	// c.JSON(http.StatusOK, deployment)
+// 	// c.JSON(http.StatusOK, deployment)
 
-	// if err != nil {
-	// 	c.JSON(http.StatusNotFound, gin.H{"error": "deployment not found"})
-	// 	return
-	// }
+// 	// if err != nil {
+// 	// 	c.JSON(http.StatusNotFound, gin.H{"error": "deployment not found"})
+// 	// 	return
+// 	// }
 
-	// c.JSON(http.StatusOK, deployment)
-}
+// 	// c.JSON(http.StatusOK, deployment)
+// }
 
 func HandleStreamDeployment(c *gin.Context, sm *streammanager.StreamManager) {
 	id := c.Param("id")

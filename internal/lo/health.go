@@ -24,7 +24,7 @@ func (l *LocalOrchestrator) MonitorHealthandStatusFromEN(
 		log.Println("lo with siteid:", fmt.Sprintf("health.%s.*", l.Config.Site))
 		subHealth := fmt.Sprintf("health.%s.*", l.Config.Site)
 		err := l.nc.Subscribe2(subHealth, func(h model.HealthMsg) {
-			log.Printf("[LO] health from %s runtime=%s", h.NodeID, h.Runtime)
+			//log.Printf("[LO] health from %s runtime=%s", h.NodeID, h.Runtime)
 
 			host := model.Host{
 				ID: h.NodeID,
