@@ -1,11 +1,9 @@
 name: Release
 
 on:
-  # push:
-  #   tags:
-  #     - 'v*.*.*'
   push:
-    branches: ["**"]
+    tags:
+      - 'v*.*.*'
 
 permissions:
   contents: write
