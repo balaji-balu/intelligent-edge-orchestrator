@@ -8,6 +8,7 @@ bin
 .env.staging
 data/lo/*.db
 README.md.bkup
+*-old
 loki-data
 orchestrator-old
 localorch-old

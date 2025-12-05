@@ -1,0 +1,11 @@
+log:
+  level: debug
+  format: text
+
+nats:
+  url: nats://localhost:4222
+  username: test
+  password: test123
+
+lo:
+  url: http://localhost:8081

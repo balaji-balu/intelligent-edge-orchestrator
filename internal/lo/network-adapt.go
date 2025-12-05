@@ -150,6 +150,7 @@ func (l *LocalOrchestrator) handleGitPolled(data GitPolledPayload) {
 		}
 
 		app := model.App{
+			DepType: dep.Spec.DeploymentProfile.Type,
 			ID: dep.Metadata.Annotations.ApplicationID,
 			Version: dep.Metadata.Annotations.Version,
 			Components: make(map[string]model.Component),

@@ -1,10 +1,9 @@
 package main
 
 import (
-	"context"
+	//"context"
 	"flag"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"time"
@@ -16,51 +15,64 @@ import (
 	"google.golang.org/grpc"
 	"go.uber.org/zap"
 	
+	"github.com/balaji-balu/margo-hello-world/pkg/logx"
+	"github.com/balaji-balu/margo-hello-world/pkg/co/model"
 	"github.com/balaji-balu/margo-hello-world/ent"
 	"github.com/balaji-balu/margo-hello-world/internal/api"
 	"github.com/balaji-balu/margo-hello-world/internal/config"
 	"github.com/balaji-balu/margo-hello-world/internal/gitmanager"
-	//"github.com/balaji-balu/margo-hello-world/internal/fsmloader"
 	"github.com/balaji-balu/margo-hello-world/internal/metrics"
 	"github.com/balaji-balu/margo-hello-world/internal/co"
-	"github.com/balaji-balu/margo-hello-world/internal/logger"
 
 )
 
 func init() {
 	err := godotenv.Load("./.env") // relative path to project root
 	if err != nil {
-		log.Println("No .env file found, reading from system environment")
+		//log.Println("No .env file found, reading from system environment")
 	}
 	
 }
 
 func main() {
-	ctx := context.Background()
-	logger, _ := logger.New("production", "co")
+	//ctx := context.Background()
+	
+    logx.Init(logx.Options{
+        Env:     os.Getenv("APP_ENV"),     // dev / prod
+        Version: "0.1.0",
+    })    
+    log := logx.New("co")
+    log.Infow("CO starting", "pid", os.Getpid())
 
-	log.Println(logger)
-	configPath := flag.String("config", "./configs/co.yaml", "path to config file")
-	flag.Parse()
+    loader := config.New()
+    var cfg model.CoConfig
+    if err := loader.Load(&cfg); err != nil {
+        log.Errorw("config load err", err)
+    }    
+    log.Infow("Loaded CO config:", "config", cfg)    
 
-	cfg, err := config.LoadConfig(*configPath)
-	if err != nil {
-		logger.Error(ctx, "error loading config:", err)
-	}
+	//log.Println(logger)
+	// configPath := flag.String("config", "./configs/co.yaml", "path to config file")
+	// flag.Parse()
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-	metrics_port := os.Getenv("METRICS_PORT")
-	if metrics_port == "" {
-		metrics_port = "9200"
-	}
+	// cfg, err := config.LoadConfig(*configPath)
+	// if err != nil {
+	// 	logger.Error(ctx, "error loading config:", err)
+	// }
+
+	// port := os.Getenv("PORT")
+	// if port == "" {
+	// 	port = "8080"
+	// }
+	// metrics_port := os.Getenv("METRICS_PORT")
+	// if metrics_port == "" {
+	// 	metrics_port = "9200"
+	// }
 
 	// msg := fmt.Sprintf("✅ Loaded config: site=%s, port=%s metrics-port=%s",
 	// 	cfg.Server.Site, port, metrics_port)
 	// log.Println("msg", msg, ctx)
-	logger.Info(ctx, "conf done")
+	log.Infow("conf done")
 
     // // Use NewProduction() for JSON, performance, and sampled logging
     // logger, err := zap.NewProduction()
@@ -92,7 +104,7 @@ func main() {
 	// _ = machine.Event(ctx, "complete")
 	// _ = machine.Event(ctx, "reset")
 	dsn := os.Getenv("DATABASE_URL")
-	logger.Info(ctx, "[CO] connecting to postgres at", zap.String("dsn:", dsn))
+	log.Infow("connecting to postgres at", zap.String("dsn:", dsn))
 
 	var drv *sql.Driver
 	var err1 error
@@ -100,22 +112,23 @@ func main() {
 		drv, err1 = sql.Open(dialect.Postgres, dsn)
 		if err1 == nil {
 			if err1 = drv.DB().Ping(); err1 == nil {
-				logger.Info(ctx, "✅ Connected to Postgres")
+				log.Infow("✅ Connected to Postgres")
 				break
 			}
 		}
-		logger.Info(ctx, "⏳ Waiting for Postgres \n", zap.Int("attempt...", i))
+		log.Infow("⏳ Waiting for Postgres \n", zap.Int("attempt...", i))
 		time.Sleep(3 * time.Second)
 	}
 	if err1 != nil {
-		logger.Error(ctx, "❌ Failed to connect to Postgres after retries.", err)
+		log.Errorw("❌ Failed to connect to Postgres after retries.", err1)
+		return
 	}
 
 	client := ent.NewClient(ent.Driver(drv))
 	defer client.Close()
 
 	metrics.Init("co")
-	metrics.StartServer(metrics_port)
+	metrics.StartServer(cfg.Server.Metricsport)
 
 	gitm := gitmanager.NewManager()
 
@@ -137,33 +150,35 @@ func main() {
 		WorkingPath: "/tmp/deployments-co",
 	})
 	if err := gitm.InitRepo("deployments"); err != nil {
-    	logger.Error(ctx, "Git initrepo failed", err)
+    	log.Errorw("Git initrepo failed", "err", err)
 	}
 	cfg1, err := gitm.GetConfig("deployments")
 	if err != nil {
-		log.Fatal(err)
+		log.Errorw("config", "err", err)
 	}
-	fmt.Printf("CONFIG: %+v\n", cfg1)
+	log.Infow("CONFIG: \n", "config", cfg1)
 	//fmt.Printf("CONFIG: %+v\n", gitm.GetConfig("deployments"))	
 	c := co.NewCO(gitm, "app-registry", "deployments")
 
 	router := api.NewRouter(client, c, cfg)
-	log.Println("CO API running on :", port)
-	if err := router.Run(fmt.Sprintf(":%s", port)); err != nil {
-		logger.Error(ctx, "Router init failed", err)
+	log.Infow("CO API running on :", "", cfg.Server.Port)
+	if err := router.Run(fmt.Sprintf(":%s", cfg.Server.Port)); err != nil {
+		log.Errorw("Router init failed", "err", err)
+		return
 	}
 
 	// Start gRPC server for callbacks from LO
 	go func() {
 		lis, err := net.Listen("tcp", *grpcPort)
 		if err != nil {
-			logger.Error(ctx, "[CO] failed to listen:", err)
+			log.Errorw("[CO] failed to listen:","", err)
 		}
 		s := grpc.NewServer()
 		//pb.RegisterCentralOrchestratorServer(s, &server{})
-		log.Printf("[CO] gRPC listening on %s", *grpcPort)
+		log.Infow("[CO] gRPC listening on", "", *grpcPort)
 		if err := s.Serve(lis); err != nil {
-			log.Fatalf("[CO] serve: %v", err)
+			log.Errorw("[CO] serve: ", "err", err)
+			return
 		}
 	}()
 }

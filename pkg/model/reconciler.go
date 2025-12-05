@@ -58,6 +58,7 @@ type Component struct {
 type App struct {
 	ID         string               `json:"id"`
 	Version    string               `json:"version"`
+	DepType	   string 				`json:"dep_type"`	
 	Components map[string]Component `json:"components"`
 }
 

@@ -23,7 +23,7 @@ import (
 	"github.com/balaji-balu/margo-hello-world/ent/component"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
 	"github.com/balaji-balu/margo-hello-world/ent/applicationdesc"
-	"github.com/balaji-balu/margo-hello-world/internal/config"
+	//"github.com/balaji-balu/margo-hello-world/internal/config"
 	"github.com/balaji-balu/margo-hello-world/internal/co"
 	"github.com/balaji-balu/margo-hello-world/internal/streammanager"
 	"github.com/balaji-balu/margo-hello-world/internal/metrics"
@@ -199,14 +199,14 @@ func PushDeploymentYAML(ctx context.Context,
 	return nil
 }
 
-func CreateDeployment(c *gin.Context,co *co.CO,  client *ent.Client, cfg *config.Config) {
+func CreateDeployment(c *gin.Context,co *co.CO,  client *ent.Client, repo string) {
 	//log.Println("CreateDeployment called. Site:", cfg.Server.Site)
  
 	//c.StartDeplotment
 
 	start := time.Now()
 
-	log.Println("Repo URL:", cfg.Git.Repo)
+	log.Println("Repo URL:", repo)
 
 	var app App
 	if err := c.ShouldBindJSON(&app); err != nil {

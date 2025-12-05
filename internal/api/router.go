@@ -8,13 +8,14 @@ import (
 	"github.com/balaji-balu/margo-hello-world/ent"
 	"github.com/balaji-balu/margo-hello-world/internal/api/handlers"
 	"github.com/balaji-balu/margo-hello-world/internal/api/middleware"
-	"github.com/balaji-balu/margo-hello-world/internal/config"
+	//"github.com/balaji-balu/margo-hello-world/internal/config"
 	"github.com/balaji-balu/margo-hello-world/internal/streammanager"
 	"github.com/balaji-balu/margo-hello-world/internal/gitfetcher"
 	"github.com/balaji-balu/margo-hello-world/internal/co"
+	"github.com/balaji-balu/margo-hello-world/pkg/co/model"
 )
 
-func NewRouter(client *ent.Client, co *co.CO, cfg *config.Config) *gin.Engine {
+func NewRouter(client *ent.Client, co *co.CO, cfg model.CoConfig) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
@@ -50,7 +51,7 @@ func NewRouter(client *ent.Client, co *co.CO, cfg *config.Config) *gin.Engine {
 		api.GET("/deployments/:id/stream", func(c *gin.Context) { 
 			handlers.HandleStreamDeployment(c, sm) })			
 		api.POST("/deployments", func(c *gin.Context) { 
-			handlers.CreateDeployment(c,co, client, cfg) })
+			handlers.CreateDeployment(c,co, client, cfg.Git.Repo) })
 
 		api.GET("/healthz", handlers.HealthzHandler)
 

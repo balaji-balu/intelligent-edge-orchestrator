@@ -7,7 +7,7 @@ import (
 	"time"
 	//"errors"
 
-	. "github.com/balaji-balu/margo-hello-world/internal/config"
+	//. "github.com/balaji-balu/margo-hello-world/internal/config"
 	"github.com/balaji-balu/margo-hello-world/internal/gitobserver"
 	"github.com/balaji-balu/margo-hello-world/internal/natsbroker"
 	"github.com/balaji-balu/margo-hello-world/internal/lo/watcher"
@@ -156,7 +156,7 @@ func (lo *LocalOrchestrator) StartPullMode(ctx context.Context, cfg LoConfig) er
 */
 
 // Handles OfflineDeterministic mode
-func (lo *LocalOrchestrator) start_offline_mode(ctx context.Context, cfg *Config) error {
+func (lo *LocalOrchestrator) start_offline_mode(ctx context.Context) error {
 	log.Println("📴 Starting Offline Mode (working from journal)")
 	//TBD: lo.FSM.Event(ctx, "offline_mode_start")
 	<-ctx.Done()

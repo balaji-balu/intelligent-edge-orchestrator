@@ -1,0 +1,37 @@
+project_name: edge-installer
+
+builds:
+  - id: installer
+    main: ./cmd/installer
+    binary: installer
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - "-s -w"
+    env:
+      - CGO_ENABLED=0
+
+archives:
+  - id: installer-archive
+    builds:
+      - installer
+    name_template: "{{ .Binary }}-{{ .Os }}-{{ .Arch }}"
+    format: tar.gz
+    wrap_in_directory: false
+    files:
+      - LICENSE
+
+checksum:
+  name_template: "checksums.txt"
+
+release:
+  draft: false
+  prerelease: false
+
+changelog:
+  use: github
