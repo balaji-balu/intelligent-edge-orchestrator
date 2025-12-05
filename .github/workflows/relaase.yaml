@@ -22,11 +22,15 @@ jobs:
           go-version: '1.22'
 
       - name: Install GoReleaser
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/goreleaser/goreleaser/main/scripts/install.sh | sh
-        shell: bash
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          version: latest
+          install-only: true
 
       - name: Run GoReleaser
-        run: goreleaser release --clean
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          version: latest
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
