@@ -1,57 +1,31 @@
-project_name: edge-orchestration
+project_name: edge-installer
 
 builds:
   - id: installer
     main: ./cmd/installer
     binary: installer
-    goos: [linux, darwin, windows]
-    goarch: [amd64, arm64]
-    env: [CGO_ENABLED=0]
-    ldflags: ["-s -w"]
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - "-s -w"
+    env:
+      - CGO_ENABLED=0
 
-  - id: era
-    main: ./cmd/era
-    binary: era
-    goos: [linux, darwin, windows]
-    goarch: [amd64, arm64]
-    env: [CGO_ENABLED=0]
-    ldflags: ["-s -w"]
-
-  - id: lo
-    main: ./cmd/lo
-    binary: lo
-    goos: [linux, darwin, windows]
-    goarch: [amd64, arm64]
-    env: [CGO_ENABLED=0]
-    ldflags: ["-s -w"]
-
-  - id: co
-    main: ./cmd/co
-    binary: co
-    goos: [linux, darwin, windows]
-    goarch: [amd64, arm64]
-    env: [CGO_ENABLED=0]
-    ldflags: ["-s -w"]
-
-  - id: edgectl
-    main: ./cmd/edgectl
-    binary: edgectl
-    goos: [linux, darwin, windows]
-    goarch: [amd64, arm64]
-    env: [CGO_ENABLED=0]
-    ldflags: ["-s -w"]
-
-# IMPORTANT — produce raw binaries, not tar.gz or zip
 archives:
   - id: binaries
     builds: [installer, era, lo, co, edgectl]
     format: binary
-    name_template: "{{ .ID }}-{{ .Os }}-{{ .Arch }}"
+    name_template: "{{ .Binary }}-{{ .Os }}-{{ .Arch }}"
     files:
       - LICENSE
 
 checksum:
-  name_template: checksums.txt
+  name_template: "checksums.txt"
 
 release:
   draft: false
