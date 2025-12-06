@@ -17,12 +17,10 @@ builds:
       - CGO_ENABLED=0
 
 archives:
-  - id: installer-archive
-    builds:
-      - installer
+  - id: binaries
+    builds: [installer, era, lo, co, edgectl]
+    format: binary
     name_template: "{{ .Binary }}-{{ .Os }}-{{ .Arch }}"
-    format: tar.gz
-    wrap_in_directory: false
     files:
       - LICENSE
 
