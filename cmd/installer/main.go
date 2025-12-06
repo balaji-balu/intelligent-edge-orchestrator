@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/balaji-balu/installer/internal/install"
+	"github.com/balaji-balu/margo-hello-world/internal/install"
 )
 
 func main() {

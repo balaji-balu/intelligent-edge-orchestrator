@@ -19,7 +19,8 @@ import (
     "github.com/balaji-balu/margo-hello-world/internal/config"
     "github.com/balaji-balu/margo-hello-world/internal/natsbroker"
     "github.com/balaji-balu/margo-hello-world/internal/era/heartbeat"
-    _ "github.com/balaji-balu/margo-hello-world/internal/era/plugins/containerd"
+    //_ "github.com/balaji-balu/margo-hello-world/internal/era/plugins/containerd"
+    _ "github.com/balaji-balu/margo-hello-world/internal/era/plugins/mock_containerd"
 )
 // sudo ctr -n era containers ls
 // sudo ctr -n era tasks ls
@@ -107,7 +108,7 @@ func main() {
     //     Runtime:  "containerd",
     //     Artifact: "ghcr.io/edge-orchestration-platform/edge-ai-sample:74fb8f5c0bcdeecb53685605a1c30889b33601b6",
     // }
-    era := runtimemgr.NewRuntimeManager("containerd", nb, log)
+    era := runtimemgr.NewRuntimeManager("mock-containerd", nb, log)
     era.LoActionDispatcher(siteID, ls.HostID)
 
     // log.Infow("Deploy status", "", era.Deploy(comp))
