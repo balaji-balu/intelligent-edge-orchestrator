@@ -25,6 +25,7 @@ type LifecycleController struct {
 }
 
 func NewLifecycleController(runtime string, log *zap.SugaredLogger) *LifecycleController {
+    log.Infow("Runtime", "", runtime)
     return &LifecycleController{
         plugin: plugins.Get(runtime),
         log: log,
@@ -57,7 +58,7 @@ func (lc *LifecycleController) HandleAction(op model.DiffOp) (error) {
 
     case model.ActionAddApp:
         lc.log.Debugw("ActionAddApp")
-        return nil //lc.handleAddApp(ctx, rt, app)
+        return lc.handleAddApp(&app)
 
     case model.ActionUpdateApp:
         lc.log.Debugw("ActionUpdateApp")
@@ -95,10 +96,12 @@ func (lc *LifecycleController) handleAddApp(app *model.App) error {
         // comp.Repository
         // comp.PackageURL
         // comp.KeyURL
-        c := edgeruntime.ComponentSpec{}
-        //     Name:     comp.Name
-        //     Runtime:  "containerd",
-        //     Artifact: comp.Registry
+        c := edgeruntime.ComponentSpec{
+            Name:     comp.Name,
+            Runtime:  "containerd",
+            Artifact: comp.Repository,
+        }
+
         if err := lc.plugin.Install(c); err != nil {
             lc.log.Errorw("plugin install","err", err)
             return err
@@ -106,7 +109,11 @@ func (lc *LifecycleController) handleAddApp(app *model.App) error {
     }
     for _, comp := range app.Components {
         lc.log.Debugw("","", comp)
-        c := edgeruntime.ComponentSpec{}
+        c := edgeruntime.ComponentSpec{
+            Name:     comp.Name,
+            Runtime:  "containerd",
+            Artifact: comp.Repository,
+        }
         if err := lc.plugin.Start(c); err != nil {
             lc.log.Errorw("plugin Start","err", err)
             return err

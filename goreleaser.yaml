@@ -41,21 +41,14 @@ builds:
     env: [CGO_ENABLED=0]
     ldflags: ["-s -w"]
 
+# IMPORTANT — produce raw binaries, not tar.gz or zip
 archives:
-  - id: default
-    builds:
-      - installer
-      - era
-      - lo
-      - co
-      - edgectl
-    name_template: "{{ .Binary }}-{{ .Os }}-{{ .Arch }}"
-    wrap_in_directory: false
+  - id: binaries
+    builds: [installer, era, lo, co, edgectl]
+    format: binary
+    name_template: "{{ .ID }}-{{ .Os }}-{{ .Arch }}"
     files:
       - LICENSE
-    format_overrides:
-      - goos: windows
-        format: zip
 
 checksum:
   name_template: checksums.txt
