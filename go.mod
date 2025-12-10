@@ -12,7 +12,6 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/knadh/koanf/parsers/yaml v1.1.0
-	github.com/knadh/koanf/providers/env v1.1.0
 	github.com/knadh/koanf/providers/file v1.2.0
 	github.com/knadh/koanf/v2 v2.3.0
 	github.com/lib/pq v1.10.9
@@ -20,6 +19,7 @@ require (
 	github.com/nats-io/nats.go v1.47.0
 	github.com/prometheus/client_golang v1.19.1
 	github.com/spf13/cobra v1.8.1
+	github.com/stretchr/testify v1.11.1
 	github.com/tetratelabs/wazero v1.10.1
 	go.etcd.io/bbolt v1.4.3
 	go.opentelemetry.io/otel v1.38.0
@@ -59,6 +59,7 @@ require (
 	github.com/containerd/ttrpc v1.2.7 // indirect
 	github.com/containerd/typeurl/v2 v2.1.1 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
@@ -112,6 +113,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pjbgf/sha1cd v0.3.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.48.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect

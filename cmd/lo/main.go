@@ -19,7 +19,7 @@ import (
 
 	"github.com/balaji-balu/margo-hello-world/pkg/logx"
 	"github.com/balaji-balu/margo-hello-world/internal/lo"
-	"github.com/balaji-balu/margo-hello-world/internal/config"
+	//"github.com/balaji-balu/margo-hello-world/internal/config"
 	"github.com/balaji-balu/margo-hello-world/internal/natsbroker"
 	"github.com/balaji-balu/margo-hello-world/internal/gitmanager"
 
@@ -58,7 +58,7 @@ func main() {
 
     logx.Init(logx.Options{
         Env:     os.Getenv("APP_ENV"),     // dev / prod
-        Version: "0.1.0",
+        //Version: "0.1.0",
     })    
     log := logx.New("lo")
     log.Infow("LO starting", "pid", os.Getpid())
@@ -70,13 +70,17 @@ func main() {
 	}
 	log.Infow("lostorage", "", loStorage)
 
-	loader := config.New()
-    var cfg LoConfig
-    if err := loader.Load(&cfg); err != nil {
-        log.Errorw("config load err", "err", err)
-    } 	
-	log.Infow("Loaded LO config:", "config", cfg)
-
+	// loader := config.New()
+    // var cfg LoConfig
+    // if err := loader.Load(&cfg); err != nil {
+    //     log.Errorw("config load err", "err", err)
+    // } 	
+	// log.Infow("Loaded LO config:", "config", cfg)
+    cfg := LoConfig{}
+	cfg.Port = os.Getenv("LO_PORT")
+	cfg.NATS.URL = os.Getenv("LO_NATS_URL")
+	cfg.MetricsPort = os.Getenv("LO_METRICS_PORT")
+	cfg.CO.URL = os.Getenv("LO_CO_URL")
 	log.Infow("Connecting to", "nats(url)", cfg.NATS.URL)
 	nc, err := natsbroker.New(cfg.NATS.URL)
 	if err != nil {
@@ -103,7 +107,8 @@ func main() {
 	localorch := lo.NewLO(ctx, 
 		loStorage.SiteID,
 		loStorage.BoltPath, 
-		cfg.NATS.URL,  
+		cfg.NATS.URL, 
+		cfg.CO.URL, 
 		"deployments", nc, gitmgr, cfg.MetricsPort, log)
 	if localorch == nil {
 		log.Errorw("localorch is nil")

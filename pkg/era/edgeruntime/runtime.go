@@ -1,6 +1,7 @@
 package edgeruntime
 import (
 	//"github.com/balaji-balu/margo-hello-world/pkg/era"
+    "github.com/balaji-balu/margo-hello-world/pkg/model"
 )
 
 type ComponentSpec struct {
@@ -30,6 +31,10 @@ type RuntimePlugin interface {
     Stop(string) error
     Delete(string) error
     Status(string) (ComponentStatus, error)
+}
+
+type EventHandler interface {
+	OnEvent(op model.DiffOp, compName string,event model.DeploymentStage, err error)
 }
 
 // type RuntimePlugin interface {

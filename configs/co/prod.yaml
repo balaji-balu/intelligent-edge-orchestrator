@@ -12,4 +12,4 @@ git:
 appregistry:
   repo: https://github.com/edge-orchestration-platform/app-registry
   branch: main
-mode: push
+# mode: push

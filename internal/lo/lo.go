@@ -81,7 +81,8 @@ func NewLO(
 	ctx context.Context,
 	siteID string, 
 	boltDb string,
-	natsURL, 
+	natsURL,
+	coUrl, 
 	repo string,
 	//boltz *bolt.DB,
 	//db *ent.Client,
@@ -108,7 +109,7 @@ func NewLO(
 	metrics.StartServer(metrics_port)
 
 	//inMemStore := reconciler.NewInMemoryStore()
-	na := actuators.NewNatsActuator(store, nc, siteID, 30)
+	na := actuators.NewNatsActuator(store, nc, coUrl, siteID, 30)
 	//r := localorch.NewHTTPReporter("api/v1/co/deploy/status", 30)
 	reconcile := reconciler.NewReconciler(store, na)
 

@@ -15,8 +15,10 @@ import (
 	"github.com/balaji-balu/margo-hello-world/pkg/co/model"
 )
 
-func NewRouter(client *ent.Client, co *co.CO, cfg model.CoConfig) *gin.Engine {
+func NewRouter(client *ent.Client, co *co.CO, cfg model.COConfig) *gin.Engine {
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
+	//.SetMode(gin.ReleaseMode)
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 	r.Use(middleware.CORSMiddleware())

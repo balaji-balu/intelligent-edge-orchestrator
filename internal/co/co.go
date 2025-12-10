@@ -25,10 +25,13 @@ func NewCO(m *gitmanager.Manager, appRepo, depRepo string) *CO {
 func (c *CO) CreateDeployment(siteID, deploymentID string, yaml []byte) error {
 	fmt.Println("CreateDeployment: enter")
 	rel := filepath.Join(siteID, deploymentID, "desiredstate.yaml")
+	fmt.Println("xxxxxxxxxxxxxxxx rel", rel)
+
 	// write file into working path
 	cfg, _ := c.Mgr.GetConfig(c.DepRepo)
 	full := filepath.Join(cfg.WorkingPath, rel)
 	if err := os.MkdirAll(filepath.Dir(full), 0755); err != nil {
+		fmt.Println("err................")
 		return err
 	}
 	if err := os.WriteFile(full, yaml, 0644); err != nil {
@@ -42,6 +45,7 @@ func (c *CO) CreateDeployment(siteID, deploymentID string, yaml []byte) error {
 
 // ReadApp reads a file from app-registry
 func (c *CO) ReadApp(path string) ([]byte, error) {
+	
 	return c.Mgr.ReadFile(c.AppRepo, path)
 }
 

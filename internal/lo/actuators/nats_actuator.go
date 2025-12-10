@@ -25,11 +25,13 @@ type NatsActuator struct {
     timeout time.Duration
     siteId  string
     store *boltstore.StateStore
+    CoUrl string
+
 }
 
 // NewNatsActuator creates a new NatsActuator
 func NewNatsActuator(store *boltstore.StateStore, 
-    nc *natsbroker.Broker, siteId string, timeout time.Duration) *NatsActuator {
+    nc *natsbroker.Broker, coUrl string, siteId string, timeout time.Duration) *NatsActuator {
     //nc := natsbroker.New()
 
     a := NatsActuator{
@@ -38,6 +40,7 @@ func NewNatsActuator(store *boltstore.StateStore,
         //subject: subject,
         siteId: siteId,
         timeout: timeout,
+        CoUrl: coUrl,
     }
     //return &
 
@@ -158,7 +161,8 @@ func (a *NatsActuator) ReceiveStatus() {
 			// l.sendStatusToCO(s)			
 
 			//forward to CO
-			forwardToCO("http://localhost:8080/api/v1", s)
+            coPath := fmt.Sprintf("%s/api/v1",a.CoUrl)
+			forwardToCO(coPath, s)
 
 		})
 		if err != nil {

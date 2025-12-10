@@ -1,0 +1,69 @@
+name: Build & Push EdgeOrch Images
+
+on:
+  workflow_dispatch:
+# on:
+#   push:
+#     branches: [ main ]
+#     tags:
+#       - "v*"
+#   pull_request:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---------- CO ----------
+      - name: Build & push CO
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: dockerfile.co
+          push: true
+          tags: |
+            ghcr.io/${{ env.IMAGE_PREFIX }}/edgeorch-co:latest
+            ghcr.io/${{ env.IMAGE_PREFIX }}/edgeorch-co:${{ github.sha }}
+
+      # ---------- LO ----------
+      - name: Build & push LO
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: dockerfile.lo
+          push: true
+          tags: |
+            ghcr.io/${{ env.IMAGE_PREFIX }}/edgeorch-lo:latest
+            ghcr.io/${{ env.IMAGE_PREFIX }}/edgeorch-lo:${{ github.sha }}
+
+      # ---------- ERA ----------
+      - name: Build & push ERA
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: dockerfile.era
+          push: true
+          tags: |
+            ghcr.io/${{ env.IMAGE_PREFIX }}/edgeorch-era:latest
+            ghcr.io/${{ env.IMAGE_PREFIX }}/edgeorch-era:${{ github.sha }}

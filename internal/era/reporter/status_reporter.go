@@ -4,7 +4,6 @@ import (
     "go.uber.org/zap"
     
     "github.com/balaji-balu/margo-hello-world/internal/era/plugins"
-    //"github.com/balaji-balu/margo-hello-world/internal/era/lifecycle"
     "github.com/balaji-balu/margo-hello-world/pkg/era/edgeruntime"
 )
 type StatusReporter struct {
@@ -12,7 +11,8 @@ type StatusReporter struct {
     plugin edgeruntime.RuntimePlugin
 }
 
-func NewStatusReporter(runtime string, log *zap.SugaredLogger ) *StatusReporter {
+func NewStatusReporter(runtime string, 
+    log *zap.SugaredLogger ) *StatusReporter {
     return &StatusReporter{
         plugin: plugins.Get(runtime),
         log: log,

@@ -28,6 +28,7 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.PersistentFlags().StringVar(&node, "node", "", "Node scope override")
 
 	rootCmd.AddCommand(
+		newInitCmd(),
 		newCOCmd(),
 		newLOCmd(),
 		newENCmd(),

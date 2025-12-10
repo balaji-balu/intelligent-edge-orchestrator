@@ -1,52 +1,104 @@
 package config
 
 import (
-    "fmt"
-    "os"
-    "path/filepath"
-
-    "github.com/knadh/koanf/v2"
-    "github.com/knadh/koanf/parsers/yaml"
-    "github.com/knadh/koanf/providers/file"
-    "github.com/knadh/koanf/providers/env"
+	//"os"
+	"log"
+	"fmt"
+	"runtime"
+	"path/filepath"
+	"github.com/knadh/koanf/v2"
+	"github.com/knadh/koanf/parsers/yaml"
+	"github.com/knadh/koanf/providers/file"
 )
 
-var k = koanf.New(".")
-
-type Loader struct {
-    AppName string
-    Env     string
+type Options struct {
+	//RootDir	string
+	Env     string // dev | prod | staging
+	AppName string // edge-orch
+	Unit    string // co | lo | era
 }
 
-func New() *Loader {
-    l := &Loader{
-        AppName: os.Getenv("APP_NAME"),
-        Env:     os.Getenv("APP_ENV"),
-    }
+func RootDir(opts Options) (string, error) {
+	// dev mode → ~/.<app>/<unit>
+	if opts.Env == "" || opts.Env == "dev" {
+		// home, err := os.UserHomeDir()
+		// if err != nil {
+		// 	return "", err
+		// }
+		// return filepath.Join(
+		// 	home,
+		// 	"."+opts.AppName,
+		// 	opts.Unit,
+		// ), nil
+		return "./", nil
+	}
 
-    if l.AppName == "" {
-        panic("APP_NAME must be set (co, lo, era, edgectl)")
-    }
-    if l.Env == "" {
-        l.Env = "development"
-    }
-
-    return l
+	// flags 
+	
+	// prod / staging → OS defaults
+	return osDefaultRoot(opts)
 }
 
-func (l *Loader) Load(out interface{}) error {
-    configPath := filepath.Join("configs", l.AppName, l.Env+".yaml")
 
-    err := k.Load(file.Provider(configPath), yaml.Parser())
-    if err != nil {
-        return fmt.Errorf("error loading config %s: %w", configPath, err)
-    }
+// func LoadPath(options Options) {
+// 	path := osDefault(options)
+// 	return path
+// }
 
-    // Load ENV overrides: APP_<SECTION>_<KEY>
-    // Example: APP_NATS_PASSWORD, APP_LOG_LEVEL, APP_CONTAINERD_SOCKET
-    k.Load(env.Provider("APP_", ".", func(s string) string {
-        return s
-    }), nil)
+func Load(o Options, out interface{}) (error) {
+	path := ""
+	if o.Env == "" || o.Env == "dev" {
+		path = filepath.Join("./", "configs", o.Unit+".yaml")
+	} else {
+		path = filepath.Join("/etc", o.AppName, o.Unit, "config.yaml")
+	}
 
-    return k.Unmarshal("", out)
+	log.Println("cfg loader", "path", path)
+
+	k := koanf.New(".")
+
+	if err := k.Load(file.Provider(path), yaml.Parser()); err != nil {
+		return err
+	}
+
+	return k.Unmarshal("", out)
+}
+
+func osDefaultRoot(o Options) (string, error) {
+	switch runtime.GOOS {
+	case "linux":
+		return filepath.Join(
+			"/var/lib",
+			o.AppName,
+			o.Unit,
+		), nil
+	default:
+		return "", fmt.Errorf("unsupported OS: %s", runtime.GOOS)
+	}
+}
+
+// LoadOrCreateID returns a persistent UUID stored at path
+func LoadOrCreateID(path string) (string, error) {
+	log.Println("LoadOrCreateId: enter" )
+	// if b, err := os.ReadFile(path); err == nil {
+	// 	log.Println("readfile err", err)
+	// 	return string(b), nil
+	// }
+
+	// // generate new
+	// id := uuid.New().String()
+
+	// // ensure directory exists
+	// if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	// 	log.Println("mkdir err", err)
+	// 	return "", err
+	// }
+
+	// if err := os.WriteFile(path, []byte(id), 0o644); err != nil {
+	// 	log.Println("writefile err", err)
+	// 	return "", err
+	// }
+
+	//return id, nil
+	return "",nil
 }

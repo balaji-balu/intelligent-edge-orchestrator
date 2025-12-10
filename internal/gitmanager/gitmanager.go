@@ -9,11 +9,11 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	//"time"
+	"time"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-	//"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
@@ -237,6 +237,7 @@ func (m *Manager) Pull(name string) error {
 		if err == git.NoErrAlreadyUpToDate {
 			return nil
 		}
+
 		return err
 	})
 }
@@ -258,23 +259,37 @@ fmt.Println("DEBUG: .git exists? =", isDir(filepath.Join(cfg.WorkingPath, ".git"
         // Always open the REAL repo root
         repo, err := git.PlainOpen(cfg.WorkingPath)
         if err != nil {
+			fmt.Println("CommitAndPush: open repo: %w", err)
             return fmt.Errorf("open repo: %w", err)
         }
+		fmt.Println("CommitAndPush: stage 1")
 
         wt, err := repo.Worktree()
         if err != nil {
+			fmt.Println("CommitAndPush: worktree: %w", err)
             return fmt.Errorf("worktree: %w", err)
         }
+		fmt.Println("CommitAndPush: stage 2")
 
         // Add file relative to the repo root
         if _, err := wt.Add(relPath); err != nil {
+			fmt.Println("CommitAndPush: add file: %w", err)
             return fmt.Errorf("add %s: %w", relPath, err)
         }
+		fmt.Println("CommitAndPush: stage 3")
 
         // Commit
-        if _, err := wt.Commit(msg, &git.CommitOptions{}); err != nil {
+        if _, err := wt.Commit(msg, &git.CommitOptions{
+			Author: &object.Signature{
+				Name:  "balaji balu",
+				Email: "balaji.balu@gmail.com",
+				When:  time.Now(),
+			},
+		}); err != nil {
+			fmt.Println("CommitAndPush: commit: %w", err)
             return fmt.Errorf("commit: %w", err)
         }
+		fmt.Println("CommitAndPush: stage 4")
 
         // Push
         if err := repo.Push(&git.PushOptions{Auth: cfg.Auth()}); err != nil {
@@ -283,7 +298,7 @@ fmt.Println("DEBUG: .git exists? =", isDir(filepath.Join(cfg.WorkingPath, ".git"
             }
             return fmt.Errorf("push: %w", err)
         }
-
+		fmt.Println("dsssssssssssssssssssssssfdf push complete")
         return nil
     })
 }
@@ -295,20 +310,29 @@ func isDir(path string) bool {
 
 // ReadFile from working copy (ensure clone/pull first)
 func (m *Manager) ReadFile(name string, relPath string) ([]byte, error) {
+	fmt.Println("ReadFile: Enter", name, relPath)
 	cfg, err := m.GetConfig(name)
 	if err != nil {
+	    fmt.Println("get config failed:")
 		return nil, err
 	}
-
+    fmt.Println("stage 2", cfg) 
 	if err := m.Pull(name); err != nil {
+		fmt.Println("pull failed")
+
 		// Pull may fail for local-only scenarios; ignore NoErrAlreadyUpToDate
 	}
 
+	fmt.Println("stage 3")
 	full := filepath.Join(cfg.WorkingPath, relPath)
+	fmt.Println("stage 4 full=", full)
 	b, err := os.ReadFile(full)
 	if err != nil {
+		fmt.Println("ReadFile: failed", err)
 		return nil, err
 	}
+    fmt.Println("ReadFile: Exit")
+
 	return b, nil
 }
 

@@ -11,23 +11,21 @@ import (
     "github.com/balaji-balu/margo-hello-world/pkg/model"
 )
 
-// type RuntimePlugin interface {
-//     Install(c era.ComponentSpec) error
-//     Start(c era.ComponentSpec) error
-//     Stop(name string) error
-//     Remove(name string) error
-//     Status(name string) era.ComponentStatus
+// type EventHandler interface {
+// 	OnEvent(op model.DiffOp, event string)
 // }
 
 type LifecycleController struct {
     plugin edgeruntime.RuntimePlugin
     log *zap.SugaredLogger
+    statusHandler  edgeruntime.EventHandler
 }
 
-func NewLifecycleController(runtime string, log *zap.SugaredLogger) *LifecycleController {
+func NewLifecycleController(runtime string, cb edgeruntime.EventHandler, log *zap.SugaredLogger) *LifecycleController {
     log.Infow("Runtime", "", runtime)
     return &LifecycleController{
         plugin: plugins.Get(runtime),
+        statusHandler: cb, 
         log: log,
     }
 }
@@ -58,7 +56,12 @@ func (lc *LifecycleController) HandleAction(op model.DiffOp) (error) {
 
     case model.ActionAddApp:
         lc.log.Debugw("ActionAddApp")
-        return lc.handleAddApp(&app)
+        //lc.statusHandler.OnEvent(op, model.StateInstalling, nil)
+        if err := lc.handleAddApp(op); err != nil {
+            //lc.statusHandler.OnEvent(op, model.StateFailed, err)
+        }
+        //lc.statusHandler.OnEvent(op, model.StateInstalled, nil)
+        return nil
 
     case model.ActionUpdateApp:
         lc.log.Debugw("ActionUpdateApp")
@@ -87,8 +90,13 @@ func (lc *LifecycleController) HandleAction(op model.DiffOp) (error) {
     return nil
 }
 
-func (lc *LifecycleController) handleAddApp(app *model.App) error {
+func (lc *LifecycleController) handleAddApp(op model.DiffOp) error {
     lc.log.Debugw("handleAddApp: enter")
+
+    app := op.App
+
+    // send deployment status
+    //status := edgeruntime.ComponentStatus{}
     for _, comp := range app.Components {
         lc.log.Debugw("","", comp)
         // comp.Name
@@ -101,8 +109,10 @@ func (lc *LifecycleController) handleAddApp(app *model.App) error {
             Runtime:  "containerd",
             Artifact: comp.Repository,
         }
-
+        lc.statusHandler.OnEvent(op, comp.Name, model.StateInstalling, nil)
+        //if (lc.cb != nil) {lc.cb()}
         if err := lc.plugin.Install(c); err != nil {
+            lc.statusHandler.OnEvent(op, comp.Name, model.StateFailed, err)
             lc.log.Errorw("plugin install","err", err)
             return err
         }
@@ -115,10 +125,13 @@ func (lc *LifecycleController) handleAddApp(app *model.App) error {
             Artifact: comp.Repository,
         }
         if err := lc.plugin.Start(c); err != nil {
+            lc.statusHandler.OnEvent(op, comp.Name, model.StateFailed, err)
             lc.log.Errorw("plugin Start","err", err)
             return err
         }
+        lc.statusHandler.OnEvent(op, comp.Name, model.StateInstalled, nil)
     }
+    
     lc.log.Debugw("handleAddApp: exit")
     return nil
 }

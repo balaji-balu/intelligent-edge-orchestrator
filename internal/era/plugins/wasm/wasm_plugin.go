@@ -9,7 +9,7 @@ import (
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
 
-	"github.com/balaji-balu/margo-hello-world/pkg/era/runtime"
+	"github.com/balaji-balu/margo-hello-world/pkg/era/edgeruntime"
 	"github.com/balaji-balu/margo-hello-world/internal/era/plugins"
 )
 

@@ -15,6 +15,7 @@ import (
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
 	"github.com/balaji-balu/margo-hello-world/ent/component"	
 	"github.com/balaji-balu/margo-hello-world/pkg/application"
+	//"github.com/balaji-balu/margo-hello-world/internal/co"
 	"github.com/balaji-balu/margo-hello-world/internal/gitfetcher"
 )
 type AppRequest struct {
@@ -127,7 +128,18 @@ func CreateApp(c *gin.Context, client *ent.Client, fetcher *gitfetcher.GitFetche
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "duplicate apps found"})
 		return
 	}
-
+/*
+    TBD: Gitmanager Issue: locks. cannot use 
+	path := fmt.Sprintf("%s/%s/%s", category, appName, version)
+	log.Println("path:", path)
+	content, err := co.ReadApp(path)
+	if err != nil {
+		log.Printf("❌ failed to fetch resource: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+*/			
+	
 	fetcher.RepoURL = req.RepoURL
 	path := fmt.Sprintf("%s/%s/%s", category, appName, version)
 	log.Println("path:", path)

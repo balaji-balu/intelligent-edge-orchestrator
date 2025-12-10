@@ -5,18 +5,20 @@ import (
     "io"
     "encoding/json"
     "os"
-    "strings"
+    //"strings"
     "net/http"
-    "path/filepath"
+    //"path/filepath"
     "bytes"
     "errors"
-    "runtime"
-    "github.com/google/uuid"
+    //"runtime"
+    
     "go.uber.org/zap"
+    "github.com/google/uuid"
+    "github.com/joho/godotenv"
 
     "github.com/balaji-balu/margo-hello-world/internal/era/runtimemgr"
     "github.com/balaji-balu/margo-hello-world/pkg/logx"
-    "github.com/balaji-balu/margo-hello-world/internal/config"
+    //"github.com/balaji-balu/margo-hello-world/internal/config"
     "github.com/balaji-balu/margo-hello-world/internal/natsbroker"
     "github.com/balaji-balu/margo-hello-world/internal/era/heartbeat"
     //_ "github.com/balaji-balu/margo-hello-world/internal/era/plugins/containerd"
@@ -45,6 +47,11 @@ import (
 //     fmt.Println("Status:", rm.GetStatus("hello"))
 // }
 
+// type ERAStorage struct {
+    // BaseDir string
+    // HostID  string
+// }
+
 type EraConfig struct {
     Log struct {
         Level  string `koanf:"level"`
@@ -59,72 +66,78 @@ type EraConfig struct {
 
     LO struct {
         URL     string `koanf:"url"`
-    }
+    } `koanf:"lo"`
+    Host struct {
+        HostID  string `koanf:"host_id"`
+    } `koanf:"host"`    
 }
 
 var log *zap.SugaredLogger
-func Init() {
 
+func init() {
+    if err := godotenv.Load("./.env"); err != nil {
+		//log.Println("No .env file found, reading from system environment")
+	}
+    //flag.StringVar(&cfgFlag, "config", "", "config root directory")
 }
 
 func main() {
-
-    ls, err := InitERAStorage() //loadOrCreateHostID(getBaseDir("ERA"), "host_id")
-
     logx.Init(logx.Options{
         Env:     os.Getenv("APP_ENV"),     // dev / prod
-        Version: "0.1.0",
+        //Version: "0.1.0",
     })    
     log = logx.New("era")
     log.Infow("ERA starting", "pid", os.Getpid())
+/*
+    options := config.Options{
+        AppName: "edge-orch",
+        Unit: "era",
+        Env: os.Getenv("APP_ENV"),
+    }
+    rootDir, err := config.RootDir(options) 
+    if err != nil {
+        log.Fatalw("rootdir detection error","error", err)
+    }
 
-    log.Infow("ls", "", ls)
-    
-    loader := config.New()
+    log.Debugw("root directory", "rootDir", rootDir)
+    //cfgPath := filepath.Join("./configs", options.Unit, "dev.yaml")
+    //options.RootDir = rootDir
     var cfg EraConfig
-    if err := loader.Load(&cfg); err != nil {
-        log.Errorw("config load err", err)
+    if err := config.Load(options, &cfg); err != nil {
+        log.Fatalw("Configution load error","error", err)
     }    
-    log.Infow("Loaded ERA config:", "config", cfg)    
+    
+    log.Debugw("loaded config", "cfg:", cfg)
 
-    log.Infow("📡 Connecting to ","NATS at", cfg.NATS.URL)
-	nb, err := natsbroker.New(cfg.NATS.URL)
+    // if err := loader.Load(&cfg); err != nil {
+    //     log.Errorw("config load err", err)
+    // }    
+    //log.Infow("Loaded ERA config:", "config", cfg)    
+*/
+
+    natsUrl := os.Getenv("ERA_NATS_URL") 
+    log.Infow("📡 Connecting to ","NATS at", natsUrl)
+	nb, err := natsbroker.New(natsUrl)
 	if err != nil {
 		log.Errorf("❌ Failed to connect to NATS.","err:", err)
         return
 	}
-    siteID, err := register(cfg.LO.URL, ls.HostID)
+    hostID := uuid.New().String()
+    loUrl := os.Getenv("ERA_LO_URL")
+    siteID, err := register(loUrl, hostID)
     if err != nil {
         log.Errorf("❌ Unable to Register with LO","err:", err)
         return
     }
     log.Infow("LO", "siteid", siteID)
     
-    heartbeat.StartHeartbeat(nb, log, siteID, ls.HostID)
-    // Pass log into your DI / top-level orchestrator
+    heartbeat.StartHeartbeat(nb, log, siteID, hostID)
 
-    // comp := edgeruntime.ComponentSpec{
-    //     Name:     "edge-ai-sample",
-    //     Runtime:  "containerd",
-    //     Artifact: "ghcr.io/edge-orchestration-platform/edge-ai-sample:74fb8f5c0bcdeecb53685605a1c30889b33601b6",
-    // }
-    era := runtimemgr.NewRuntimeManager("mock-containerd", nb, log)
-    era.LoActionDispatcher(siteID, ls.HostID)
-
-    // log.Infow("Deploy status", "", era.Deploy(comp))
-
-    // // get the status
-    // log.Infow("container status", "", era.GetStatus(comp.Name))
-
-    // time.Sleep(1 * time.Minute)
-
-    // // stop the container
-    // status := era.Stop(comp.Name)
-    // log.Infow("stop", "status", status)
-    // status = era.Delete(comp.Name )
-    // log.Infow("Delete", "status", status)
-    // log.Infow("container status", "", era.GetStatus(comp.Name))    
+    era := runtimemgr.NewRuntimeManager( nb, siteID, hostID, "mock-containerd", log)
+    era.LoActionDispatcher()
+   
     select{}
+
 }
 
 func register(loURL, hostID string) (string, error) {
@@ -173,6 +186,8 @@ func register(loURL, hostID string) (string, error) {
 }
 
 
+
+/*
 func loadOrCreateID(baseDir, name string) (string, error) {
     idPath := filepath.Join(baseDir, name)
 
@@ -189,12 +204,6 @@ func loadOrCreateID(baseDir, name string) (string, error) {
     os.WriteFile(idPath, []byte(id), 0644)
 
     return id, nil
-}
-
-
-type ERAStorage struct {
-    BaseDir string
-    HostID  string
 }
 
 func InitERAStorage() (*ERAStorage, error) {
@@ -232,3 +241,4 @@ func ERABaseDir() string {
         return "/var/lib/era"
     }
 }
+*/
