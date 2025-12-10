@@ -35,7 +35,7 @@ func init() {
 }
 
 func main() {
-	ctx := context.Background()
+	//ctx := context.Background()
     logx.Init(logx.Options{
         Env:     os.Getenv("APP_ENV"),     // dev / prod
         //Version: "0.1.0",
