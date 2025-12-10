@@ -18,13 +18,7 @@ services:
       - edge-net
 
   co:
-    # build:
-    #   dockerfile: ./dockerfile.co
-
-    # image: bbalu/edgeorch-co:latest
-    # command: ["--config=/config/prod.yaml"]
-    # volumes:
-      # - ./configs/co:/config
+    image: ghcr.io/balaji-balu/edgeorch-co:latest
     depends_on: [postgres]
     ports: ["9001:9001"]
     expose:
@@ -39,7 +33,8 @@ services:
       - edge-net
   lo:
     # build:
-    #   dockerfile: ./dockerfile.lo    
+    #   dockerfile: ./dockerfile.lo 
+    image: ghcr.io/balaji-balu/edgeorch-lo:latest   
     depends_on: [nats]
     ports: ["9010:9010"]
     expose:
@@ -63,7 +58,8 @@ services:
 
   era:
     # build:
-    #   dockerfile: ./dockerfile.era    
+    #   dockerfile: ./dockerfile.era 
+    image: ghcr.io/balaji-balu/edgeorch-era:latest   
     depends_on: [nats]
     ports: ["9011:9011"]
     expose:
