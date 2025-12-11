@@ -1,0 +1,53 @@
+name: Release edgectl + quickstart bundle
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Build edgectl (linux amd64)
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+          go build -o dist/edgectl ./cmd/edgectl
+
+      - name: Prepare release bundle
+        run: |
+          mkdir -p bundle/edge-orch-quickstart/db
+
+          cp dist/edgectl bundle/edge-orch-quickstart/
+          cp deploy/docker-compose.yaml bundle/edge-orch-quickstart/
+          cp deploy/.env.example bundle/edge-orch-quickstart/
+          cp deploy/db/init.sql bundle/edge-orch-quickstart/db/
+          cp README.md bundle/edge-orch-quickstart/
+
+      - name: Create tar.gz
+        run: |
+          tar -czf edge-orch-quickstart-linux-amd64.tar.gz \
+              -C bundle edge-orch-quickstart
+
+      - name: Create zip
+        run: |
+          cd bundle && zip -r ../edge-orch-quickstart-linux-amd64.zip edge-orch-quickstart
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            edge-orch-quickstart-linux-amd64.tar.gz
+            edge-orch-quickstart-linux-amd64.zip
