@@ -120,10 +120,11 @@ var (
 		Columns:    DeploymentStatusColumns,
 		PrimaryKey: []*schema.Column{DeploymentStatusColumns[0]},
 	}
-	// HostColumns holds the columns for the "host" table.
-	HostColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID},
-		{Name: "host_id", Type: field.TypeString, Unique: true},
+	// HostsColumns holds the columns for the "hosts" table.
+	HostsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "host_id", Type: field.TypeUUID, Unique: true},
+		{Name: "site_id", Type: field.TypeUUID},
 		{Name: "runtime", Type: field.TypeString, Nullable: true},
 		{Name: "last_seen", Type: field.TypeTime, Nullable: true},
 		{Name: "misses", Type: field.TypeInt, Nullable: true},
@@ -135,18 +136,18 @@ var (
 		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime, Nullable: true},
 		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
-		{Name: "site_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "site_hosts", Type: field.TypeInt, Nullable: true},
 	}
-	// HostTable holds the schema information for the "host" table.
-	HostTable = &schema.Table{
-		Name:       "host",
-		Columns:    HostColumns,
-		PrimaryKey: []*schema.Column{HostColumns[0]},
+	// HostsTable holds the schema information for the "hosts" table.
+	HostsTable = &schema.Table{
+		Name:       "hosts",
+		Columns:    HostsColumns,
+		PrimaryKey: []*schema.Column{HostsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "host_site_hosts",
-				Columns:    []*schema.Column{HostColumns[13]},
-				RefColumns: []*schema.Column{SiteColumns[0]},
+				Symbol:     "hosts_sites_hosts",
+				Columns:    []*schema.Column{HostsColumns[14]},
+				RefColumns: []*schema.Column{SitesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -167,27 +168,28 @@ var (
 		Columns:    OrchestratorColumns,
 		PrimaryKey: []*schema.Column{OrchestratorColumns[0]},
 	}
-	// SiteColumns holds the columns for the "site" table.
-	SiteColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID},
-		{Name: "site_id", Type: field.TypeString, Unique: true},
+	// SitesColumns holds the columns for the "sites" table.
+	SitesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "site_id", Type: field.TypeUUID, Unique: true},
 		{Name: "name", Type: field.TypeString, Nullable: true},
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "location", Type: field.TypeString, Nullable: true},
+		{Name: "orchestrator_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime, Nullable: true},
 		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
-		{Name: "orchestrator_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "orchestrator_sites", Type: field.TypeUUID, Nullable: true},
 	}
-	// SiteTable holds the schema information for the "site" table.
-	SiteTable = &schema.Table{
-		Name:       "site",
-		Columns:    SiteColumns,
-		PrimaryKey: []*schema.Column{SiteColumns[0]},
+	// SitesTable holds the schema information for the "sites" table.
+	SitesTable = &schema.Table{
+		Name:       "sites",
+		Columns:    SitesColumns,
+		PrimaryKey: []*schema.Column{SitesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "site_orchestrator_sites",
-				Columns:    []*schema.Column{SiteColumns[8]},
+				Symbol:     "sites_orchestrator_sites",
+				Columns:    []*schema.Column{SitesColumns[9]},
 				RefColumns: []*schema.Column{OrchestratorColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -210,9 +212,9 @@ var (
 		DeploymentComponentStatusTable,
 		DeploymentProfileTable,
 		DeploymentStatusTable,
-		HostTable,
+		HostsTable,
 		OrchestratorTable,
-		SiteTable,
+		SitesTable,
 		UsersTable,
 	}
 )
@@ -230,15 +232,9 @@ func init() {
 	DeploymentProfileTable.Annotation = &entsql.Annotation{
 		Table: "deployment_profile",
 	}
-	HostTable.ForeignKeys[0].RefTable = SiteTable
-	HostTable.Annotation = &entsql.Annotation{
-		Table: "host",
-	}
+	HostsTable.ForeignKeys[0].RefTable = SitesTable
 	OrchestratorTable.Annotation = &entsql.Annotation{
 		Table: "orchestrator",
 	}
-	SiteTable.ForeignKeys[0].RefTable = OrchestratorTable
-	SiteTable.Annotation = &entsql.Annotation{
-		Table: "site",
-	}
+	SitesTable.ForeignKeys[0].RefTable = OrchestratorTable
 }

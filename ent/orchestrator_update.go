@@ -14,7 +14,6 @@ import (
 	"github.com/balaji-balu/margo-hello-world/ent/orchestrator"
 	"github.com/balaji-balu/margo-hello-world/ent/predicate"
 	"github.com/balaji-balu/margo-hello-world/ent/site"
-	"github.com/google/uuid"
 )
 
 // OrchestratorUpdate is the builder for updating Orchestrator entities.
@@ -151,14 +150,14 @@ func (_u *OrchestratorUpdate) ClearUpdatedAt() *OrchestratorUpdate {
 }
 
 // AddSiteIDs adds the "sites" edge to the Site entity by IDs.
-func (_u *OrchestratorUpdate) AddSiteIDs(ids ...uuid.UUID) *OrchestratorUpdate {
+func (_u *OrchestratorUpdate) AddSiteIDs(ids ...int) *OrchestratorUpdate {
 	_u.mutation.AddSiteIDs(ids...)
 	return _u
 }
 
 // AddSites adds the "sites" edges to the Site entity.
 func (_u *OrchestratorUpdate) AddSites(v ...*Site) *OrchestratorUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -177,14 +176,14 @@ func (_u *OrchestratorUpdate) ClearSites() *OrchestratorUpdate {
 }
 
 // RemoveSiteIDs removes the "sites" edge to Site entities by IDs.
-func (_u *OrchestratorUpdate) RemoveSiteIDs(ids ...uuid.UUID) *OrchestratorUpdate {
+func (_u *OrchestratorUpdate) RemoveSiteIDs(ids ...int) *OrchestratorUpdate {
 	_u.mutation.RemoveSiteIDs(ids...)
 	return _u
 }
 
 // RemoveSites removes "sites" edges to Site entities.
 func (_u *OrchestratorUpdate) RemoveSites(v ...*Site) *OrchestratorUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -271,7 +270,7 @@ func (_u *OrchestratorUpdate) sqlSave(ctx context.Context) (_node int, err error
 			Columns: []string{orchestrator.SitesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(site.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(site.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -284,7 +283,7 @@ func (_u *OrchestratorUpdate) sqlSave(ctx context.Context) (_node int, err error
 			Columns: []string{orchestrator.SitesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(site.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(site.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -300,7 +299,7 @@ func (_u *OrchestratorUpdate) sqlSave(ctx context.Context) (_node int, err error
 			Columns: []string{orchestrator.SitesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(site.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(site.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -449,14 +448,14 @@ func (_u *OrchestratorUpdateOne) ClearUpdatedAt() *OrchestratorUpdateOne {
 }
 
 // AddSiteIDs adds the "sites" edge to the Site entity by IDs.
-func (_u *OrchestratorUpdateOne) AddSiteIDs(ids ...uuid.UUID) *OrchestratorUpdateOne {
+func (_u *OrchestratorUpdateOne) AddSiteIDs(ids ...int) *OrchestratorUpdateOne {
 	_u.mutation.AddSiteIDs(ids...)
 	return _u
 }
 
 // AddSites adds the "sites" edges to the Site entity.
 func (_u *OrchestratorUpdateOne) AddSites(v ...*Site) *OrchestratorUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -475,14 +474,14 @@ func (_u *OrchestratorUpdateOne) ClearSites() *OrchestratorUpdateOne {
 }
 
 // RemoveSiteIDs removes the "sites" edge to Site entities by IDs.
-func (_u *OrchestratorUpdateOne) RemoveSiteIDs(ids ...uuid.UUID) *OrchestratorUpdateOne {
+func (_u *OrchestratorUpdateOne) RemoveSiteIDs(ids ...int) *OrchestratorUpdateOne {
 	_u.mutation.RemoveSiteIDs(ids...)
 	return _u
 }
 
 // RemoveSites removes "sites" edges to Site entities.
 func (_u *OrchestratorUpdateOne) RemoveSites(v ...*Site) *OrchestratorUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -599,7 +598,7 @@ func (_u *OrchestratorUpdateOne) sqlSave(ctx context.Context) (_node *Orchestrat
 			Columns: []string{orchestrator.SitesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(site.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(site.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -612,7 +611,7 @@ func (_u *OrchestratorUpdateOne) sqlSave(ctx context.Context) (_node *Orchestrat
 			Columns: []string{orchestrator.SitesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(site.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(site.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -628,7 +627,7 @@ func (_u *OrchestratorUpdateOne) sqlSave(ctx context.Context) (_node *Orchestrat
 			Columns: []string{orchestrator.SitesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(site.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(site.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

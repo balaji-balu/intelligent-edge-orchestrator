@@ -8,12 +8,10 @@ import (
 	"fmt"
 	"time"
 
-	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/balaji-balu/margo-hello-world/ent/host"
-	"github.com/balaji-balu/margo-hello-world/ent/orchestrator"
 	"github.com/balaji-balu/margo-hello-world/ent/site"
 	"github.com/google/uuid"
 )
@@ -27,7 +25,7 @@ type SiteCreate struct {
 }
 
 // SetSiteID sets the "site_id" field.
-func (_c *SiteCreate) SetSiteID(v string) *SiteCreate {
+func (_c *SiteCreate) SetSiteID(v uuid.UUID) *SiteCreate {
 	_c.mutation.SetSiteID(v)
 	return _c
 }
@@ -89,16 +87,8 @@ func (_c *SiteCreate) SetNillableOrchestratorID(v *uuid.UUID) *SiteCreate {
 }
 
 // SetMetadata sets the "metadata" field.
-func (_c *SiteCreate) SetMetadata(v struct{}) *SiteCreate {
+func (_c *SiteCreate) SetMetadata(v map[string]interface{}) *SiteCreate {
 	_c.mutation.SetMetadata(v)
-	return _c
-}
-
-// SetNillableMetadata sets the "metadata" field if the given value is not nil.
-func (_c *SiteCreate) SetNillableMetadata(v *struct{}) *SiteCreate {
-	if v != nil {
-		_c.SetMetadata(*v)
-	}
 	return _c
 }
 
@@ -130,38 +120,19 @@ func (_c *SiteCreate) SetNillableUpdatedAt(v *time.Time) *SiteCreate {
 	return _c
 }
 
-// SetID sets the "id" field.
-func (_c *SiteCreate) SetID(v uuid.UUID) *SiteCreate {
-	_c.mutation.SetID(v)
-	return _c
-}
-
-// SetNillableID sets the "id" field if the given value is not nil.
-func (_c *SiteCreate) SetNillableID(v *uuid.UUID) *SiteCreate {
-	if v != nil {
-		_c.SetID(*v)
-	}
-	return _c
-}
-
 // AddHostIDs adds the "hosts" edge to the Host entity by IDs.
-func (_c *SiteCreate) AddHostIDs(ids ...uuid.UUID) *SiteCreate {
+func (_c *SiteCreate) AddHostIDs(ids ...int) *SiteCreate {
 	_c.mutation.AddHostIDs(ids...)
 	return _c
 }
 
 // AddHosts adds the "hosts" edges to the Host entity.
 func (_c *SiteCreate) AddHosts(v ...*Host) *SiteCreate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
 	return _c.AddHostIDs(ids...)
-}
-
-// SetOrchestrator sets the "orchestrator" edge to the Orchestrator entity.
-func (_c *SiteCreate) SetOrchestrator(v *Orchestrator) *SiteCreate {
-	return _c.SetOrchestratorID(v.ID)
 }
 
 // Mutation returns the SiteMutation object of the builder.
@@ -171,7 +142,6 @@ func (_c *SiteCreate) Mutation() *SiteMutation {
 
 // Save creates the Site in the database.
 func (_c *SiteCreate) Save(ctx context.Context) (*Site, error) {
-	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -197,14 +167,6 @@ func (_c *SiteCreate) ExecX(ctx context.Context) {
 	}
 }
 
-// defaults sets the default values of the builder before save.
-func (_c *SiteCreate) defaults() {
-	if _, ok := _c.mutation.ID(); !ok {
-		v := site.DefaultID()
-		_c.mutation.SetID(v)
-	}
-}
-
 // check runs all checks and user-defined validators on the builder.
 func (_c *SiteCreate) check() error {
 	if _, ok := _c.mutation.SiteID(); !ok {
@@ -224,13 +186,8 @@ func (_c *SiteCreate) sqlSave(ctx context.Context) (*Site, error) {
 		}
 		return nil, err
 	}
-	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
-			_node.ID = *id
-		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
-			return nil, err
-		}
-	}
+	id := _spec.ID.Value.(int64)
+	_node.ID = int(id)
 	_c.mutation.id = &_node.ID
 	_c.mutation.done = true
 	return _node, nil
@@ -239,15 +196,11 @@ func (_c *SiteCreate) sqlSave(ctx context.Context) (*Site, error) {
 func (_c *SiteCreate) createSpec() (*Site, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Site{config: _c.config}
-		_spec = sqlgraph.NewCreateSpec(site.Table, sqlgraph.NewFieldSpec(site.FieldID, field.TypeUUID))
+		_spec = sqlgraph.NewCreateSpec(site.Table, sqlgraph.NewFieldSpec(site.FieldID, field.TypeInt))
 	)
 	_spec.OnConflict = _c.conflict
-	if id, ok := _c.mutation.ID(); ok {
-		_node.ID = id
-		_spec.ID.Value = &id
-	}
 	if value, ok := _c.mutation.SiteID(); ok {
-		_spec.SetField(site.FieldSiteID, field.TypeString, value)
+		_spec.SetField(site.FieldSiteID, field.TypeUUID, value)
 		_node.SiteID = value
 	}
 	if value, ok := _c.mutation.Name(); ok {
@@ -261,6 +214,10 @@ func (_c *SiteCreate) createSpec() (*Site, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Location(); ok {
 		_spec.SetField(site.FieldLocation, field.TypeString, value)
 		_node.Location = value
+	}
+	if value, ok := _c.mutation.OrchestratorID(); ok {
+		_spec.SetField(site.FieldOrchestratorID, field.TypeUUID, value)
+		_node.OrchestratorID = &value
 	}
 	if value, ok := _c.mutation.Metadata(); ok {
 		_spec.SetField(site.FieldMetadata, field.TypeJSON, value)
@@ -282,29 +239,12 @@ func (_c *SiteCreate) createSpec() (*Site, *sqlgraph.CreateSpec) {
 			Columns: []string{site.HostsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(host.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(host.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.OrchestratorIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   site.OrchestratorTable,
-			Columns: []string{site.OrchestratorColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(orchestrator.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.OrchestratorID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -360,7 +300,7 @@ type (
 )
 
 // SetSiteID sets the "site_id" field.
-func (u *SiteUpsert) SetSiteID(v string) *SiteUpsert {
+func (u *SiteUpsert) SetSiteID(v uuid.UUID) *SiteUpsert {
 	u.Set(site.FieldSiteID, v)
 	return u
 }
@@ -444,7 +384,7 @@ func (u *SiteUpsert) ClearOrchestratorID() *SiteUpsert {
 }
 
 // SetMetadata sets the "metadata" field.
-func (u *SiteUpsert) SetMetadata(v struct{}) *SiteUpsert {
+func (u *SiteUpsert) SetMetadata(v map[string]interface{}) *SiteUpsert {
 	u.Set(site.FieldMetadata, v)
 	return u
 }
@@ -497,24 +437,16 @@ func (u *SiteUpsert) ClearUpdatedAt() *SiteUpsert {
 	return u
 }
 
-// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
 //	client.Site.Create().
 //		OnConflict(
 //			sql.ResolveWithNewValues(),
-//			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(site.FieldID)
-//			}),
 //		).
 //		Exec(ctx)
 func (u *SiteUpsertOne) UpdateNewValues() *SiteUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
-		if _, exists := u.create.mutation.ID(); exists {
-			s.SetIgnore(site.FieldID)
-		}
-	}))
 	return u
 }
 
@@ -546,7 +478,7 @@ func (u *SiteUpsertOne) Update(set func(*SiteUpsert)) *SiteUpsertOne {
 }
 
 // SetSiteID sets the "site_id" field.
-func (u *SiteUpsertOne) SetSiteID(v string) *SiteUpsertOne {
+func (u *SiteUpsertOne) SetSiteID(v uuid.UUID) *SiteUpsertOne {
 	return u.Update(func(s *SiteUpsert) {
 		s.SetSiteID(v)
 	})
@@ -644,7 +576,7 @@ func (u *SiteUpsertOne) ClearOrchestratorID() *SiteUpsertOne {
 }
 
 // SetMetadata sets the "metadata" field.
-func (u *SiteUpsertOne) SetMetadata(v struct{}) *SiteUpsertOne {
+func (u *SiteUpsertOne) SetMetadata(v map[string]interface{}) *SiteUpsertOne {
 	return u.Update(func(s *SiteUpsert) {
 		s.SetMetadata(v)
 	})
@@ -722,12 +654,7 @@ func (u *SiteUpsertOne) ExecX(ctx context.Context) {
 }
 
 // Exec executes the UPSERT query and returns the inserted/updated ID.
-func (u *SiteUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
-	if u.create.driver.Dialect() == dialect.MySQL {
-		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
-		// fields from the database since MySQL does not support the RETURNING clause.
-		return id, errors.New("ent: SiteUpsertOne.ID is not supported by MySQL driver. Use SiteUpsertOne.Exec instead")
-	}
+func (u *SiteUpsertOne) ID(ctx context.Context) (id int, err error) {
 	node, err := u.create.Save(ctx)
 	if err != nil {
 		return id, err
@@ -736,7 +663,7 @@ func (u *SiteUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // IDX is like ID, but panics if an error occurs.
-func (u *SiteUpsertOne) IDX(ctx context.Context) uuid.UUID {
+func (u *SiteUpsertOne) IDX(ctx context.Context) int {
 	id, err := u.ID(ctx)
 	if err != nil {
 		panic(err)
@@ -763,7 +690,6 @@ func (_c *SiteCreateBulk) Save(ctx context.Context) ([]*Site, error) {
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
-			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*SiteMutation)
 				if !ok {
@@ -791,6 +717,10 @@ func (_c *SiteCreateBulk) Save(ctx context.Context) ([]*Site, error) {
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
+				if specs[i].ID.Value != nil {
+					id := specs[i].ID.Value.(int64)
+					nodes[i].ID = int(id)
+				}
 				mutation.done = true
 				return nodes[i], nil
 			})
@@ -877,20 +807,10 @@ type SiteUpsertBulk struct {
 //	client.Site.Create().
 //		OnConflict(
 //			sql.ResolveWithNewValues(),
-//			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(site.FieldID)
-//			}),
 //		).
 //		Exec(ctx)
 func (u *SiteUpsertBulk) UpdateNewValues() *SiteUpsertBulk {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
-		for _, b := range u.create.builders {
-			if _, exists := b.mutation.ID(); exists {
-				s.SetIgnore(site.FieldID)
-			}
-		}
-	}))
 	return u
 }
 
@@ -922,7 +842,7 @@ func (u *SiteUpsertBulk) Update(set func(*SiteUpsert)) *SiteUpsertBulk {
 }
 
 // SetSiteID sets the "site_id" field.
-func (u *SiteUpsertBulk) SetSiteID(v string) *SiteUpsertBulk {
+func (u *SiteUpsertBulk) SetSiteID(v uuid.UUID) *SiteUpsertBulk {
 	return u.Update(func(s *SiteUpsert) {
 		s.SetSiteID(v)
 	})
@@ -1020,7 +940,7 @@ func (u *SiteUpsertBulk) ClearOrchestratorID() *SiteUpsertBulk {
 }
 
 // SetMetadata sets the "metadata" field.
-func (u *SiteUpsertBulk) SetMetadata(v struct{}) *SiteUpsertBulk {
+func (u *SiteUpsertBulk) SetMetadata(v map[string]interface{}) *SiteUpsertBulk {
 	return u.Update(func(s *SiteUpsert) {
 		s.SetMetadata(v)
 	})

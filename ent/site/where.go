@@ -12,52 +12,52 @@ import (
 )
 
 // ID filters vertices based on their ID field.
-func ID(id uuid.UUID) predicate.Site {
+func ID(id int) predicate.Site {
 	return predicate.Site(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id uuid.UUID) predicate.Site {
+func IDEQ(id int) predicate.Site {
 	return predicate.Site(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id uuid.UUID) predicate.Site {
+func IDNEQ(id int) predicate.Site {
 	return predicate.Site(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...uuid.UUID) predicate.Site {
+func IDIn(ids ...int) predicate.Site {
 	return predicate.Site(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...uuid.UUID) predicate.Site {
+func IDNotIn(ids ...int) predicate.Site {
 	return predicate.Site(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id uuid.UUID) predicate.Site {
+func IDGT(id int) predicate.Site {
 	return predicate.Site(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id uuid.UUID) predicate.Site {
+func IDGTE(id int) predicate.Site {
 	return predicate.Site(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id uuid.UUID) predicate.Site {
+func IDLT(id int) predicate.Site {
 	return predicate.Site(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id uuid.UUID) predicate.Site {
+func IDLTE(id int) predicate.Site {
 	return predicate.Site(sql.FieldLTE(FieldID, id))
 }
 
 // SiteID applies equality check predicate on the "site_id" field. It's identical to SiteIDEQ.
-func SiteID(v string) predicate.Site {
+func SiteID(v uuid.UUID) predicate.Site {
 	return predicate.Site(sql.FieldEQ(FieldSiteID, v))
 }
 
@@ -92,68 +92,43 @@ func UpdatedAt(v time.Time) predicate.Site {
 }
 
 // SiteIDEQ applies the EQ predicate on the "site_id" field.
-func SiteIDEQ(v string) predicate.Site {
+func SiteIDEQ(v uuid.UUID) predicate.Site {
 	return predicate.Site(sql.FieldEQ(FieldSiteID, v))
 }
 
 // SiteIDNEQ applies the NEQ predicate on the "site_id" field.
-func SiteIDNEQ(v string) predicate.Site {
+func SiteIDNEQ(v uuid.UUID) predicate.Site {
 	return predicate.Site(sql.FieldNEQ(FieldSiteID, v))
 }
 
 // SiteIDIn applies the In predicate on the "site_id" field.
-func SiteIDIn(vs ...string) predicate.Site {
+func SiteIDIn(vs ...uuid.UUID) predicate.Site {
 	return predicate.Site(sql.FieldIn(FieldSiteID, vs...))
 }
 
 // SiteIDNotIn applies the NotIn predicate on the "site_id" field.
-func SiteIDNotIn(vs ...string) predicate.Site {
+func SiteIDNotIn(vs ...uuid.UUID) predicate.Site {
 	return predicate.Site(sql.FieldNotIn(FieldSiteID, vs...))
 }
 
 // SiteIDGT applies the GT predicate on the "site_id" field.
-func SiteIDGT(v string) predicate.Site {
+func SiteIDGT(v uuid.UUID) predicate.Site {
 	return predicate.Site(sql.FieldGT(FieldSiteID, v))
 }
 
 // SiteIDGTE applies the GTE predicate on the "site_id" field.
-func SiteIDGTE(v string) predicate.Site {
+func SiteIDGTE(v uuid.UUID) predicate.Site {
 	return predicate.Site(sql.FieldGTE(FieldSiteID, v))
 }
 
 // SiteIDLT applies the LT predicate on the "site_id" field.
-func SiteIDLT(v string) predicate.Site {
+func SiteIDLT(v uuid.UUID) predicate.Site {
 	return predicate.Site(sql.FieldLT(FieldSiteID, v))
 }
 
 // SiteIDLTE applies the LTE predicate on the "site_id" field.
-func SiteIDLTE(v string) predicate.Site {
+func SiteIDLTE(v uuid.UUID) predicate.Site {
 	return predicate.Site(sql.FieldLTE(FieldSiteID, v))
-}
-
-// SiteIDContains applies the Contains predicate on the "site_id" field.
-func SiteIDContains(v string) predicate.Site {
-	return predicate.Site(sql.FieldContains(FieldSiteID, v))
-}
-
-// SiteIDHasPrefix applies the HasPrefix predicate on the "site_id" field.
-func SiteIDHasPrefix(v string) predicate.Site {
-	return predicate.Site(sql.FieldHasPrefix(FieldSiteID, v))
-}
-
-// SiteIDHasSuffix applies the HasSuffix predicate on the "site_id" field.
-func SiteIDHasSuffix(v string) predicate.Site {
-	return predicate.Site(sql.FieldHasSuffix(FieldSiteID, v))
-}
-
-// SiteIDEqualFold applies the EqualFold predicate on the "site_id" field.
-func SiteIDEqualFold(v string) predicate.Site {
-	return predicate.Site(sql.FieldEqualFold(FieldSiteID, v))
-}
-
-// SiteIDContainsFold applies the ContainsFold predicate on the "site_id" field.
-func SiteIDContainsFold(v string) predicate.Site {
-	return predicate.Site(sql.FieldContainsFold(FieldSiteID, v))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -401,6 +376,26 @@ func OrchestratorIDNotIn(vs ...uuid.UUID) predicate.Site {
 	return predicate.Site(sql.FieldNotIn(FieldOrchestratorID, vs...))
 }
 
+// OrchestratorIDGT applies the GT predicate on the "orchestrator_id" field.
+func OrchestratorIDGT(v uuid.UUID) predicate.Site {
+	return predicate.Site(sql.FieldGT(FieldOrchestratorID, v))
+}
+
+// OrchestratorIDGTE applies the GTE predicate on the "orchestrator_id" field.
+func OrchestratorIDGTE(v uuid.UUID) predicate.Site {
+	return predicate.Site(sql.FieldGTE(FieldOrchestratorID, v))
+}
+
+// OrchestratorIDLT applies the LT predicate on the "orchestrator_id" field.
+func OrchestratorIDLT(v uuid.UUID) predicate.Site {
+	return predicate.Site(sql.FieldLT(FieldOrchestratorID, v))
+}
+
+// OrchestratorIDLTE applies the LTE predicate on the "orchestrator_id" field.
+func OrchestratorIDLTE(v uuid.UUID) predicate.Site {
+	return predicate.Site(sql.FieldLTE(FieldOrchestratorID, v))
+}
+
 // OrchestratorIDIsNil applies the IsNil predicate on the "orchestrator_id" field.
 func OrchestratorIDIsNil() predicate.Site {
 	return predicate.Site(sql.FieldIsNull(FieldOrchestratorID))
@@ -536,29 +531,6 @@ func HasHosts() predicate.Site {
 func HasHostsWith(preds ...predicate.Host) predicate.Site {
 	return predicate.Site(func(s *sql.Selector) {
 		step := newHostsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasOrchestrator applies the HasEdge predicate on the "orchestrator" edge.
-func HasOrchestrator() predicate.Site {
-	return predicate.Site(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, OrchestratorTable, OrchestratorColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasOrchestratorWith applies the HasEdge predicate on the "orchestrator" edge with a given conditions (other predicates).
-func HasOrchestratorWith(preds ...predicate.Orchestrator) predicate.Site {
-	return predicate.Site(func(s *sql.Selector) {
-		step := newOrchestratorStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

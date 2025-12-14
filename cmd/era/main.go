@@ -5,12 +5,12 @@ import (
     "io"
     "encoding/json"
     "os"
-    //"strings"
+    "strings"
     "net/http"
-    //"path/filepath"
+    "path/filepath"
     "bytes"
     "errors"
-    //"runtime"
+    "runtime"
     
     "go.uber.org/zap"
     "github.com/google/uuid"
@@ -47,10 +47,10 @@ import (
 //     fmt.Println("Status:", rm.GetStatus("hello"))
 // }
 
-// type ERAStorage struct {
-    // BaseDir string
-    // HostID  string
-// }
+type ERAStorage struct {
+    BaseDir string
+    HostID  string
+}
 
 type EraConfig struct {
     Log struct {
@@ -122,7 +122,8 @@ func main() {
 		log.Errorf("❌ Failed to connect to NATS.","err:", err)
         return
 	}
-    hostID := uuid.New().String()
+    e := InitERAStorage() //uuid.New().String()
+    hostID := e.HostID
     loUrl := os.Getenv("ERA_LO_URL")
     siteID, err := register(loUrl, hostID)
     if err != nil {
@@ -176,18 +177,19 @@ func register(loURL, hostID string) (string, error) {
     }
 
     // Parse LO's response (siteID)
-    var siteID string
-    if err := json.NewDecoder(resp.Body).Decode(&siteID); err != nil {
+    type Response struct {
+        siteId string `json:"site_id"`
+        hostId string `json:"host_id"`
+    }
+    var response Response
+    if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
         log.Errorw("failed to decode LO response: ","err", err)
         return "", err
     }
 
-    return siteID, nil
+    return response.siteId, nil
 }
 
-
-
-/*
 func loadOrCreateID(baseDir, name string) (string, error) {
     idPath := filepath.Join(baseDir, name)
 
@@ -241,4 +243,3 @@ func ERABaseDir() string {
         return "/var/lib/era"
     }
 }
-*/

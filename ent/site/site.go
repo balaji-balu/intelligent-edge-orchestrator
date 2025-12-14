@@ -5,7 +5,6 @@ package site
 import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/google/uuid"
 )
 
 const (
@@ -31,24 +30,15 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// EdgeHosts holds the string denoting the hosts edge name in mutations.
 	EdgeHosts = "hosts"
-	// EdgeOrchestrator holds the string denoting the orchestrator edge name in mutations.
-	EdgeOrchestrator = "orchestrator"
 	// Table holds the table name of the site in the database.
-	Table = "site"
+	Table = "sites"
 	// HostsTable is the table that holds the hosts relation/edge.
-	HostsTable = "host"
+	HostsTable = "hosts"
 	// HostsInverseTable is the table name for the Host entity.
 	// It exists in this package in order to avoid circular dependency with the "host" package.
-	HostsInverseTable = "host"
+	HostsInverseTable = "hosts"
 	// HostsColumn is the table column denoting the hosts relation/edge.
-	HostsColumn = "site_id"
-	// OrchestratorTable is the table that holds the orchestrator relation/edge.
-	OrchestratorTable = "site"
-	// OrchestratorInverseTable is the table name for the Orchestrator entity.
-	// It exists in this package in order to avoid circular dependency with the "orchestrator" package.
-	OrchestratorInverseTable = "orchestrator"
-	// OrchestratorColumn is the table column denoting the orchestrator relation/edge.
-	OrchestratorColumn = "orchestrator_id"
+	HostsColumn = "site_hosts"
 )
 
 // Columns holds all SQL columns for site fields.
@@ -64,6 +54,12 @@ var Columns = []string{
 	FieldUpdatedAt,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "sites"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"orchestrator_sites",
+}
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
@@ -71,13 +67,13 @@ func ValidColumn(column string) bool {
 			return true
 		}
 	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
+			return true
+		}
+	}
 	return false
 }
-
-var (
-	// DefaultID holds the default value on creation for the "id" field.
-	DefaultID func() uuid.UUID
-)
 
 // OrderOption defines the ordering options for the Site queries.
 type OrderOption func(*sql.Selector)
@@ -135,24 +131,10 @@ func ByHosts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newHostsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-
-// ByOrchestratorField orders the results by orchestrator field.
-func ByOrchestratorField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newOrchestratorStep(), sql.OrderByField(field, opts...))
-	}
-}
 func newHostsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(HostsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, HostsTable, HostsColumn),
-	)
-}
-func newOrchestratorStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(OrchestratorInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, OrchestratorTable, OrchestratorColumn),
 	)
 }

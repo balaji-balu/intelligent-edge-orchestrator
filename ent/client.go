@@ -1096,7 +1096,7 @@ func (c *HostClient) UpdateOne(_m *Host) *HostUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *HostClient) UpdateOneID(id uuid.UUID) *HostUpdateOne {
+func (c *HostClient) UpdateOneID(id int) *HostUpdateOne {
 	mutation := newHostMutation(c.config, OpUpdateOne, withHostID(id))
 	return &HostUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -1113,7 +1113,7 @@ func (c *HostClient) DeleteOne(_m *Host) *HostDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *HostClient) DeleteOneID(id uuid.UUID) *HostDeleteOne {
+func (c *HostClient) DeleteOneID(id int) *HostDeleteOne {
 	builder := c.Delete().Where(host.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -1130,33 +1130,17 @@ func (c *HostClient) Query() *HostQuery {
 }
 
 // Get returns a Host entity by its id.
-func (c *HostClient) Get(ctx context.Context, id uuid.UUID) (*Host, error) {
+func (c *HostClient) Get(ctx context.Context, id int) (*Host, error) {
 	return c.Query().Where(host.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *HostClient) GetX(ctx context.Context, id uuid.UUID) *Host {
+func (c *HostClient) GetX(ctx context.Context, id int) *Host {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
 	}
 	return obj
-}
-
-// QuerySite queries the site edge of a Host.
-func (c *HostClient) QuerySite(_m *Host) *SiteQuery {
-	query := (&SiteClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(host.Table, host.FieldID, id),
-			sqlgraph.To(site.Table, site.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, host.SiteTable, host.SiteColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
 }
 
 // Hooks returns the client hooks.
@@ -1394,7 +1378,7 @@ func (c *SiteClient) UpdateOne(_m *Site) *SiteUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *SiteClient) UpdateOneID(id uuid.UUID) *SiteUpdateOne {
+func (c *SiteClient) UpdateOneID(id int) *SiteUpdateOne {
 	mutation := newSiteMutation(c.config, OpUpdateOne, withSiteID(id))
 	return &SiteUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -1411,7 +1395,7 @@ func (c *SiteClient) DeleteOne(_m *Site) *SiteDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *SiteClient) DeleteOneID(id uuid.UUID) *SiteDeleteOne {
+func (c *SiteClient) DeleteOneID(id int) *SiteDeleteOne {
 	builder := c.Delete().Where(site.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -1428,12 +1412,12 @@ func (c *SiteClient) Query() *SiteQuery {
 }
 
 // Get returns a Site entity by its id.
-func (c *SiteClient) Get(ctx context.Context, id uuid.UUID) (*Site, error) {
+func (c *SiteClient) Get(ctx context.Context, id int) (*Site, error) {
 	return c.Query().Where(site.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *SiteClient) GetX(ctx context.Context, id uuid.UUID) *Site {
+func (c *SiteClient) GetX(ctx context.Context, id int) *Site {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -1450,22 +1434,6 @@ func (c *SiteClient) QueryHosts(_m *Site) *HostQuery {
 			sqlgraph.From(site.Table, site.FieldID, id),
 			sqlgraph.To(host.Table, host.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, site.HostsTable, site.HostsColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryOrchestrator queries the orchestrator edge of a Site.
-func (c *SiteClient) QueryOrchestrator(_m *Site) *OrchestratorQuery {
-	query := (&OrchestratorClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(site.Table, site.FieldID, id),
-			sqlgraph.To(orchestrator.Table, orchestrator.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, site.OrchestratorTable, site.OrchestratorColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil

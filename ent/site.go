@@ -10,7 +10,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/balaji-balu/margo-hello-world/ent/orchestrator"
 	"github.com/balaji-balu/margo-hello-world/ent/site"
 	"github.com/google/uuid"
 )
@@ -19,9 +18,9 @@ import (
 type Site struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID uuid.UUID `json:"id,omitempty"`
+	ID int `json:"id,omitempty"`
 	// SiteID holds the value of the "site_id" field.
-	SiteID string `json:"site_id,omitempty"`
+	SiteID uuid.UUID `json:"site_id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
@@ -29,28 +28,27 @@ type Site struct {
 	// Location holds the value of the "location" field.
 	Location string `json:"location,omitempty"`
 	// OrchestratorID holds the value of the "orchestrator_id" field.
-	OrchestratorID uuid.UUID `json:"orchestrator_id,omitempty"`
+	OrchestratorID *uuid.UUID `json:"orchestrator_id,omitempty"`
 	// Metadata holds the value of the "metadata" field.
-	Metadata struct{} `json:"metadata,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the SiteQuery when eager-loading is set.
-	Edges        SiteEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges              SiteEdges `json:"edges"`
+	orchestrator_sites *uuid.UUID
+	selectValues       sql.SelectValues
 }
 
 // SiteEdges holds the relations/edges for other nodes in the graph.
 type SiteEdges struct {
 	// Hosts holds the value of the hosts edge.
 	Hosts []*Host `json:"hosts,omitempty"`
-	// Orchestrator holds the value of the orchestrator edge.
-	Orchestrator *Orchestrator `json:"orchestrator,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [1]bool
 }
 
 // HostsOrErr returns the Hosts value or an error if the edge
@@ -62,30 +60,25 @@ func (e SiteEdges) HostsOrErr() ([]*Host, error) {
 	return nil, &NotLoadedError{edge: "hosts"}
 }
 
-// OrchestratorOrErr returns the Orchestrator value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e SiteEdges) OrchestratorOrErr() (*Orchestrator, error) {
-	if e.Orchestrator != nil {
-		return e.Orchestrator, nil
-	} else if e.loadedTypes[1] {
-		return nil, &NotFoundError{label: orchestrator.Label}
-	}
-	return nil, &NotLoadedError{edge: "orchestrator"}
-}
-
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Site) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case site.FieldOrchestratorID:
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case site.FieldMetadata:
 			values[i] = new([]byte)
-		case site.FieldSiteID, site.FieldName, site.FieldDescription, site.FieldLocation:
+		case site.FieldID:
+			values[i] = new(sql.NullInt64)
+		case site.FieldName, site.FieldDescription, site.FieldLocation:
 			values[i] = new(sql.NullString)
 		case site.FieldCreatedAt, site.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case site.FieldID, site.FieldOrchestratorID:
+		case site.FieldSiteID:
 			values[i] = new(uuid.UUID)
+		case site.ForeignKeys[0]: // orchestrator_sites
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -102,16 +95,16 @@ func (_m *Site) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case site.FieldID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value != nil {
-				_m.ID = *value
+			value, ok := values[i].(*sql.NullInt64)
+			if !ok {
+				return fmt.Errorf("unexpected type %T for field id", value)
 			}
+			_m.ID = int(value.Int64)
 		case site.FieldSiteID:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field site_id", values[i])
-			} else if value.Valid {
-				_m.SiteID = value.String
+			} else if value != nil {
+				_m.SiteID = *value
 			}
 		case site.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -132,10 +125,11 @@ func (_m *Site) assignValues(columns []string, values []any) error {
 				_m.Location = value.String
 			}
 		case site.FieldOrchestratorID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
+			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field orchestrator_id", values[i])
-			} else if value != nil {
-				_m.OrchestratorID = *value
+			} else if value.Valid {
+				_m.OrchestratorID = new(uuid.UUID)
+				*_m.OrchestratorID = *value.S.(*uuid.UUID)
 			}
 		case site.FieldMetadata:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -157,6 +151,13 @@ func (_m *Site) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
 			}
+		case site.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field orchestrator_sites", values[i])
+			} else if value.Valid {
+				_m.orchestrator_sites = new(uuid.UUID)
+				*_m.orchestrator_sites = *value.S.(*uuid.UUID)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -173,11 +174,6 @@ func (_m *Site) Value(name string) (ent.Value, error) {
 // QueryHosts queries the "hosts" edge of the Site entity.
 func (_m *Site) QueryHosts() *HostQuery {
 	return NewSiteClient(_m.config).QueryHosts(_m)
-}
-
-// QueryOrchestrator queries the "orchestrator" edge of the Site entity.
-func (_m *Site) QueryOrchestrator() *OrchestratorQuery {
-	return NewSiteClient(_m.config).QueryOrchestrator(_m)
 }
 
 // Update returns a builder for updating this Site.
@@ -204,7 +200,7 @@ func (_m *Site) String() string {
 	builder.WriteString("Site(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("site_id=")
-	builder.WriteString(_m.SiteID)
+	builder.WriteString(fmt.Sprintf("%v", _m.SiteID))
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)
@@ -215,8 +211,10 @@ func (_m *Site) String() string {
 	builder.WriteString("location=")
 	builder.WriteString(_m.Location)
 	builder.WriteString(", ")
-	builder.WriteString("orchestrator_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.OrchestratorID))
+	if v := _m.OrchestratorID; v != nil {
+		builder.WriteString("orchestrator_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("metadata=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Metadata))

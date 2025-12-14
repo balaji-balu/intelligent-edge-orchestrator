@@ -11,7 +11,6 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/balaji-balu/margo-hello-world/ent/host"
-	"github.com/balaji-balu/margo-hello-world/ent/site"
 	"github.com/google/uuid"
 )
 
@@ -19,9 +18,9 @@ import (
 type Host struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID uuid.UUID `json:"id,omitempty"`
+	ID int `json:"id,omitempty"`
 	// HostID holds the value of the "host_id" field.
-	HostID string `json:"host_id,omitempty"`
+	HostID uuid.UUID `json:"host_id,omitempty"`
 	// SiteID holds the value of the "site_id" field.
 	SiteID uuid.UUID `json:"site_id,omitempty"`
 	// Runtime holds the value of the "runtime" field.
@@ -41,35 +40,13 @@ type Host struct {
 	// EdgeURL holds the value of the "edge_url" field.
 	EdgeURL string `json:"edge_url,omitempty"`
 	// Metadata holds the value of the "metadata" field.
-	Metadata struct{} `json:"metadata,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the HostQuery when eager-loading is set.
-	Edges        HostEdges `json:"edges"`
+	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	site_hosts   *int
 	selectValues sql.SelectValues
-}
-
-// HostEdges holds the relations/edges for other nodes in the graph.
-type HostEdges struct {
-	// Site holds the value of the site edge.
-	Site *Site `json:"site,omitempty"`
-	// loadedTypes holds the information for reporting if a
-	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
-}
-
-// SiteOrErr returns the Site value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e HostEdges) SiteOrErr() (*Site, error) {
-	if e.Site != nil {
-		return e.Site, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: site.Label}
-	}
-	return nil, &NotLoadedError{edge: "site"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -81,14 +58,16 @@ func (*Host) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case host.FieldCPUFree:
 			values[i] = new(sql.NullFloat64)
-		case host.FieldMisses:
+		case host.FieldID, host.FieldMisses:
 			values[i] = new(sql.NullInt64)
-		case host.FieldHostID, host.FieldRuntime, host.FieldStatus, host.FieldHostname, host.FieldIPAddress, host.FieldEdgeURL:
+		case host.FieldRuntime, host.FieldStatus, host.FieldHostname, host.FieldIPAddress, host.FieldEdgeURL:
 			values[i] = new(sql.NullString)
 		case host.FieldLastSeen, host.FieldCreatedAt, host.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case host.FieldID, host.FieldSiteID:
+		case host.FieldHostID, host.FieldSiteID:
 			values[i] = new(uuid.UUID)
+		case host.ForeignKeys[0]: // site_hosts
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -105,16 +84,16 @@ func (_m *Host) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case host.FieldID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value != nil {
-				_m.ID = *value
+			value, ok := values[i].(*sql.NullInt64)
+			if !ok {
+				return fmt.Errorf("unexpected type %T for field id", value)
 			}
+			_m.ID = int(value.Int64)
 		case host.FieldHostID:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field host_id", values[i])
-			} else if value.Valid {
-				_m.HostID = value.String
+			} else if value != nil {
+				_m.HostID = *value
 			}
 		case host.FieldSiteID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -190,6 +169,13 @@ func (_m *Host) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
 			}
+		case host.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field site_hosts", value)
+			} else if value.Valid {
+				_m.site_hosts = new(int)
+				*_m.site_hosts = int(value.Int64)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -201,11 +187,6 @@ func (_m *Host) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (_m *Host) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
-}
-
-// QuerySite queries the "site" edge of the Host entity.
-func (_m *Host) QuerySite() *SiteQuery {
-	return NewHostClient(_m.config).QuerySite(_m)
 }
 
 // Update returns a builder for updating this Host.
@@ -232,7 +213,7 @@ func (_m *Host) String() string {
 	builder.WriteString("Host(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("host_id=")
-	builder.WriteString(_m.HostID)
+	builder.WriteString(fmt.Sprintf("%v", _m.HostID))
 	builder.WriteString(", ")
 	builder.WriteString("site_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.SiteID))

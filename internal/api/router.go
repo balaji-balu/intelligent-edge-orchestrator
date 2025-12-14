@@ -55,8 +55,12 @@ func NewRouter(client *ent.Client, co *co.CO, cfg model.COConfig) *gin.Engine {
 		api.POST("/deployments", func(c *gin.Context) { 
 			handlers.CreateDeployment(c,co, client, cfg.Git.Repo) })
 
-		api.GET("/healthz", handlers.HealthzHandler)
+		api.GET("/sites", func(c *gin.Context){ handlers.ListSites(c,client)})	
+		api.GET("/sites/:siteId", func(c *gin.Context){handlers.GetSiteInfo(c,client)})	
+		api.POST("/register", func(c *gin.Context) {handlers.RegisterSite(c,client)})
+		api.POST("/register/:hostId", func(c *gin.Context) {handlers.RegisterHost(c,client)})
 
+		api.GET("/healthz", handlers.HealthzHandler)
 	}
 
 	return r

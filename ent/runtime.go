@@ -10,9 +10,7 @@ import (
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentcomponentstatus"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentprofile"
 	"github.com/balaji-balu/margo-hello-world/ent/deploymentstatus"
-	"github.com/balaji-balu/margo-hello-world/ent/host"
 	"github.com/balaji-balu/margo-hello-world/ent/schema"
-	"github.com/balaji-balu/margo-hello-world/ent/site"
 	"github.com/google/uuid"
 )
 
@@ -82,16 +80,4 @@ func init() {
 	deploymentstatusDescID := deploymentstatusFields[0].Descriptor()
 	// deploymentstatus.DefaultID holds the default value on creation for the id field.
 	deploymentstatus.DefaultID = deploymentstatusDescID.Default.(func() uuid.UUID)
-	hostFields := schema.Host{}.Fields()
-	_ = hostFields
-	// hostDescID is the schema descriptor for id field.
-	hostDescID := hostFields[0].Descriptor()
-	// host.DefaultID holds the default value on creation for the id field.
-	host.DefaultID = hostDescID.Default.(func() uuid.UUID)
-	siteFields := schema.Site{}.Fields()
-	_ = siteFields
-	// siteDescID is the schema descriptor for id field.
-	siteDescID := siteFields[0].Descriptor()
-	// site.DefaultID holds the default value on creation for the id field.
-	site.DefaultID = siteDescID.Default.(func() uuid.UUID)
 }

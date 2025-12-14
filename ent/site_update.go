@@ -12,7 +12,6 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/balaji-balu/margo-hello-world/ent/host"
-	"github.com/balaji-balu/margo-hello-world/ent/orchestrator"
 	"github.com/balaji-balu/margo-hello-world/ent/predicate"
 	"github.com/balaji-balu/margo-hello-world/ent/site"
 	"github.com/google/uuid"
@@ -32,13 +31,13 @@ func (_u *SiteUpdate) Where(ps ...predicate.Site) *SiteUpdate {
 }
 
 // SetSiteID sets the "site_id" field.
-func (_u *SiteUpdate) SetSiteID(v string) *SiteUpdate {
+func (_u *SiteUpdate) SetSiteID(v uuid.UUID) *SiteUpdate {
 	_u.mutation.SetSiteID(v)
 	return _u
 }
 
 // SetNillableSiteID sets the "site_id" field if the given value is not nil.
-func (_u *SiteUpdate) SetNillableSiteID(v *string) *SiteUpdate {
+func (_u *SiteUpdate) SetNillableSiteID(v *uuid.UUID) *SiteUpdate {
 	if v != nil {
 		_u.SetSiteID(*v)
 	}
@@ -126,16 +125,8 @@ func (_u *SiteUpdate) ClearOrchestratorID() *SiteUpdate {
 }
 
 // SetMetadata sets the "metadata" field.
-func (_u *SiteUpdate) SetMetadata(v struct{}) *SiteUpdate {
+func (_u *SiteUpdate) SetMetadata(v map[string]interface{}) *SiteUpdate {
 	_u.mutation.SetMetadata(v)
-	return _u
-}
-
-// SetNillableMetadata sets the "metadata" field if the given value is not nil.
-func (_u *SiteUpdate) SetNillableMetadata(v *struct{}) *SiteUpdate {
-	if v != nil {
-		_u.SetMetadata(*v)
-	}
 	return _u
 }
 
@@ -186,23 +177,18 @@ func (_u *SiteUpdate) ClearUpdatedAt() *SiteUpdate {
 }
 
 // AddHostIDs adds the "hosts" edge to the Host entity by IDs.
-func (_u *SiteUpdate) AddHostIDs(ids ...uuid.UUID) *SiteUpdate {
+func (_u *SiteUpdate) AddHostIDs(ids ...int) *SiteUpdate {
 	_u.mutation.AddHostIDs(ids...)
 	return _u
 }
 
 // AddHosts adds the "hosts" edges to the Host entity.
 func (_u *SiteUpdate) AddHosts(v ...*Host) *SiteUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
 	return _u.AddHostIDs(ids...)
-}
-
-// SetOrchestrator sets the "orchestrator" edge to the Orchestrator entity.
-func (_u *SiteUpdate) SetOrchestrator(v *Orchestrator) *SiteUpdate {
-	return _u.SetOrchestratorID(v.ID)
 }
 
 // Mutation returns the SiteMutation object of the builder.
@@ -217,24 +203,18 @@ func (_u *SiteUpdate) ClearHosts() *SiteUpdate {
 }
 
 // RemoveHostIDs removes the "hosts" edge to Host entities by IDs.
-func (_u *SiteUpdate) RemoveHostIDs(ids ...uuid.UUID) *SiteUpdate {
+func (_u *SiteUpdate) RemoveHostIDs(ids ...int) *SiteUpdate {
 	_u.mutation.RemoveHostIDs(ids...)
 	return _u
 }
 
 // RemoveHosts removes "hosts" edges to Host entities.
 func (_u *SiteUpdate) RemoveHosts(v ...*Host) *SiteUpdate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveHostIDs(ids...)
-}
-
-// ClearOrchestrator clears the "orchestrator" edge to the Orchestrator entity.
-func (_u *SiteUpdate) ClearOrchestrator() *SiteUpdate {
-	_u.mutation.ClearOrchestrator()
-	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -265,7 +245,7 @@ func (_u *SiteUpdate) ExecX(ctx context.Context) {
 }
 
 func (_u *SiteUpdate) sqlSave(ctx context.Context) (_node int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(site.Table, site.Columns, sqlgraph.NewFieldSpec(site.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(site.Table, site.Columns, sqlgraph.NewFieldSpec(site.FieldID, field.TypeInt))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -274,7 +254,7 @@ func (_u *SiteUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 	}
 	if value, ok := _u.mutation.SiteID(); ok {
-		_spec.SetField(site.FieldSiteID, field.TypeString, value)
+		_spec.SetField(site.FieldSiteID, field.TypeUUID, value)
 	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(site.FieldName, field.TypeString, value)
@@ -293,6 +273,12 @@ func (_u *SiteUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.LocationCleared() {
 		_spec.ClearField(site.FieldLocation, field.TypeString)
+	}
+	if value, ok := _u.mutation.OrchestratorID(); ok {
+		_spec.SetField(site.FieldOrchestratorID, field.TypeUUID, value)
+	}
+	if _u.mutation.OrchestratorIDCleared() {
+		_spec.ClearField(site.FieldOrchestratorID, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.Metadata(); ok {
 		_spec.SetField(site.FieldMetadata, field.TypeJSON, value)
@@ -320,7 +306,7 @@ func (_u *SiteUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{site.HostsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(host.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(host.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -333,7 +319,7 @@ func (_u *SiteUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{site.HostsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(host.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(host.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -349,36 +335,7 @@ func (_u *SiteUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{site.HostsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(host.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.OrchestratorCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   site.OrchestratorTable,
-			Columns: []string{site.OrchestratorColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(orchestrator.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.OrchestratorIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   site.OrchestratorTable,
-			Columns: []string{site.OrchestratorColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(orchestrator.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(host.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -407,13 +364,13 @@ type SiteUpdateOne struct {
 }
 
 // SetSiteID sets the "site_id" field.
-func (_u *SiteUpdateOne) SetSiteID(v string) *SiteUpdateOne {
+func (_u *SiteUpdateOne) SetSiteID(v uuid.UUID) *SiteUpdateOne {
 	_u.mutation.SetSiteID(v)
 	return _u
 }
 
 // SetNillableSiteID sets the "site_id" field if the given value is not nil.
-func (_u *SiteUpdateOne) SetNillableSiteID(v *string) *SiteUpdateOne {
+func (_u *SiteUpdateOne) SetNillableSiteID(v *uuid.UUID) *SiteUpdateOne {
 	if v != nil {
 		_u.SetSiteID(*v)
 	}
@@ -501,16 +458,8 @@ func (_u *SiteUpdateOne) ClearOrchestratorID() *SiteUpdateOne {
 }
 
 // SetMetadata sets the "metadata" field.
-func (_u *SiteUpdateOne) SetMetadata(v struct{}) *SiteUpdateOne {
+func (_u *SiteUpdateOne) SetMetadata(v map[string]interface{}) *SiteUpdateOne {
 	_u.mutation.SetMetadata(v)
-	return _u
-}
-
-// SetNillableMetadata sets the "metadata" field if the given value is not nil.
-func (_u *SiteUpdateOne) SetNillableMetadata(v *struct{}) *SiteUpdateOne {
-	if v != nil {
-		_u.SetMetadata(*v)
-	}
 	return _u
 }
 
@@ -561,23 +510,18 @@ func (_u *SiteUpdateOne) ClearUpdatedAt() *SiteUpdateOne {
 }
 
 // AddHostIDs adds the "hosts" edge to the Host entity by IDs.
-func (_u *SiteUpdateOne) AddHostIDs(ids ...uuid.UUID) *SiteUpdateOne {
+func (_u *SiteUpdateOne) AddHostIDs(ids ...int) *SiteUpdateOne {
 	_u.mutation.AddHostIDs(ids...)
 	return _u
 }
 
 // AddHosts adds the "hosts" edges to the Host entity.
 func (_u *SiteUpdateOne) AddHosts(v ...*Host) *SiteUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
 	return _u.AddHostIDs(ids...)
-}
-
-// SetOrchestrator sets the "orchestrator" edge to the Orchestrator entity.
-func (_u *SiteUpdateOne) SetOrchestrator(v *Orchestrator) *SiteUpdateOne {
-	return _u.SetOrchestratorID(v.ID)
 }
 
 // Mutation returns the SiteMutation object of the builder.
@@ -592,24 +536,18 @@ func (_u *SiteUpdateOne) ClearHosts() *SiteUpdateOne {
 }
 
 // RemoveHostIDs removes the "hosts" edge to Host entities by IDs.
-func (_u *SiteUpdateOne) RemoveHostIDs(ids ...uuid.UUID) *SiteUpdateOne {
+func (_u *SiteUpdateOne) RemoveHostIDs(ids ...int) *SiteUpdateOne {
 	_u.mutation.RemoveHostIDs(ids...)
 	return _u
 }
 
 // RemoveHosts removes "hosts" edges to Host entities.
 func (_u *SiteUpdateOne) RemoveHosts(v ...*Host) *SiteUpdateOne {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveHostIDs(ids...)
-}
-
-// ClearOrchestrator clears the "orchestrator" edge to the Orchestrator entity.
-func (_u *SiteUpdateOne) ClearOrchestrator() *SiteUpdateOne {
-	_u.mutation.ClearOrchestrator()
-	return _u
 }
 
 // Where appends a list predicates to the SiteUpdate builder.
@@ -653,7 +591,7 @@ func (_u *SiteUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (_u *SiteUpdateOne) sqlSave(ctx context.Context) (_node *Site, err error) {
-	_spec := sqlgraph.NewUpdateSpec(site.Table, site.Columns, sqlgraph.NewFieldSpec(site.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(site.Table, site.Columns, sqlgraph.NewFieldSpec(site.FieldID, field.TypeInt))
 	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Site.id" for update`)}
@@ -679,7 +617,7 @@ func (_u *SiteUpdateOne) sqlSave(ctx context.Context) (_node *Site, err error) {
 		}
 	}
 	if value, ok := _u.mutation.SiteID(); ok {
-		_spec.SetField(site.FieldSiteID, field.TypeString, value)
+		_spec.SetField(site.FieldSiteID, field.TypeUUID, value)
 	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(site.FieldName, field.TypeString, value)
@@ -698,6 +636,12 @@ func (_u *SiteUpdateOne) sqlSave(ctx context.Context) (_node *Site, err error) {
 	}
 	if _u.mutation.LocationCleared() {
 		_spec.ClearField(site.FieldLocation, field.TypeString)
+	}
+	if value, ok := _u.mutation.OrchestratorID(); ok {
+		_spec.SetField(site.FieldOrchestratorID, field.TypeUUID, value)
+	}
+	if _u.mutation.OrchestratorIDCleared() {
+		_spec.ClearField(site.FieldOrchestratorID, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.Metadata(); ok {
 		_spec.SetField(site.FieldMetadata, field.TypeJSON, value)
@@ -725,7 +669,7 @@ func (_u *SiteUpdateOne) sqlSave(ctx context.Context) (_node *Site, err error) {
 			Columns: []string{site.HostsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(host.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(host.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -738,7 +682,7 @@ func (_u *SiteUpdateOne) sqlSave(ctx context.Context) (_node *Site, err error) {
 			Columns: []string{site.HostsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(host.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(host.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -754,36 +698,7 @@ func (_u *SiteUpdateOne) sqlSave(ctx context.Context) (_node *Site, err error) {
 			Columns: []string{site.HostsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(host.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.OrchestratorCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   site.OrchestratorTable,
-			Columns: []string{site.OrchestratorColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(orchestrator.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.OrchestratorIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   site.OrchestratorTable,
-			Columns: []string{site.OrchestratorColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(orchestrator.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(host.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

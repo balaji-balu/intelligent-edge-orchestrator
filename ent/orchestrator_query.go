@@ -414,9 +414,7 @@ func (_q *OrchestratorQuery) loadSites(ctx context.Context, query *SiteQuery, no
 			init(nodes[i])
 		}
 	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(site.FieldOrchestratorID)
-	}
+	query.withFKs = true
 	query.Where(predicate.Site(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(orchestrator.SitesColumn), fks...))
 	}))
@@ -425,10 +423,13 @@ func (_q *OrchestratorQuery) loadSites(ctx context.Context, query *SiteQuery, no
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.OrchestratorID
-		node, ok := nodeids[fk]
+		fk := n.orchestrator_sites
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "orchestrator_sites" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "orchestrator_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "orchestrator_sites" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

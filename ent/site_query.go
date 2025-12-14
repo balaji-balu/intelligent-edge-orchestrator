@@ -13,21 +13,19 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/balaji-balu/margo-hello-world/ent/host"
-	"github.com/balaji-balu/margo-hello-world/ent/orchestrator"
 	"github.com/balaji-balu/margo-hello-world/ent/predicate"
 	"github.com/balaji-balu/margo-hello-world/ent/site"
-	"github.com/google/uuid"
 )
 
 // SiteQuery is the builder for querying Site entities.
 type SiteQuery struct {
 	config
-	ctx              *QueryContext
-	order            []site.OrderOption
-	inters           []Interceptor
-	predicates       []predicate.Site
-	withHosts        *HostQuery
-	withOrchestrator *OrchestratorQuery
+	ctx        *QueryContext
+	order      []site.OrderOption
+	inters     []Interceptor
+	predicates []predicate.Site
+	withHosts  *HostQuery
+	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -86,28 +84,6 @@ func (_q *SiteQuery) QueryHosts() *HostQuery {
 	return query
 }
 
-// QueryOrchestrator chains the current query on the "orchestrator" edge.
-func (_q *SiteQuery) QueryOrchestrator() *OrchestratorQuery {
-	query := (&OrchestratorClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(site.Table, site.FieldID, selector),
-			sqlgraph.To(orchestrator.Table, orchestrator.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, site.OrchestratorTable, site.OrchestratorColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
 // First returns the first Site entity from the query.
 // Returns a *NotFoundError when no Site was found.
 func (_q *SiteQuery) First(ctx context.Context) (*Site, error) {
@@ -132,8 +108,8 @@ func (_q *SiteQuery) FirstX(ctx context.Context) *Site {
 
 // FirstID returns the first Site ID from the query.
 // Returns a *NotFoundError when no Site ID was found.
-func (_q *SiteQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (_q *SiteQuery) FirstID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
@@ -145,7 +121,7 @@ func (_q *SiteQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *SiteQuery) FirstIDX(ctx context.Context) uuid.UUID {
+func (_q *SiteQuery) FirstIDX(ctx context.Context) int {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -183,8 +159,8 @@ func (_q *SiteQuery) OnlyX(ctx context.Context) *Site {
 // OnlyID is like Only, but returns the only Site ID in the query.
 // Returns a *NotSingularError when more than one Site ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *SiteQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (_q *SiteQuery) OnlyID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
@@ -200,7 +176,7 @@ func (_q *SiteQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *SiteQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+func (_q *SiteQuery) OnlyIDX(ctx context.Context) int {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -228,7 +204,7 @@ func (_q *SiteQuery) AllX(ctx context.Context) []*Site {
 }
 
 // IDs executes the query and returns a list of Site IDs.
-func (_q *SiteQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+func (_q *SiteQuery) IDs(ctx context.Context) (ids []int, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
@@ -240,7 +216,7 @@ func (_q *SiteQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *SiteQuery) IDsX(ctx context.Context) []uuid.UUID {
+func (_q *SiteQuery) IDsX(ctx context.Context) []int {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -295,13 +271,12 @@ func (_q *SiteQuery) Clone() *SiteQuery {
 		return nil
 	}
 	return &SiteQuery{
-		config:           _q.config,
-		ctx:              _q.ctx.Clone(),
-		order:            append([]site.OrderOption{}, _q.order...),
-		inters:           append([]Interceptor{}, _q.inters...),
-		predicates:       append([]predicate.Site{}, _q.predicates...),
-		withHosts:        _q.withHosts.Clone(),
-		withOrchestrator: _q.withOrchestrator.Clone(),
+		config:     _q.config,
+		ctx:        _q.ctx.Clone(),
+		order:      append([]site.OrderOption{}, _q.order...),
+		inters:     append([]Interceptor{}, _q.inters...),
+		predicates: append([]predicate.Site{}, _q.predicates...),
+		withHosts:  _q.withHosts.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -319,24 +294,13 @@ func (_q *SiteQuery) WithHosts(opts ...func(*HostQuery)) *SiteQuery {
 	return _q
 }
 
-// WithOrchestrator tells the query-builder to eager-load the nodes that are connected to
-// the "orchestrator" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *SiteQuery) WithOrchestrator(opts ...func(*OrchestratorQuery)) *SiteQuery {
-	query := (&OrchestratorClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withOrchestrator = query
-	return _q
-}
-
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
 // Example:
 //
 //	var v []struct {
-//		SiteID string `json:"site_id,omitempty"`
+//		SiteID uuid.UUID `json:"site_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
@@ -359,7 +323,7 @@ func (_q *SiteQuery) GroupBy(field string, fields ...string) *SiteGroupBy {
 // Example:
 //
 //	var v []struct {
-//		SiteID string `json:"site_id,omitempty"`
+//		SiteID uuid.UUID `json:"site_id,omitempty"`
 //	}
 //
 //	client.Site.Query().
@@ -407,12 +371,15 @@ func (_q *SiteQuery) prepareQuery(ctx context.Context) error {
 func (_q *SiteQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Site, error) {
 	var (
 		nodes       = []*Site{}
+		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [1]bool{
 			_q.withHosts != nil,
-			_q.withOrchestrator != nil,
 		}
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, site.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Site).scanValues(nil, columns)
 	}
@@ -438,18 +405,12 @@ func (_q *SiteQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Site, e
 			return nil, err
 		}
 	}
-	if query := _q.withOrchestrator; query != nil {
-		if err := _q.loadOrchestrator(ctx, query, nodes, nil,
-			func(n *Site, e *Orchestrator) { n.Edges.Orchestrator = e }); err != nil {
-			return nil, err
-		}
-	}
 	return nodes, nil
 }
 
 func (_q *SiteQuery) loadHosts(ctx context.Context, query *HostQuery, nodes []*Site, init func(*Site), assign func(*Site, *Host)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[uuid.UUID]*Site)
+	nodeids := make(map[int]*Site)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -457,9 +418,7 @@ func (_q *SiteQuery) loadHosts(ctx context.Context, query *HostQuery, nodes []*S
 			init(nodes[i])
 		}
 	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(host.FieldSiteID)
-	}
+	query.withFKs = true
 	query.Where(predicate.Host(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(site.HostsColumn), fks...))
 	}))
@@ -468,41 +427,15 @@ func (_q *SiteQuery) loadHosts(ctx context.Context, query *HostQuery, nodes []*S
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.SiteID
-		node, ok := nodeids[fk]
+		fk := n.site_hosts
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "site_hosts" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "site_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "site_hosts" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
-	}
-	return nil
-}
-func (_q *SiteQuery) loadOrchestrator(ctx context.Context, query *OrchestratorQuery, nodes []*Site, init func(*Site), assign func(*Site, *Orchestrator)) error {
-	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*Site)
-	for i := range nodes {
-		fk := nodes[i].OrchestratorID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(orchestrator.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "orchestrator_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
 	}
 	return nil
 }
@@ -517,7 +450,7 @@ func (_q *SiteQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (_q *SiteQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(site.Table, site.Columns, sqlgraph.NewFieldSpec(site.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewQuerySpec(site.Table, site.Columns, sqlgraph.NewFieldSpec(site.FieldID, field.TypeInt))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -531,9 +464,6 @@ func (_q *SiteQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != site.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
-		}
-		if _q.withOrchestrator != nil {
-			_spec.Node.AddColumnOnce(site.FieldOrchestratorID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

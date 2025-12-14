@@ -13,7 +13,6 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/balaji-balu/margo-hello-world/ent/host"
 	"github.com/balaji-balu/margo-hello-world/ent/predicate"
-	"github.com/balaji-balu/margo-hello-world/ent/site"
 	"github.com/google/uuid"
 )
 
@@ -31,13 +30,13 @@ func (_u *HostUpdate) Where(ps ...predicate.Host) *HostUpdate {
 }
 
 // SetHostID sets the "host_id" field.
-func (_u *HostUpdate) SetHostID(v string) *HostUpdate {
+func (_u *HostUpdate) SetHostID(v uuid.UUID) *HostUpdate {
 	_u.mutation.SetHostID(v)
 	return _u
 }
 
 // SetNillableHostID sets the "host_id" field if the given value is not nil.
-func (_u *HostUpdate) SetNillableHostID(v *string) *HostUpdate {
+func (_u *HostUpdate) SetNillableHostID(v *uuid.UUID) *HostUpdate {
 	if v != nil {
 		_u.SetHostID(*v)
 	}
@@ -55,12 +54,6 @@ func (_u *HostUpdate) SetNillableSiteID(v *uuid.UUID) *HostUpdate {
 	if v != nil {
 		_u.SetSiteID(*v)
 	}
-	return _u
-}
-
-// ClearSiteID clears the value of the "site_id" field.
-func (_u *HostUpdate) ClearSiteID() *HostUpdate {
-	_u.mutation.ClearSiteID()
 	return _u
 }
 
@@ -239,16 +232,8 @@ func (_u *HostUpdate) ClearEdgeURL() *HostUpdate {
 }
 
 // SetMetadata sets the "metadata" field.
-func (_u *HostUpdate) SetMetadata(v struct{}) *HostUpdate {
+func (_u *HostUpdate) SetMetadata(v map[string]interface{}) *HostUpdate {
 	_u.mutation.SetMetadata(v)
-	return _u
-}
-
-// SetNillableMetadata sets the "metadata" field if the given value is not nil.
-func (_u *HostUpdate) SetNillableMetadata(v *struct{}) *HostUpdate {
-	if v != nil {
-		_u.SetMetadata(*v)
-	}
 	return _u
 }
 
@@ -298,20 +283,9 @@ func (_u *HostUpdate) ClearUpdatedAt() *HostUpdate {
 	return _u
 }
 
-// SetSite sets the "site" edge to the Site entity.
-func (_u *HostUpdate) SetSite(v *Site) *HostUpdate {
-	return _u.SetSiteID(v.ID)
-}
-
 // Mutation returns the HostMutation object of the builder.
 func (_u *HostUpdate) Mutation() *HostMutation {
 	return _u.mutation
-}
-
-// ClearSite clears the "site" edge to the Site entity.
-func (_u *HostUpdate) ClearSite() *HostUpdate {
-	_u.mutation.ClearSite()
-	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -342,7 +316,7 @@ func (_u *HostUpdate) ExecX(ctx context.Context) {
 }
 
 func (_u *HostUpdate) sqlSave(ctx context.Context) (_node int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(host.Table, host.Columns, sqlgraph.NewFieldSpec(host.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(host.Table, host.Columns, sqlgraph.NewFieldSpec(host.FieldID, field.TypeInt))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -351,7 +325,10 @@ func (_u *HostUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 	}
 	if value, ok := _u.mutation.HostID(); ok {
-		_spec.SetField(host.FieldHostID, field.TypeString, value)
+		_spec.SetField(host.FieldHostID, field.TypeUUID, value)
+	}
+	if value, ok := _u.mutation.SiteID(); ok {
+		_spec.SetField(host.FieldSiteID, field.TypeUUID, value)
 	}
 	if value, ok := _u.mutation.Runtime(); ok {
 		_spec.SetField(host.FieldRuntime, field.TypeString, value)
@@ -425,35 +402,6 @@ func (_u *HostUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.UpdatedAtCleared() {
 		_spec.ClearField(host.FieldUpdatedAt, field.TypeTime)
 	}
-	if _u.mutation.SiteCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   host.SiteTable,
-			Columns: []string{host.SiteColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(site.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.SiteIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   host.SiteTable,
-			Columns: []string{host.SiteColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(site.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{host.Label}
@@ -475,13 +423,13 @@ type HostUpdateOne struct {
 }
 
 // SetHostID sets the "host_id" field.
-func (_u *HostUpdateOne) SetHostID(v string) *HostUpdateOne {
+func (_u *HostUpdateOne) SetHostID(v uuid.UUID) *HostUpdateOne {
 	_u.mutation.SetHostID(v)
 	return _u
 }
 
 // SetNillableHostID sets the "host_id" field if the given value is not nil.
-func (_u *HostUpdateOne) SetNillableHostID(v *string) *HostUpdateOne {
+func (_u *HostUpdateOne) SetNillableHostID(v *uuid.UUID) *HostUpdateOne {
 	if v != nil {
 		_u.SetHostID(*v)
 	}
@@ -499,12 +447,6 @@ func (_u *HostUpdateOne) SetNillableSiteID(v *uuid.UUID) *HostUpdateOne {
 	if v != nil {
 		_u.SetSiteID(*v)
 	}
-	return _u
-}
-
-// ClearSiteID clears the value of the "site_id" field.
-func (_u *HostUpdateOne) ClearSiteID() *HostUpdateOne {
-	_u.mutation.ClearSiteID()
 	return _u
 }
 
@@ -683,16 +625,8 @@ func (_u *HostUpdateOne) ClearEdgeURL() *HostUpdateOne {
 }
 
 // SetMetadata sets the "metadata" field.
-func (_u *HostUpdateOne) SetMetadata(v struct{}) *HostUpdateOne {
+func (_u *HostUpdateOne) SetMetadata(v map[string]interface{}) *HostUpdateOne {
 	_u.mutation.SetMetadata(v)
-	return _u
-}
-
-// SetNillableMetadata sets the "metadata" field if the given value is not nil.
-func (_u *HostUpdateOne) SetNillableMetadata(v *struct{}) *HostUpdateOne {
-	if v != nil {
-		_u.SetMetadata(*v)
-	}
 	return _u
 }
 
@@ -742,20 +676,9 @@ func (_u *HostUpdateOne) ClearUpdatedAt() *HostUpdateOne {
 	return _u
 }
 
-// SetSite sets the "site" edge to the Site entity.
-func (_u *HostUpdateOne) SetSite(v *Site) *HostUpdateOne {
-	return _u.SetSiteID(v.ID)
-}
-
 // Mutation returns the HostMutation object of the builder.
 func (_u *HostUpdateOne) Mutation() *HostMutation {
 	return _u.mutation
-}
-
-// ClearSite clears the "site" edge to the Site entity.
-func (_u *HostUpdateOne) ClearSite() *HostUpdateOne {
-	_u.mutation.ClearSite()
-	return _u
 }
 
 // Where appends a list predicates to the HostUpdate builder.
@@ -799,7 +722,7 @@ func (_u *HostUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (_u *HostUpdateOne) sqlSave(ctx context.Context) (_node *Host, err error) {
-	_spec := sqlgraph.NewUpdateSpec(host.Table, host.Columns, sqlgraph.NewFieldSpec(host.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(host.Table, host.Columns, sqlgraph.NewFieldSpec(host.FieldID, field.TypeInt))
 	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Host.id" for update`)}
@@ -825,7 +748,10 @@ func (_u *HostUpdateOne) sqlSave(ctx context.Context) (_node *Host, err error) {
 		}
 	}
 	if value, ok := _u.mutation.HostID(); ok {
-		_spec.SetField(host.FieldHostID, field.TypeString, value)
+		_spec.SetField(host.FieldHostID, field.TypeUUID, value)
+	}
+	if value, ok := _u.mutation.SiteID(); ok {
+		_spec.SetField(host.FieldSiteID, field.TypeUUID, value)
 	}
 	if value, ok := _u.mutation.Runtime(); ok {
 		_spec.SetField(host.FieldRuntime, field.TypeString, value)
@@ -898,35 +824,6 @@ func (_u *HostUpdateOne) sqlSave(ctx context.Context) (_node *Host, err error) {
 	}
 	if _u.mutation.UpdatedAtCleared() {
 		_spec.ClearField(host.FieldUpdatedAt, field.TypeTime)
-	}
-	if _u.mutation.SiteCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   host.SiteTable,
-			Columns: []string{host.SiteColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(site.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.SiteIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   host.SiteTable,
-			Columns: []string{host.SiteColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(site.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Host{config: _u.config}
 	_spec.Assign = _node.assignValues

@@ -4,8 +4,6 @@ package host
 
 import (
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/google/uuid"
 )
 
 const (
@@ -39,17 +37,8 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
-	// EdgeSite holds the string denoting the site edge name in mutations.
-	EdgeSite = "site"
 	// Table holds the table name of the host in the database.
-	Table = "host"
-	// SiteTable is the table that holds the site relation/edge.
-	SiteTable = "host"
-	// SiteInverseTable is the table name for the Site entity.
-	// It exists in this package in order to avoid circular dependency with the "site" package.
-	SiteInverseTable = "site"
-	// SiteColumn is the table column denoting the site relation/edge.
-	SiteColumn = "site_id"
+	Table = "hosts"
 )
 
 // Columns holds all SQL columns for host fields.
@@ -70,6 +59,12 @@ var Columns = []string{
 	FieldUpdatedAt,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "hosts"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"site_hosts",
+}
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
@@ -77,13 +72,13 @@ func ValidColumn(column string) bool {
 			return true
 		}
 	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
+			return true
+		}
+	}
 	return false
 }
-
-var (
-	// DefaultID holds the default value on creation for the "id" field.
-	DefaultID func() uuid.UUID
-)
 
 // OrderOption defines the ordering options for the Host queries.
 type OrderOption func(*sql.Selector)
@@ -151,18 +146,4 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
-}
-
-// BySiteField orders the results by site field.
-func BySiteField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSiteStep(), sql.OrderByField(field, opts...))
-	}
-}
-func newSiteStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(SiteInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, SiteTable, SiteColumn),
-	)
 }

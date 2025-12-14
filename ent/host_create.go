@@ -8,12 +8,10 @@ import (
 	"fmt"
 	"time"
 
-	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/balaji-balu/margo-hello-world/ent/host"
-	"github.com/balaji-balu/margo-hello-world/ent/site"
 	"github.com/google/uuid"
 )
 
@@ -26,7 +24,7 @@ type HostCreate struct {
 }
 
 // SetHostID sets the "host_id" field.
-func (_c *HostCreate) SetHostID(v string) *HostCreate {
+func (_c *HostCreate) SetHostID(v uuid.UUID) *HostCreate {
 	_c.mutation.SetHostID(v)
 	return _c
 }
@@ -34,14 +32,6 @@ func (_c *HostCreate) SetHostID(v string) *HostCreate {
 // SetSiteID sets the "site_id" field.
 func (_c *HostCreate) SetSiteID(v uuid.UUID) *HostCreate {
 	_c.mutation.SetSiteID(v)
-	return _c
-}
-
-// SetNillableSiteID sets the "site_id" field if the given value is not nil.
-func (_c *HostCreate) SetNillableSiteID(v *uuid.UUID) *HostCreate {
-	if v != nil {
-		_c.SetSiteID(*v)
-	}
 	return _c
 }
 
@@ -158,16 +148,8 @@ func (_c *HostCreate) SetNillableEdgeURL(v *string) *HostCreate {
 }
 
 // SetMetadata sets the "metadata" field.
-func (_c *HostCreate) SetMetadata(v struct{}) *HostCreate {
+func (_c *HostCreate) SetMetadata(v map[string]interface{}) *HostCreate {
 	_c.mutation.SetMetadata(v)
-	return _c
-}
-
-// SetNillableMetadata sets the "metadata" field if the given value is not nil.
-func (_c *HostCreate) SetNillableMetadata(v *struct{}) *HostCreate {
-	if v != nil {
-		_c.SetMetadata(*v)
-	}
 	return _c
 }
 
@@ -199,25 +181,6 @@ func (_c *HostCreate) SetNillableUpdatedAt(v *time.Time) *HostCreate {
 	return _c
 }
 
-// SetID sets the "id" field.
-func (_c *HostCreate) SetID(v uuid.UUID) *HostCreate {
-	_c.mutation.SetID(v)
-	return _c
-}
-
-// SetNillableID sets the "id" field if the given value is not nil.
-func (_c *HostCreate) SetNillableID(v *uuid.UUID) *HostCreate {
-	if v != nil {
-		_c.SetID(*v)
-	}
-	return _c
-}
-
-// SetSite sets the "site" edge to the Site entity.
-func (_c *HostCreate) SetSite(v *Site) *HostCreate {
-	return _c.SetSiteID(v.ID)
-}
-
 // Mutation returns the HostMutation object of the builder.
 func (_c *HostCreate) Mutation() *HostMutation {
 	return _c.mutation
@@ -225,7 +188,6 @@ func (_c *HostCreate) Mutation() *HostMutation {
 
 // Save creates the Host in the database.
 func (_c *HostCreate) Save(ctx context.Context) (*Host, error) {
-	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -251,18 +213,13 @@ func (_c *HostCreate) ExecX(ctx context.Context) {
 	}
 }
 
-// defaults sets the default values of the builder before save.
-func (_c *HostCreate) defaults() {
-	if _, ok := _c.mutation.ID(); !ok {
-		v := host.DefaultID()
-		_c.mutation.SetID(v)
-	}
-}
-
 // check runs all checks and user-defined validators on the builder.
 func (_c *HostCreate) check() error {
 	if _, ok := _c.mutation.HostID(); !ok {
 		return &ValidationError{Name: "host_id", err: errors.New(`ent: missing required field "Host.host_id"`)}
+	}
+	if _, ok := _c.mutation.SiteID(); !ok {
+		return &ValidationError{Name: "site_id", err: errors.New(`ent: missing required field "Host.site_id"`)}
 	}
 	return nil
 }
@@ -278,13 +235,8 @@ func (_c *HostCreate) sqlSave(ctx context.Context) (*Host, error) {
 		}
 		return nil, err
 	}
-	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
-			_node.ID = *id
-		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
-			return nil, err
-		}
-	}
+	id := _spec.ID.Value.(int64)
+	_node.ID = int(id)
 	_c.mutation.id = &_node.ID
 	_c.mutation.done = true
 	return _node, nil
@@ -293,16 +245,16 @@ func (_c *HostCreate) sqlSave(ctx context.Context) (*Host, error) {
 func (_c *HostCreate) createSpec() (*Host, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Host{config: _c.config}
-		_spec = sqlgraph.NewCreateSpec(host.Table, sqlgraph.NewFieldSpec(host.FieldID, field.TypeUUID))
+		_spec = sqlgraph.NewCreateSpec(host.Table, sqlgraph.NewFieldSpec(host.FieldID, field.TypeInt))
 	)
 	_spec.OnConflict = _c.conflict
-	if id, ok := _c.mutation.ID(); ok {
-		_node.ID = id
-		_spec.ID.Value = &id
-	}
 	if value, ok := _c.mutation.HostID(); ok {
-		_spec.SetField(host.FieldHostID, field.TypeString, value)
+		_spec.SetField(host.FieldHostID, field.TypeUUID, value)
 		_node.HostID = value
+	}
+	if value, ok := _c.mutation.SiteID(); ok {
+		_spec.SetField(host.FieldSiteID, field.TypeUUID, value)
+		_node.SiteID = value
 	}
 	if value, ok := _c.mutation.Runtime(); ok {
 		_spec.SetField(host.FieldRuntime, field.TypeString, value)
@@ -347,23 +299,6 @@ func (_c *HostCreate) createSpec() (*Host, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(host.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
-	}
-	if nodes := _c.mutation.SiteIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   host.SiteTable,
-			Columns: []string{host.SiteColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(site.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.SiteID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }
@@ -418,7 +353,7 @@ type (
 )
 
 // SetHostID sets the "host_id" field.
-func (u *HostUpsert) SetHostID(v string) *HostUpsert {
+func (u *HostUpsert) SetHostID(v uuid.UUID) *HostUpsert {
 	u.Set(host.FieldHostID, v)
 	return u
 }
@@ -438,12 +373,6 @@ func (u *HostUpsert) SetSiteID(v uuid.UUID) *HostUpsert {
 // UpdateSiteID sets the "site_id" field to the value that was provided on create.
 func (u *HostUpsert) UpdateSiteID() *HostUpsert {
 	u.SetExcluded(host.FieldSiteID)
-	return u
-}
-
-// ClearSiteID clears the value of the "site_id" field.
-func (u *HostUpsert) ClearSiteID() *HostUpsert {
-	u.SetNull(host.FieldSiteID)
 	return u
 }
 
@@ -604,7 +533,7 @@ func (u *HostUpsert) ClearEdgeURL() *HostUpsert {
 }
 
 // SetMetadata sets the "metadata" field.
-func (u *HostUpsert) SetMetadata(v struct{}) *HostUpsert {
+func (u *HostUpsert) SetMetadata(v map[string]interface{}) *HostUpsert {
 	u.Set(host.FieldMetadata, v)
 	return u
 }
@@ -657,24 +586,16 @@ func (u *HostUpsert) ClearUpdatedAt() *HostUpsert {
 	return u
 }
 
-// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
 //	client.Host.Create().
 //		OnConflict(
 //			sql.ResolveWithNewValues(),
-//			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(host.FieldID)
-//			}),
 //		).
 //		Exec(ctx)
 func (u *HostUpsertOne) UpdateNewValues() *HostUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
-		if _, exists := u.create.mutation.ID(); exists {
-			s.SetIgnore(host.FieldID)
-		}
-	}))
 	return u
 }
 
@@ -706,7 +627,7 @@ func (u *HostUpsertOne) Update(set func(*HostUpsert)) *HostUpsertOne {
 }
 
 // SetHostID sets the "host_id" field.
-func (u *HostUpsertOne) SetHostID(v string) *HostUpsertOne {
+func (u *HostUpsertOne) SetHostID(v uuid.UUID) *HostUpsertOne {
 	return u.Update(func(s *HostUpsert) {
 		s.SetHostID(v)
 	})
@@ -730,13 +651,6 @@ func (u *HostUpsertOne) SetSiteID(v uuid.UUID) *HostUpsertOne {
 func (u *HostUpsertOne) UpdateSiteID() *HostUpsertOne {
 	return u.Update(func(s *HostUpsert) {
 		s.UpdateSiteID()
-	})
-}
-
-// ClearSiteID clears the value of the "site_id" field.
-func (u *HostUpsertOne) ClearSiteID() *HostUpsertOne {
-	return u.Update(func(s *HostUpsert) {
-		s.ClearSiteID()
 	})
 }
 
@@ -923,7 +837,7 @@ func (u *HostUpsertOne) ClearEdgeURL() *HostUpsertOne {
 }
 
 // SetMetadata sets the "metadata" field.
-func (u *HostUpsertOne) SetMetadata(v struct{}) *HostUpsertOne {
+func (u *HostUpsertOne) SetMetadata(v map[string]interface{}) *HostUpsertOne {
 	return u.Update(func(s *HostUpsert) {
 		s.SetMetadata(v)
 	})
@@ -1001,12 +915,7 @@ func (u *HostUpsertOne) ExecX(ctx context.Context) {
 }
 
 // Exec executes the UPSERT query and returns the inserted/updated ID.
-func (u *HostUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
-	if u.create.driver.Dialect() == dialect.MySQL {
-		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
-		// fields from the database since MySQL does not support the RETURNING clause.
-		return id, errors.New("ent: HostUpsertOne.ID is not supported by MySQL driver. Use HostUpsertOne.Exec instead")
-	}
+func (u *HostUpsertOne) ID(ctx context.Context) (id int, err error) {
 	node, err := u.create.Save(ctx)
 	if err != nil {
 		return id, err
@@ -1015,7 +924,7 @@ func (u *HostUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // IDX is like ID, but panics if an error occurs.
-func (u *HostUpsertOne) IDX(ctx context.Context) uuid.UUID {
+func (u *HostUpsertOne) IDX(ctx context.Context) int {
 	id, err := u.ID(ctx)
 	if err != nil {
 		panic(err)
@@ -1042,7 +951,6 @@ func (_c *HostCreateBulk) Save(ctx context.Context) ([]*Host, error) {
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
-			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*HostMutation)
 				if !ok {
@@ -1070,6 +978,10 @@ func (_c *HostCreateBulk) Save(ctx context.Context) ([]*Host, error) {
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
+				if specs[i].ID.Value != nil {
+					id := specs[i].ID.Value.(int64)
+					nodes[i].ID = int(id)
+				}
 				mutation.done = true
 				return nodes[i], nil
 			})
@@ -1156,20 +1068,10 @@ type HostUpsertBulk struct {
 //	client.Host.Create().
 //		OnConflict(
 //			sql.ResolveWithNewValues(),
-//			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(host.FieldID)
-//			}),
 //		).
 //		Exec(ctx)
 func (u *HostUpsertBulk) UpdateNewValues() *HostUpsertBulk {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
-		for _, b := range u.create.builders {
-			if _, exists := b.mutation.ID(); exists {
-				s.SetIgnore(host.FieldID)
-			}
-		}
-	}))
 	return u
 }
 
@@ -1201,7 +1103,7 @@ func (u *HostUpsertBulk) Update(set func(*HostUpsert)) *HostUpsertBulk {
 }
 
 // SetHostID sets the "host_id" field.
-func (u *HostUpsertBulk) SetHostID(v string) *HostUpsertBulk {
+func (u *HostUpsertBulk) SetHostID(v uuid.UUID) *HostUpsertBulk {
 	return u.Update(func(s *HostUpsert) {
 		s.SetHostID(v)
 	})
@@ -1225,13 +1127,6 @@ func (u *HostUpsertBulk) SetSiteID(v uuid.UUID) *HostUpsertBulk {
 func (u *HostUpsertBulk) UpdateSiteID() *HostUpsertBulk {
 	return u.Update(func(s *HostUpsert) {
 		s.UpdateSiteID()
-	})
-}
-
-// ClearSiteID clears the value of the "site_id" field.
-func (u *HostUpsertBulk) ClearSiteID() *HostUpsertBulk {
-	return u.Update(func(s *HostUpsert) {
-		s.ClearSiteID()
 	})
 }
 
@@ -1418,7 +1313,7 @@ func (u *HostUpsertBulk) ClearEdgeURL() *HostUpsertBulk {
 }
 
 // SetMetadata sets the "metadata" field.
-func (u *HostUpsertBulk) SetMetadata(v struct{}) *HostUpsertBulk {
+func (u *HostUpsertBulk) SetMetadata(v map[string]interface{}) *HostUpsertBulk {
 	return u.Update(func(s *HostUpsert) {
 		s.SetMetadata(v)
 	})

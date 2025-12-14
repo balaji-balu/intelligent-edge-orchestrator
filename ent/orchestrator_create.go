@@ -116,14 +116,14 @@ func (_c *OrchestratorCreate) SetID(v uuid.UUID) *OrchestratorCreate {
 }
 
 // AddSiteIDs adds the "sites" edge to the Site entity by IDs.
-func (_c *OrchestratorCreate) AddSiteIDs(ids ...uuid.UUID) *OrchestratorCreate {
+func (_c *OrchestratorCreate) AddSiteIDs(ids ...int) *OrchestratorCreate {
 	_c.mutation.AddSiteIDs(ids...)
 	return _c
 }
 
 // AddSites adds the "sites" edges to the Site entity.
 func (_c *OrchestratorCreate) AddSites(v ...*Site) *OrchestratorCreate {
-	ids := make([]uuid.UUID, len(v))
+	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -232,7 +232,7 @@ func (_c *OrchestratorCreate) createSpec() (*Orchestrator, *sqlgraph.CreateSpec)
 			Columns: []string{orchestrator.SitesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(site.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(site.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

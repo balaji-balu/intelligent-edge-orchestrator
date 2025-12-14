@@ -6,58 +6,57 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/balaji-balu/margo-hello-world/ent/predicate"
 	"github.com/google/uuid"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id uuid.UUID) predicate.Host {
+func ID(id int) predicate.Host {
 	return predicate.Host(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id uuid.UUID) predicate.Host {
+func IDEQ(id int) predicate.Host {
 	return predicate.Host(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id uuid.UUID) predicate.Host {
+func IDNEQ(id int) predicate.Host {
 	return predicate.Host(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...uuid.UUID) predicate.Host {
+func IDIn(ids ...int) predicate.Host {
 	return predicate.Host(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...uuid.UUID) predicate.Host {
+func IDNotIn(ids ...int) predicate.Host {
 	return predicate.Host(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id uuid.UUID) predicate.Host {
+func IDGT(id int) predicate.Host {
 	return predicate.Host(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id uuid.UUID) predicate.Host {
+func IDGTE(id int) predicate.Host {
 	return predicate.Host(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id uuid.UUID) predicate.Host {
+func IDLT(id int) predicate.Host {
 	return predicate.Host(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id uuid.UUID) predicate.Host {
+func IDLTE(id int) predicate.Host {
 	return predicate.Host(sql.FieldLTE(FieldID, id))
 }
 
 // HostID applies equality check predicate on the "host_id" field. It's identical to HostIDEQ.
-func HostID(v string) predicate.Host {
+func HostID(v uuid.UUID) predicate.Host {
 	return predicate.Host(sql.FieldEQ(FieldHostID, v))
 }
 
@@ -117,68 +116,43 @@ func UpdatedAt(v time.Time) predicate.Host {
 }
 
 // HostIDEQ applies the EQ predicate on the "host_id" field.
-func HostIDEQ(v string) predicate.Host {
+func HostIDEQ(v uuid.UUID) predicate.Host {
 	return predicate.Host(sql.FieldEQ(FieldHostID, v))
 }
 
 // HostIDNEQ applies the NEQ predicate on the "host_id" field.
-func HostIDNEQ(v string) predicate.Host {
+func HostIDNEQ(v uuid.UUID) predicate.Host {
 	return predicate.Host(sql.FieldNEQ(FieldHostID, v))
 }
 
 // HostIDIn applies the In predicate on the "host_id" field.
-func HostIDIn(vs ...string) predicate.Host {
+func HostIDIn(vs ...uuid.UUID) predicate.Host {
 	return predicate.Host(sql.FieldIn(FieldHostID, vs...))
 }
 
 // HostIDNotIn applies the NotIn predicate on the "host_id" field.
-func HostIDNotIn(vs ...string) predicate.Host {
+func HostIDNotIn(vs ...uuid.UUID) predicate.Host {
 	return predicate.Host(sql.FieldNotIn(FieldHostID, vs...))
 }
 
 // HostIDGT applies the GT predicate on the "host_id" field.
-func HostIDGT(v string) predicate.Host {
+func HostIDGT(v uuid.UUID) predicate.Host {
 	return predicate.Host(sql.FieldGT(FieldHostID, v))
 }
 
 // HostIDGTE applies the GTE predicate on the "host_id" field.
-func HostIDGTE(v string) predicate.Host {
+func HostIDGTE(v uuid.UUID) predicate.Host {
 	return predicate.Host(sql.FieldGTE(FieldHostID, v))
 }
 
 // HostIDLT applies the LT predicate on the "host_id" field.
-func HostIDLT(v string) predicate.Host {
+func HostIDLT(v uuid.UUID) predicate.Host {
 	return predicate.Host(sql.FieldLT(FieldHostID, v))
 }
 
 // HostIDLTE applies the LTE predicate on the "host_id" field.
-func HostIDLTE(v string) predicate.Host {
+func HostIDLTE(v uuid.UUID) predicate.Host {
 	return predicate.Host(sql.FieldLTE(FieldHostID, v))
-}
-
-// HostIDContains applies the Contains predicate on the "host_id" field.
-func HostIDContains(v string) predicate.Host {
-	return predicate.Host(sql.FieldContains(FieldHostID, v))
-}
-
-// HostIDHasPrefix applies the HasPrefix predicate on the "host_id" field.
-func HostIDHasPrefix(v string) predicate.Host {
-	return predicate.Host(sql.FieldHasPrefix(FieldHostID, v))
-}
-
-// HostIDHasSuffix applies the HasSuffix predicate on the "host_id" field.
-func HostIDHasSuffix(v string) predicate.Host {
-	return predicate.Host(sql.FieldHasSuffix(FieldHostID, v))
-}
-
-// HostIDEqualFold applies the EqualFold predicate on the "host_id" field.
-func HostIDEqualFold(v string) predicate.Host {
-	return predicate.Host(sql.FieldEqualFold(FieldHostID, v))
-}
-
-// HostIDContainsFold applies the ContainsFold predicate on the "host_id" field.
-func HostIDContainsFold(v string) predicate.Host {
-	return predicate.Host(sql.FieldContainsFold(FieldHostID, v))
 }
 
 // SiteIDEQ applies the EQ predicate on the "site_id" field.
@@ -201,14 +175,24 @@ func SiteIDNotIn(vs ...uuid.UUID) predicate.Host {
 	return predicate.Host(sql.FieldNotIn(FieldSiteID, vs...))
 }
 
-// SiteIDIsNil applies the IsNil predicate on the "site_id" field.
-func SiteIDIsNil() predicate.Host {
-	return predicate.Host(sql.FieldIsNull(FieldSiteID))
+// SiteIDGT applies the GT predicate on the "site_id" field.
+func SiteIDGT(v uuid.UUID) predicate.Host {
+	return predicate.Host(sql.FieldGT(FieldSiteID, v))
 }
 
-// SiteIDNotNil applies the NotNil predicate on the "site_id" field.
-func SiteIDNotNil() predicate.Host {
-	return predicate.Host(sql.FieldNotNull(FieldSiteID))
+// SiteIDGTE applies the GTE predicate on the "site_id" field.
+func SiteIDGTE(v uuid.UUID) predicate.Host {
+	return predicate.Host(sql.FieldGTE(FieldSiteID, v))
+}
+
+// SiteIDLT applies the LT predicate on the "site_id" field.
+func SiteIDLT(v uuid.UUID) predicate.Host {
+	return predicate.Host(sql.FieldLT(FieldSiteID, v))
+}
+
+// SiteIDLTE applies the LTE predicate on the "site_id" field.
+func SiteIDLTE(v uuid.UUID) predicate.Host {
+	return predicate.Host(sql.FieldLTE(FieldSiteID, v))
 }
 
 // RuntimeEQ applies the EQ predicate on the "runtime" field.
@@ -844,29 +828,6 @@ func UpdatedAtIsNil() predicate.Host {
 // UpdatedAtNotNil applies the NotNil predicate on the "updated_at" field.
 func UpdatedAtNotNil() predicate.Host {
 	return predicate.Host(sql.FieldNotNull(FieldUpdatedAt))
-}
-
-// HasSite applies the HasEdge predicate on the "site" edge.
-func HasSite() predicate.Host {
-	return predicate.Host(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, SiteTable, SiteColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasSiteWith applies the HasEdge predicate on the "site" edge with a given conditions (other predicates).
-func HasSiteWith(preds ...predicate.Site) predicate.Host {
-	return predicate.Host(func(s *sql.Selector) {
-		step := newSiteStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
 }
 
 // And groups predicates with the AND operator between them.

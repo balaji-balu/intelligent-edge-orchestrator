@@ -13,8 +13,6 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/balaji-balu/margo-hello-world/ent/host"
 	"github.com/balaji-balu/margo-hello-world/ent/predicate"
-	"github.com/balaji-balu/margo-hello-world/ent/site"
-	"github.com/google/uuid"
 )
 
 // HostQuery is the builder for querying Host entities.
@@ -24,7 +22,7 @@ type HostQuery struct {
 	order      []host.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Host
-	withSite   *SiteQuery
+	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -61,28 +59,6 @@ func (_q *HostQuery) Order(o ...host.OrderOption) *HostQuery {
 	return _q
 }
 
-// QuerySite chains the current query on the "site" edge.
-func (_q *HostQuery) QuerySite() *SiteQuery {
-	query := (&SiteClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(host.Table, host.FieldID, selector),
-			sqlgraph.To(site.Table, site.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, host.SiteTable, host.SiteColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
 // First returns the first Host entity from the query.
 // Returns a *NotFoundError when no Host was found.
 func (_q *HostQuery) First(ctx context.Context) (*Host, error) {
@@ -107,8 +83,8 @@ func (_q *HostQuery) FirstX(ctx context.Context) *Host {
 
 // FirstID returns the first Host ID from the query.
 // Returns a *NotFoundError when no Host ID was found.
-func (_q *HostQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (_q *HostQuery) FirstID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
@@ -120,7 +96,7 @@ func (_q *HostQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *HostQuery) FirstIDX(ctx context.Context) uuid.UUID {
+func (_q *HostQuery) FirstIDX(ctx context.Context) int {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -158,8 +134,8 @@ func (_q *HostQuery) OnlyX(ctx context.Context) *Host {
 // OnlyID is like Only, but returns the only Host ID in the query.
 // Returns a *NotSingularError when more than one Host ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *HostQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (_q *HostQuery) OnlyID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
@@ -175,7 +151,7 @@ func (_q *HostQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *HostQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+func (_q *HostQuery) OnlyIDX(ctx context.Context) int {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -203,7 +179,7 @@ func (_q *HostQuery) AllX(ctx context.Context) []*Host {
 }
 
 // IDs executes the query and returns a list of Host IDs.
-func (_q *HostQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+func (_q *HostQuery) IDs(ctx context.Context) (ids []int, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
@@ -215,7 +191,7 @@ func (_q *HostQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *HostQuery) IDsX(ctx context.Context) []uuid.UUID {
+func (_q *HostQuery) IDsX(ctx context.Context) []int {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -275,22 +251,10 @@ func (_q *HostQuery) Clone() *HostQuery {
 		order:      append([]host.OrderOption{}, _q.order...),
 		inters:     append([]Interceptor{}, _q.inters...),
 		predicates: append([]predicate.Host{}, _q.predicates...),
-		withSite:   _q.withSite.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
-}
-
-// WithSite tells the query-builder to eager-load the nodes that are connected to
-// the "site" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *HostQuery) WithSite(opts ...func(*SiteQuery)) *HostQuery {
-	query := (&SiteClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withSite = query
-	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -299,7 +263,7 @@ func (_q *HostQuery) WithSite(opts ...func(*SiteQuery)) *HostQuery {
 // Example:
 //
 //	var v []struct {
-//		HostID string `json:"host_id,omitempty"`
+//		HostID uuid.UUID `json:"host_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
@@ -322,7 +286,7 @@ func (_q *HostQuery) GroupBy(field string, fields ...string) *HostGroupBy {
 // Example:
 //
 //	var v []struct {
-//		HostID string `json:"host_id,omitempty"`
+//		HostID uuid.UUID `json:"host_id,omitempty"`
 //	}
 //
 //	client.Host.Query().
@@ -369,19 +333,19 @@ func (_q *HostQuery) prepareQuery(ctx context.Context) error {
 
 func (_q *HostQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Host, error) {
 	var (
-		nodes       = []*Host{}
-		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
-			_q.withSite != nil,
-		}
+		nodes   = []*Host{}
+		withFKs = _q.withFKs
+		_spec   = _q.querySpec()
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, host.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Host).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Host{config: _q.config}
 		nodes = append(nodes, node)
-		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -393,43 +357,7 @@ func (_q *HostQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Host, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withSite; query != nil {
-		if err := _q.loadSite(ctx, query, nodes, nil,
-			func(n *Host, e *Site) { n.Edges.Site = e }); err != nil {
-			return nil, err
-		}
-	}
 	return nodes, nil
-}
-
-func (_q *HostQuery) loadSite(ctx context.Context, query *SiteQuery, nodes []*Host, init func(*Host), assign func(*Host, *Site)) error {
-	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*Host)
-	for i := range nodes {
-		fk := nodes[i].SiteID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(site.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "site_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
 }
 
 func (_q *HostQuery) sqlCount(ctx context.Context) (int, error) {
@@ -442,7 +370,7 @@ func (_q *HostQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (_q *HostQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(host.Table, host.Columns, sqlgraph.NewFieldSpec(host.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewQuerySpec(host.Table, host.Columns, sqlgraph.NewFieldSpec(host.FieldID, field.TypeInt))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -456,9 +384,6 @@ func (_q *HostQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != host.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
-		}
-		if _q.withSite != nil {
-			_spec.Node.AddColumnOnce(host.FieldSiteID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

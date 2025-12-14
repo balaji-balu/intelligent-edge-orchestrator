@@ -4513,8 +4513,9 @@ type HostMutation struct {
 	config
 	op            Op
 	typ           string
-	id            *uuid.UUID
-	host_id       *string
+	id            *int
+	host_id       *uuid.UUID
+	site_id       *uuid.UUID
 	runtime       *string
 	last_seen     *time.Time
 	misses        *int
@@ -4525,12 +4526,10 @@ type HostMutation struct {
 	hostname      *string
 	ip_address    *string
 	edge_url      *string
-	metadata      *struct{}
+	metadata      *map[string]interface{}
 	created_at    *time.Time
 	updated_at    *time.Time
 	clearedFields map[string]struct{}
-	site          *uuid.UUID
-	clearedsite   bool
 	done          bool
 	oldValue      func(context.Context) (*Host, error)
 	predicates    []predicate.Host
@@ -4556,7 +4555,7 @@ func newHostMutation(c config, op Op, opts ...hostOption) *HostMutation {
 }
 
 // withHostID sets the ID field of the mutation.
-func withHostID(id uuid.UUID) hostOption {
+func withHostID(id int) hostOption {
 	return func(m *HostMutation) {
 		var (
 			err   error
@@ -4606,15 +4605,9 @@ func (m HostMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
-// SetID sets the value of the id field. Note that this
-// operation is only accepted on creation of Host entities.
-func (m *HostMutation) SetID(id uuid.UUID) {
-	m.id = &id
-}
-
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *HostMutation) ID() (id uuid.UUID, exists bool) {
+func (m *HostMutation) ID() (id int, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -4625,12 +4618,12 @@ func (m *HostMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *HostMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *HostMutation) IDs(ctx context.Context) ([]int, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uuid.UUID{id}, nil
+			return []int{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -4641,12 +4634,12 @@ func (m *HostMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 }
 
 // SetHostID sets the "host_id" field.
-func (m *HostMutation) SetHostID(s string) {
-	m.host_id = &s
+func (m *HostMutation) SetHostID(u uuid.UUID) {
+	m.host_id = &u
 }
 
 // HostID returns the value of the "host_id" field in the mutation.
-func (m *HostMutation) HostID() (r string, exists bool) {
+func (m *HostMutation) HostID() (r uuid.UUID, exists bool) {
 	v := m.host_id
 	if v == nil {
 		return
@@ -4657,7 +4650,7 @@ func (m *HostMutation) HostID() (r string, exists bool) {
 // OldHostID returns the old "host_id" field's value of the Host entity.
 // If the Host object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *HostMutation) OldHostID(ctx context.Context) (v string, err error) {
+func (m *HostMutation) OldHostID(ctx context.Context) (v uuid.UUID, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldHostID is only allowed on UpdateOne operations")
 	}
@@ -4678,12 +4671,12 @@ func (m *HostMutation) ResetHostID() {
 
 // SetSiteID sets the "site_id" field.
 func (m *HostMutation) SetSiteID(u uuid.UUID) {
-	m.site = &u
+	m.site_id = &u
 }
 
 // SiteID returns the value of the "site_id" field in the mutation.
 func (m *HostMutation) SiteID() (r uuid.UUID, exists bool) {
-	v := m.site
+	v := m.site_id
 	if v == nil {
 		return
 	}
@@ -4707,22 +4700,9 @@ func (m *HostMutation) OldSiteID(ctx context.Context) (v uuid.UUID, err error) {
 	return oldValue.SiteID, nil
 }
 
-// ClearSiteID clears the value of the "site_id" field.
-func (m *HostMutation) ClearSiteID() {
-	m.site = nil
-	m.clearedFields[host.FieldSiteID] = struct{}{}
-}
-
-// SiteIDCleared returns if the "site_id" field was cleared in this mutation.
-func (m *HostMutation) SiteIDCleared() bool {
-	_, ok := m.clearedFields[host.FieldSiteID]
-	return ok
-}
-
 // ResetSiteID resets all changes to the "site_id" field.
 func (m *HostMutation) ResetSiteID() {
-	m.site = nil
-	delete(m.clearedFields, host.FieldSiteID)
+	m.site_id = nil
 }
 
 // SetRuntime sets the "runtime" field.
@@ -5160,12 +5140,12 @@ func (m *HostMutation) ResetEdgeURL() {
 }
 
 // SetMetadata sets the "metadata" field.
-func (m *HostMutation) SetMetadata(s struct{}) {
-	m.metadata = &s
+func (m *HostMutation) SetMetadata(value map[string]interface{}) {
+	m.metadata = &value
 }
 
 // Metadata returns the value of the "metadata" field in the mutation.
-func (m *HostMutation) Metadata() (r struct{}, exists bool) {
+func (m *HostMutation) Metadata() (r map[string]interface{}, exists bool) {
 	v := m.metadata
 	if v == nil {
 		return
@@ -5176,7 +5156,7 @@ func (m *HostMutation) Metadata() (r struct{}, exists bool) {
 // OldMetadata returns the old "metadata" field's value of the Host entity.
 // If the Host object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *HostMutation) OldMetadata(ctx context.Context) (v struct{}, err error) {
+func (m *HostMutation) OldMetadata(ctx context.Context) (v map[string]interface{}, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldMetadata is only allowed on UpdateOne operations")
 	}
@@ -5306,33 +5286,6 @@ func (m *HostMutation) ResetUpdatedAt() {
 	delete(m.clearedFields, host.FieldUpdatedAt)
 }
 
-// ClearSite clears the "site" edge to the Site entity.
-func (m *HostMutation) ClearSite() {
-	m.clearedsite = true
-	m.clearedFields[host.FieldSiteID] = struct{}{}
-}
-
-// SiteCleared reports if the "site" edge to the Site entity was cleared.
-func (m *HostMutation) SiteCleared() bool {
-	return m.SiteIDCleared() || m.clearedsite
-}
-
-// SiteIDs returns the "site" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// SiteID instead. It exists only for internal usage by the builders.
-func (m *HostMutation) SiteIDs() (ids []uuid.UUID) {
-	if id := m.site; id != nil {
-		ids = append(ids, *id)
-	}
-	return
-}
-
-// ResetSite resets all changes to the "site" edge.
-func (m *HostMutation) ResetSite() {
-	m.site = nil
-	m.clearedsite = false
-}
-
 // Where appends a list predicates to the HostMutation builder.
 func (m *HostMutation) Where(ps ...predicate.Host) {
 	m.predicates = append(m.predicates, ps...)
@@ -5371,7 +5324,7 @@ func (m *HostMutation) Fields() []string {
 	if m.host_id != nil {
 		fields = append(fields, host.FieldHostID)
 	}
-	if m.site != nil {
+	if m.site_id != nil {
 		fields = append(fields, host.FieldSiteID)
 	}
 	if m.runtime != nil {
@@ -5486,7 +5439,7 @@ func (m *HostMutation) OldField(ctx context.Context, name string) (ent.Value, er
 func (m *HostMutation) SetField(name string, value ent.Value) error {
 	switch name {
 	case host.FieldHostID:
-		v, ok := value.(string)
+		v, ok := value.(uuid.UUID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -5556,7 +5509,7 @@ func (m *HostMutation) SetField(name string, value ent.Value) error {
 		m.SetEdgeURL(v)
 		return nil
 	case host.FieldMetadata:
-		v, ok := value.(struct{})
+		v, ok := value.(map[string]interface{})
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -5633,9 +5586,6 @@ func (m *HostMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *HostMutation) ClearedFields() []string {
 	var fields []string
-	if m.FieldCleared(host.FieldSiteID) {
-		fields = append(fields, host.FieldSiteID)
-	}
 	if m.FieldCleared(host.FieldRuntime) {
 		fields = append(fields, host.FieldRuntime)
 	}
@@ -5683,9 +5633,6 @@ func (m *HostMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *HostMutation) ClearField(name string) error {
 	switch name {
-	case host.FieldSiteID:
-		m.ClearSiteID()
-		return nil
 	case host.FieldRuntime:
 		m.ClearRuntime()
 		return nil
@@ -5772,28 +5719,19 @@ func (m *HostMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *HostMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.site != nil {
-		edges = append(edges, host.EdgeSite)
-	}
+	edges := make([]string, 0, 0)
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *HostMutation) AddedIDs(name string) []ent.Value {
-	switch name {
-	case host.EdgeSite:
-		if id := m.site; id != nil {
-			return []ent.Value{*id}
-		}
-	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *HostMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 0)
 	return edges
 }
 
@@ -5805,42 +5743,25 @@ func (m *HostMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *HostMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.clearedsite {
-		edges = append(edges, host.EdgeSite)
-	}
+	edges := make([]string, 0, 0)
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *HostMutation) EdgeCleared(name string) bool {
-	switch name {
-	case host.EdgeSite:
-		return m.clearedsite
-	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *HostMutation) ClearEdge(name string) error {
-	switch name {
-	case host.EdgeSite:
-		m.ClearSite()
-		return nil
-	}
 	return fmt.Errorf("unknown Host unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *HostMutation) ResetEdge(name string) error {
-	switch name {
-	case host.EdgeSite:
-		m.ResetSite()
-		return nil
-	}
 	return fmt.Errorf("unknown Host edge %s", name)
 }
 
@@ -5857,8 +5778,8 @@ type OrchestratorMutation struct {
 	created_at    *time.Time
 	updated_at    *time.Time
 	clearedFields map[string]struct{}
-	sites         map[uuid.UUID]struct{}
-	removedsites  map[uuid.UUID]struct{}
+	sites         map[int]struct{}
+	removedsites  map[int]struct{}
 	clearedsites  bool
 	done          bool
 	oldValue      func(context.Context) (*Orchestrator, error)
@@ -6264,9 +6185,9 @@ func (m *OrchestratorMutation) ResetUpdatedAt() {
 }
 
 // AddSiteIDs adds the "sites" edge to the Site entity by ids.
-func (m *OrchestratorMutation) AddSiteIDs(ids ...uuid.UUID) {
+func (m *OrchestratorMutation) AddSiteIDs(ids ...int) {
 	if m.sites == nil {
-		m.sites = make(map[uuid.UUID]struct{})
+		m.sites = make(map[int]struct{})
 	}
 	for i := range ids {
 		m.sites[ids[i]] = struct{}{}
@@ -6284,9 +6205,9 @@ func (m *OrchestratorMutation) SitesCleared() bool {
 }
 
 // RemoveSiteIDs removes the "sites" edge to the Site entity by IDs.
-func (m *OrchestratorMutation) RemoveSiteIDs(ids ...uuid.UUID) {
+func (m *OrchestratorMutation) RemoveSiteIDs(ids ...int) {
 	if m.removedsites == nil {
-		m.removedsites = make(map[uuid.UUID]struct{})
+		m.removedsites = make(map[int]struct{})
 	}
 	for i := range ids {
 		delete(m.sites, ids[i])
@@ -6295,7 +6216,7 @@ func (m *OrchestratorMutation) RemoveSiteIDs(ids ...uuid.UUID) {
 }
 
 // RemovedSites returns the removed IDs of the "sites" edge to the Site entity.
-func (m *OrchestratorMutation) RemovedSitesIDs() (ids []uuid.UUID) {
+func (m *OrchestratorMutation) RemovedSitesIDs() (ids []int) {
 	for id := range m.removedsites {
 		ids = append(ids, id)
 	}
@@ -6303,7 +6224,7 @@ func (m *OrchestratorMutation) RemovedSitesIDs() (ids []uuid.UUID) {
 }
 
 // SitesIDs returns the "sites" edge IDs in the mutation.
-func (m *OrchestratorMutation) SitesIDs() (ids []uuid.UUID) {
+func (m *OrchestratorMutation) SitesIDs() (ids []int) {
 	for id := range m.sites {
 		ids = append(ids, id)
 	}
@@ -6659,25 +6580,24 @@ func (m *OrchestratorMutation) ResetEdge(name string) error {
 // SiteMutation represents an operation that mutates the Site nodes in the graph.
 type SiteMutation struct {
 	config
-	op                  Op
-	typ                 string
-	id                  *uuid.UUID
-	site_id             *string
-	name                *string
-	description         *string
-	location            *string
-	metadata            *struct{}
-	created_at          *time.Time
-	updated_at          *time.Time
-	clearedFields       map[string]struct{}
-	hosts               map[uuid.UUID]struct{}
-	removedhosts        map[uuid.UUID]struct{}
-	clearedhosts        bool
-	orchestrator        *uuid.UUID
-	clearedorchestrator bool
-	done                bool
-	oldValue            func(context.Context) (*Site, error)
-	predicates          []predicate.Site
+	op              Op
+	typ             string
+	id              *int
+	site_id         *uuid.UUID
+	name            *string
+	description     *string
+	location        *string
+	orchestrator_id *uuid.UUID
+	metadata        *map[string]interface{}
+	created_at      *time.Time
+	updated_at      *time.Time
+	clearedFields   map[string]struct{}
+	hosts           map[int]struct{}
+	removedhosts    map[int]struct{}
+	clearedhosts    bool
+	done            bool
+	oldValue        func(context.Context) (*Site, error)
+	predicates      []predicate.Site
 }
 
 var _ ent.Mutation = (*SiteMutation)(nil)
@@ -6700,7 +6620,7 @@ func newSiteMutation(c config, op Op, opts ...siteOption) *SiteMutation {
 }
 
 // withSiteID sets the ID field of the mutation.
-func withSiteID(id uuid.UUID) siteOption {
+func withSiteID(id int) siteOption {
 	return func(m *SiteMutation) {
 		var (
 			err   error
@@ -6750,15 +6670,9 @@ func (m SiteMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
-// SetID sets the value of the id field. Note that this
-// operation is only accepted on creation of Site entities.
-func (m *SiteMutation) SetID(id uuid.UUID) {
-	m.id = &id
-}
-
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *SiteMutation) ID() (id uuid.UUID, exists bool) {
+func (m *SiteMutation) ID() (id int, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -6769,12 +6683,12 @@ func (m *SiteMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *SiteMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *SiteMutation) IDs(ctx context.Context) ([]int, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uuid.UUID{id}, nil
+			return []int{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -6785,12 +6699,12 @@ func (m *SiteMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 }
 
 // SetSiteID sets the "site_id" field.
-func (m *SiteMutation) SetSiteID(s string) {
-	m.site_id = &s
+func (m *SiteMutation) SetSiteID(u uuid.UUID) {
+	m.site_id = &u
 }
 
 // SiteID returns the value of the "site_id" field in the mutation.
-func (m *SiteMutation) SiteID() (r string, exists bool) {
+func (m *SiteMutation) SiteID() (r uuid.UUID, exists bool) {
 	v := m.site_id
 	if v == nil {
 		return
@@ -6801,7 +6715,7 @@ func (m *SiteMutation) SiteID() (r string, exists bool) {
 // OldSiteID returns the old "site_id" field's value of the Site entity.
 // If the Site object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SiteMutation) OldSiteID(ctx context.Context) (v string, err error) {
+func (m *SiteMutation) OldSiteID(ctx context.Context) (v uuid.UUID, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldSiteID is only allowed on UpdateOne operations")
 	}
@@ -6969,12 +6883,12 @@ func (m *SiteMutation) ResetLocation() {
 
 // SetOrchestratorID sets the "orchestrator_id" field.
 func (m *SiteMutation) SetOrchestratorID(u uuid.UUID) {
-	m.orchestrator = &u
+	m.orchestrator_id = &u
 }
 
 // OrchestratorID returns the value of the "orchestrator_id" field in the mutation.
 func (m *SiteMutation) OrchestratorID() (r uuid.UUID, exists bool) {
-	v := m.orchestrator
+	v := m.orchestrator_id
 	if v == nil {
 		return
 	}
@@ -6984,7 +6898,7 @@ func (m *SiteMutation) OrchestratorID() (r uuid.UUID, exists bool) {
 // OldOrchestratorID returns the old "orchestrator_id" field's value of the Site entity.
 // If the Site object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SiteMutation) OldOrchestratorID(ctx context.Context) (v uuid.UUID, err error) {
+func (m *SiteMutation) OldOrchestratorID(ctx context.Context) (v *uuid.UUID, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldOrchestratorID is only allowed on UpdateOne operations")
 	}
@@ -7000,7 +6914,7 @@ func (m *SiteMutation) OldOrchestratorID(ctx context.Context) (v uuid.UUID, err 
 
 // ClearOrchestratorID clears the value of the "orchestrator_id" field.
 func (m *SiteMutation) ClearOrchestratorID() {
-	m.orchestrator = nil
+	m.orchestrator_id = nil
 	m.clearedFields[site.FieldOrchestratorID] = struct{}{}
 }
 
@@ -7012,17 +6926,17 @@ func (m *SiteMutation) OrchestratorIDCleared() bool {
 
 // ResetOrchestratorID resets all changes to the "orchestrator_id" field.
 func (m *SiteMutation) ResetOrchestratorID() {
-	m.orchestrator = nil
+	m.orchestrator_id = nil
 	delete(m.clearedFields, site.FieldOrchestratorID)
 }
 
 // SetMetadata sets the "metadata" field.
-func (m *SiteMutation) SetMetadata(s struct{}) {
-	m.metadata = &s
+func (m *SiteMutation) SetMetadata(value map[string]interface{}) {
+	m.metadata = &value
 }
 
 // Metadata returns the value of the "metadata" field in the mutation.
-func (m *SiteMutation) Metadata() (r struct{}, exists bool) {
+func (m *SiteMutation) Metadata() (r map[string]interface{}, exists bool) {
 	v := m.metadata
 	if v == nil {
 		return
@@ -7033,7 +6947,7 @@ func (m *SiteMutation) Metadata() (r struct{}, exists bool) {
 // OldMetadata returns the old "metadata" field's value of the Site entity.
 // If the Site object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SiteMutation) OldMetadata(ctx context.Context) (v struct{}, err error) {
+func (m *SiteMutation) OldMetadata(ctx context.Context) (v map[string]interface{}, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldMetadata is only allowed on UpdateOne operations")
 	}
@@ -7164,9 +7078,9 @@ func (m *SiteMutation) ResetUpdatedAt() {
 }
 
 // AddHostIDs adds the "hosts" edge to the Host entity by ids.
-func (m *SiteMutation) AddHostIDs(ids ...uuid.UUID) {
+func (m *SiteMutation) AddHostIDs(ids ...int) {
 	if m.hosts == nil {
-		m.hosts = make(map[uuid.UUID]struct{})
+		m.hosts = make(map[int]struct{})
 	}
 	for i := range ids {
 		m.hosts[ids[i]] = struct{}{}
@@ -7184,9 +7098,9 @@ func (m *SiteMutation) HostsCleared() bool {
 }
 
 // RemoveHostIDs removes the "hosts" edge to the Host entity by IDs.
-func (m *SiteMutation) RemoveHostIDs(ids ...uuid.UUID) {
+func (m *SiteMutation) RemoveHostIDs(ids ...int) {
 	if m.removedhosts == nil {
-		m.removedhosts = make(map[uuid.UUID]struct{})
+		m.removedhosts = make(map[int]struct{})
 	}
 	for i := range ids {
 		delete(m.hosts, ids[i])
@@ -7195,7 +7109,7 @@ func (m *SiteMutation) RemoveHostIDs(ids ...uuid.UUID) {
 }
 
 // RemovedHosts returns the removed IDs of the "hosts" edge to the Host entity.
-func (m *SiteMutation) RemovedHostsIDs() (ids []uuid.UUID) {
+func (m *SiteMutation) RemovedHostsIDs() (ids []int) {
 	for id := range m.removedhosts {
 		ids = append(ids, id)
 	}
@@ -7203,7 +7117,7 @@ func (m *SiteMutation) RemovedHostsIDs() (ids []uuid.UUID) {
 }
 
 // HostsIDs returns the "hosts" edge IDs in the mutation.
-func (m *SiteMutation) HostsIDs() (ids []uuid.UUID) {
+func (m *SiteMutation) HostsIDs() (ids []int) {
 	for id := range m.hosts {
 		ids = append(ids, id)
 	}
@@ -7215,33 +7129,6 @@ func (m *SiteMutation) ResetHosts() {
 	m.hosts = nil
 	m.clearedhosts = false
 	m.removedhosts = nil
-}
-
-// ClearOrchestrator clears the "orchestrator" edge to the Orchestrator entity.
-func (m *SiteMutation) ClearOrchestrator() {
-	m.clearedorchestrator = true
-	m.clearedFields[site.FieldOrchestratorID] = struct{}{}
-}
-
-// OrchestratorCleared reports if the "orchestrator" edge to the Orchestrator entity was cleared.
-func (m *SiteMutation) OrchestratorCleared() bool {
-	return m.OrchestratorIDCleared() || m.clearedorchestrator
-}
-
-// OrchestratorIDs returns the "orchestrator" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// OrchestratorID instead. It exists only for internal usage by the builders.
-func (m *SiteMutation) OrchestratorIDs() (ids []uuid.UUID) {
-	if id := m.orchestrator; id != nil {
-		ids = append(ids, *id)
-	}
-	return
-}
-
-// ResetOrchestrator resets all changes to the "orchestrator" edge.
-func (m *SiteMutation) ResetOrchestrator() {
-	m.orchestrator = nil
-	m.clearedorchestrator = false
 }
 
 // Where appends a list predicates to the SiteMutation builder.
@@ -7291,7 +7178,7 @@ func (m *SiteMutation) Fields() []string {
 	if m.location != nil {
 		fields = append(fields, site.FieldLocation)
 	}
-	if m.orchestrator != nil {
+	if m.orchestrator_id != nil {
 		fields = append(fields, site.FieldOrchestratorID)
 	}
 	if m.metadata != nil {
@@ -7362,7 +7249,7 @@ func (m *SiteMutation) OldField(ctx context.Context, name string) (ent.Value, er
 func (m *SiteMutation) SetField(name string, value ent.Value) error {
 	switch name {
 	case site.FieldSiteID:
-		v, ok := value.(string)
+		v, ok := value.(uuid.UUID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -7397,7 +7284,7 @@ func (m *SiteMutation) SetField(name string, value ent.Value) error {
 		m.SetOrchestratorID(v)
 		return nil
 	case site.FieldMetadata:
-		v, ok := value.(struct{})
+		v, ok := value.(map[string]interface{})
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -7541,12 +7428,9 @@ func (m *SiteMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *SiteMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 1)
 	if m.hosts != nil {
 		edges = append(edges, site.EdgeHosts)
-	}
-	if m.orchestrator != nil {
-		edges = append(edges, site.EdgeOrchestrator)
 	}
 	return edges
 }
@@ -7561,17 +7445,13 @@ func (m *SiteMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case site.EdgeOrchestrator:
-		if id := m.orchestrator; id != nil {
-			return []ent.Value{*id}
-		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *SiteMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 1)
 	if m.removedhosts != nil {
 		edges = append(edges, site.EdgeHosts)
 	}
@@ -7594,12 +7474,9 @@ func (m *SiteMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *SiteMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 1)
 	if m.clearedhosts {
 		edges = append(edges, site.EdgeHosts)
-	}
-	if m.clearedorchestrator {
-		edges = append(edges, site.EdgeOrchestrator)
 	}
 	return edges
 }
@@ -7610,8 +7487,6 @@ func (m *SiteMutation) EdgeCleared(name string) bool {
 	switch name {
 	case site.EdgeHosts:
 		return m.clearedhosts
-	case site.EdgeOrchestrator:
-		return m.clearedorchestrator
 	}
 	return false
 }
@@ -7620,9 +7495,6 @@ func (m *SiteMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *SiteMutation) ClearEdge(name string) error {
 	switch name {
-	case site.EdgeOrchestrator:
-		m.ClearOrchestrator()
-		return nil
 	}
 	return fmt.Errorf("unknown Site unique edge %s", name)
 }
@@ -7633,9 +7505,6 @@ func (m *SiteMutation) ResetEdge(name string) error {
 	switch name {
 	case site.EdgeHosts:
 		m.ResetHosts()
-		return nil
-	case site.EdgeOrchestrator:
-		m.ResetOrchestrator()
 		return nil
 	}
 	return fmt.Errorf("unknown Site edge %s", name)

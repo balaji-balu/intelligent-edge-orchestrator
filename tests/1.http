@@ -37,3 +37,9 @@ Content-Type: application/json
 }
 
 ###
+
+GET http://localhost:9001/api/v1/sites
+###
+
+GET http://localhost:9001/api/v1/sites/c590b39d-6c26-4603-b950-6c412e749d13
+###

@@ -29,12 +29,12 @@ const (
 	// Table holds the table name of the orchestrator in the database.
 	Table = "orchestrator"
 	// SitesTable is the table that holds the sites relation/edge.
-	SitesTable = "site"
+	SitesTable = "sites"
 	// SitesInverseTable is the table name for the Site entity.
 	// It exists in this package in order to avoid circular dependency with the "site" package.
-	SitesInverseTable = "site"
+	SitesInverseTable = "sites"
 	// SitesColumn is the table column denoting the sites relation/edge.
-	SitesColumn = "orchestrator_id"
+	SitesColumn = "orchestrator_sites"
 )
 
 // Columns holds all SQL columns for orchestrator fields.
