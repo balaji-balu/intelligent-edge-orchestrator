@@ -122,8 +122,8 @@ func main() {
 		log.Errorf("❌ Failed to connect to NATS.","err:", err)
         return
 	}
-    e := InitERAStorage() //uuid.New().String()
-    hostID := e.HostID
+    ls, err := InitERAStorage() //uuid.New().String()
+    hostID := ls.HostID
     loUrl := os.Getenv("ERA_LO_URL")
     siteID, err := register(loUrl, hostID)
     if err != nil {
