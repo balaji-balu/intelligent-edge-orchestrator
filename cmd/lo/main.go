@@ -81,7 +81,7 @@ func main() {
 	cfg.NATS.URL = os.Getenv("LO_NATS_URL")
 	cfg.MetricsPort = os.Getenv("LO_METRICS_PORT")
 	cfg.CO.URL = os.Getenv("LO_CO_URL")
-	boltdbpath = os.Getenv("BOLTDB_PATH")
+	boltdbpath := os.Getenv("BOLTDB_PATH")
 	if boltdbpath == ""
 		boltdbpath = loStorage.BoltPath
 	log.Infow("Connecting to", "nats(url)", cfg.NATS.URL)
