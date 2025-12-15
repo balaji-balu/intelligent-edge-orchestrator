@@ -81,6 +81,9 @@ func main() {
 	cfg.NATS.URL = os.Getenv("LO_NATS_URL")
 	cfg.MetricsPort = os.Getenv("LO_METRICS_PORT")
 	cfg.CO.URL = os.Getenv("LO_CO_URL")
+	boltdbpath = os.Getenv("BOLTDB_PATH")
+	if boltdbpath == ""
+		boltdbpath = loStorage.BoltPath
 	log.Infow("Connecting to", "nats(url)", cfg.NATS.URL)
 	nc, err := natsbroker.New(cfg.NATS.URL)
 	if err != nil {
@@ -106,7 +109,7 @@ func main() {
 
 	localorch := lo.NewLO(ctx, 
 		loStorage.SiteID,
-		loStorage.BoltPath, 
+		boltdbpath, //loStorage.BoltPath, 
 		cfg.NATS.URL, 
 		cfg.CO.URL, 
 		"deployments", nc, gitmgr, cfg.MetricsPort, log)
