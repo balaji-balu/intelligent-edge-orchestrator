@@ -123,6 +123,7 @@ func main() {
         return
 	}
     ls, err := InitERAStorage() //uuid.New().String()
+    log.Infow("localstorage", "ls", ls)
     hostID := ls.HostID
     loUrl := os.Getenv("ERA_LO_URL")
     siteID, err := register(loUrl, hostID)
@@ -178,8 +179,8 @@ func register(loURL, hostID string) (string, error) {
 
     // Parse LO's response (siteID)
     type Response struct {
-        siteId string `json:"site_id"`
-        hostId string `json:"host_id"`
+        SiteID string `json:"siteId"`
+        HostID string `json:"hostId"`
     }
     var response Response
     if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
@@ -187,7 +188,8 @@ func register(loURL, hostID string) (string, error) {
         return "", err
     }
 
-    return response.siteId, nil
+    log.Debugw("register response", "reponse", response)
+    return response.SiteID, nil
 }
 
 func loadOrCreateID(baseDir, name string) (string, error) {
