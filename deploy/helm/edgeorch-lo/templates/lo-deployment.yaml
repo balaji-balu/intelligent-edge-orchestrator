@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-lo
+spec:
+  replicas: {{ .Values.lo.replicas }}
+  selector:
+    matchLabels:
+      app: lo
+  template:
+    metadata:
+      labels:
+        app: lo
+    spec:
+      containers:
+        - name: lo
+          image: {{ .Values.lo.image }}
+          env:
+            - name: LO_PORT
+              value: "{{ .Values.lo.port }}"
+
+            - name: LO_DB_TYPE
+              value: boltdb
+
+            - name: LO_DB_PATH
+              value: "{{ .Values.lo.boltdb.path }}"
+
+            - name: LO_NATS_URL
+              value: nats://{{ .Values.nats.host }}:{{ .Values.nats.port }}
+
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-github
+                  key: GITHUB_TOKEN       
+
+            - name: LO_CO_URL
+              value: http://{{ .Values.lo.co.host }}:{{ .Values.lo.co.port }}
+          ports:
+            - containerPort: {{ .Values.lo.port }}
+
+          volumeMounts:
+            - name: lo-data
+              mountPath: /data
+
+      volumes:
+        - name: lo-data
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-lo-data

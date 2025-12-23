@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-co
+spec:
+  replicas: {{ .Values.co.replicas }}
+  selector:
+    matchLabels:
+      app: co
+  template:
+    metadata:
+      labels:
+        app: co
+    spec:
+      containers:
+        - name: co
+          image: {{ .Values.co.image }}
+          env:
+            - name: DATABASE_URL
+              value: postgres://{{ .Values.postgres.user }}:{{ .Values.postgres.password }}@{{ .Release.Name }}-postgres:{{ .Values.postgres.port }}/{{ .Values.postgres.db }}?sslmode=disable
+            - name: CO_PORT
+              value: "{{ .Values.co.port }}"
+            - name: NATS_URL
+              value: nats://{{ .Release.Name }}-nats:{{ .Values.nats.port }}
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-github
+                  key: GITHUB_TOKEN       
+          ports:
+            - containerPort: {{ .Values.co.port }}
